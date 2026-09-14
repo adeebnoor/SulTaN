@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Private, sanitized feedback by email
+    url: mailto:adeeb.noor@gmail.com
+    about: Use email instead of public issues for appropriately sanitized private feedback.

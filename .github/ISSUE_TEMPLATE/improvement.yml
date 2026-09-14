@@ -1,0 +1,26 @@
+name: Improvement idea
+description: Suggest a better strategy-building experience.
+title: "[Idea] "
+body:
+  - type: markdown
+    attributes:
+      value: "This issue is public. Describe the task, not a confidential institutional plan."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What user task is difficult today?
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: What would make it more useful?
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public disclosure
+      options:
+        - label: I removed all confidential and personal information.
+          required: true

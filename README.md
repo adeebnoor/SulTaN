@@ -1,58 +1,69 @@
-# سلطان | SULTAN
+# SULTAN — Strategy, with a reason.
 
-**أداة أديب نور لبناء الاستراتيجيات الحكومية وتجهيزها للتنفيذ.**
+**A free Arabic/English strategy-building workspace by Prof. Adeeb Noor.**
 
-مساحة عمل عربية تربط هوية الجهة وطموحها باختيارات مبررة، ثم مرجعيات ومسارات سنوية وممكنات تشريعية ونموذج تشغيل ومبادرات ولوحة متابعة. ليست ورقة بحثية، ولا مولد نصوص من اسم الجهة، ولا حاسبة ساعات منفصلة.
+SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, annual transitions, enablers, initiatives, and a reviewable strategy draft. It supports building a new strategy or improving an existing one. It is not an automatic strategy generator or an accreditation service.
 
-## تجربة الأداة
+## Try the public beta
 
-لنسخة محلية مستقلة لا تحتاج اتصالًا أثناء العمل:
+**[Open SULTAN](https://adeebnoor.github.io/SulTaN/)** · [English interface](https://adeebnoor.github.io/SulTaN/?lang=en) · [Arabic interface](https://adeebnoor.github.io/SulTaN/?lang=ar)
 
-```sh
-python3 build.py
-```
+No subscription, account, payment card, or API key is required for the hosted beta. Start with the **fictional example**, change one choice or weight, then export a strategy draft. You can also start with a blank project.
 
-افتح بعد ذلك `public/index.html` في المتصفح. ويمكن تقديم المصدر مباشرة بخادم محلي:
+The language control changes the interface, not user-entered project text. Switching languages preserves the local draft and current section when browser storage is available. If storage cannot save an edited draft, the switch is blocked to prevent data loss.
 
-```sh
-python3 -m http.server 8000
-```
+## What works in version 0.6
 
-ثم افتح `http://localhost:8000`.
+- Institution identity, beneficiaries, distinctive assets, context, vision, and mandate/contribution mapping.
+- Strategic alternatives, explicit trade-offs, moonshot footholds, and documented selection decisions.
+- References and compatibility review, current/target states, annual milestones, acceptance evidence, and indicators.
+- Editable criteria, score anchors and weights, missing-score ranges, and limited local sensitivity checks.
+- Enablers covering authority, legislation, capability, incentives, and operating arrangements.
+- Linked initiatives, annual funding, dependencies, review notes, and actual measurements.
+- Local draft recovery, validated JSON import/export, and localized, script-free HTML strategy reports suitable for printing.
+- Optional feedback through an email draft or public GitHub issue draft; neither channel automatically includes project data.
 
-داخل الأداة اختر **ابدأ استراتيجية جديدة** أو **جرّب حالة افتراضية**. عرّف الجهة وصغ بدائلها، ثم وثق المرجعيات ومسارات الوصول. اضبط المعايير والأوزان وسجل قرارك ومبرره، واربط الممكنات والمبادرات بالخطة السنوية. الجاهزية الحالية لا تخفض قيمة المونشوت تلقائيًا.
+Strategic value is **not** multiplied by current readiness or historical performance. Mandatory requirements are not automatically waived by a high preference score. A moonshot may need a learning and capability-building path rather than immediate full-scale execution.
 
-**حفظ نسخة** يصدر مشروع JSON قابلًا للاستكمال. **تصدير الاستراتيجية** يخرج مسودة HTML منظمة قابلة للطباعة، تشمل المسائل التي لم تحسم؛ ليس ملف عرض تسويقيًا ثابتًا.
+## Privacy and beta limitations
 
-## الخصوصية وحدود الإصدار
+Project inputs stay in local browser storage. They are **not encrypted**, synchronized, or backed up by SULTAN. Export a JSON copy regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
 
-- مثال «جامعة أفق» ودرجاته ومبالغه وموافقاته افتراضية بالكامل.
-- لا توجد هنا الوثائق الاستشارية الأصلية أو بيانات العملاء.
-- مدخلات المشروع لا ترسلها الأداة إلى خادم. الحفظ المحلي غير مشفر وقد يمنع أو يمسح؛ ملف JSON هو النسخة الاحتياطية القابلة للنقل.
-- لا ترفع ملفات مشاريع العملاء إلى هذا المستودع العام، ولا تستخدم هذه النسخة للبيانات السرية.
-- لا تسجيل دخول أو تحرير متزامن أو سجل تدقيق محمي أو تحقق آلي من الأدلة والأنظمة.
-- الأوزان والدرجات تقديرات يحددها المستخدم، وليست احتمال نجاح أو اعتمادًا مؤسسيًا. الحساب لا يختار محفظة مثلى تلقائيًا.
-- المعايير والأوزان الأولية مقترحات قابلة للتعديل، وليست معيارًا سعوديًا معتمدًا. اختبارات الحساب لا تثبت تفردًا عالميًا أو تفوقًا ميدانيًا.
+There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after an explicit user action. GitHub issues are public and require a GitHub account; email feedback does not.
 
-## التطوير والاختبار
+A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Scores represent entered preferences, not probabilities of success. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
 
-Node.js 22 أو أحدث لاختبار الحسابات، وPython 3 لبناء النسخة المستقلة. لا حزم تشغيل خارجية للأداة.
+See [privacy](docs/PRIVACY.md), [product scope](docs/PRODUCT.md), and [feedback guide](docs/FEEDBACK.md).
+
+## Run and test locally
+
+Use Node.js 22+ and Python 3. No third-party runtime dependencies are loaded by the web app.
 
 ```sh
 node tests/engine.test.js
+node tests/i18n.test.js
 python3 build.py
+python3 -m http.server 8000 --directory public
 ```
 
-المصدر في `src/`، والاختبارات في `tests/`. يضع البناء النسخة المستقلة في `public/index.html` وحزمة المصدر في `release/`، ولا يغير صفحة المصدر `index.html`. لا تجمع عملية البناء ملفات العملاء.
+Open `http://localhost:8000/?lang=en` or `?lang=ar`. The build emits a self-contained `public/index.html` and a source archive under `release/`.
 
-يشغل GitHub Actions اختبارات الحساب والمتصفح والحفظ والاستيراد والتصدير والتجاوب، ويجمع الناتج في artifact اسمه `sultan-product`. نتائج الاختبار أدلة برمجية وليست إثبات نجاح الاستراتيجيات ميدانيًا.
+For full browser acceptance tests:
 
-## النشر
+```sh
+python3 -m pip install playwright==1.57.0
+python3 -m playwright install chromium
+python3 tests/beta_browser.py
+```
 
-هذا المستودع وحده لا يعني أن خدمة عامة منشورة. يمكن نشر `public/` على استضافة ثابتة. ويوجد مسار نشر يدوي إلى GitHub Pages: يختار مالك المستودع **Settings → Pages → GitHub Actions**، ثم يشغل **Publish SULTAN to GitHub Pages** من Actions. لا تتطلب النسخة المحلية تشغيل خادم بيانات أو إدخال مفتاح API.
+`SULTAN_RENDER_ONLY=1` is for isolated, inline rendering environments; it explicitly skips real-origin persistence and language-navigation checks. It is not a substitute for the full browser release check. `CHROMIUM_PATH` can point to an installed Chromium binary.
 
-## العلاقة بأصول المنهج
+## Repository organization
 
-ترتكز تجربة العمل على منهجية الأمن السيبراني لصاحب المشروع (المرجعية، الوضع الحالي والمستهدف، الخارطة واللوحة)، وفلسفته عن خصوصية الجهة والطموح والمفاضلات، ومنطق وضوح البيانات والقرار والذاكرة الزمنية في «رضا». معايير القيمة الاستراتيجية وقواعد الاتساق هنا إضافات تصميمية، وليست نقلًا لمعادلة مفاضلة المعلمين.
+`src/engine.js` contains deterministic model and validation rules. `src/app.js` contains the workspace. `src/portal.js` contains the public entrance and opt-in feedback. `src/locales/en.js` and `ar.js` hold translations; Arabic is confined to localization and language-test fixtures, while documentation, code identifiers, and contributor workflows use English.
 
-**إصدار تطوير 0.5.1 — للاستخدام التجريبي ببيانات غير حساسة، لا للاعتماد المؤسسي المنفرد.**
+The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic scoring criteria are design choices for this beta, not a transfer of teacher-ranking rules into strategy. No original client documents or personal transfer records are included.
+
+Hosted beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
+
+**Version 0.6.0 — public beta for non-sensitive planning and feedback.**
