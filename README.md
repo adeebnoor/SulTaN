@@ -4,13 +4,17 @@
 
 SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, annual transitions, enablers, initiatives, and a reviewable strategy draft. It supports building a new strategy or improving an existing one. It is not an automatic strategy generator or an accreditation service.
 
-## Try the public beta
+## Try the beta
 
-**[Open SULTAN](https://adeebnoor.github.io/SulTaN/)** · [English interface](https://adeebnoor.github.io/SulTaN/?lang=en) · [Arabic interface](https://adeebnoor.github.io/SulTaN/?lang=ar)
+**[Download the tested bilingual beta](https://github.com/adeebnoor/SulTaN/releases/tag/v0.6.0)** — open the `SULTAN_Beta_AR_EN.html` release asset in a browser. No subscription, account, payment card, installation, or API key is required.
 
-No subscription, account, payment card, or API key is required for the hosted beta. Start with the **fictional example**, change one choice or weight, then export a strategy draft. You can also start with a blank project.
+**Hosting activation is still required.** The repository owner must enable GitHub Pages before the following website addresses become available:
 
-The language control changes the interface, not user-entered project text. Switching languages preserves the local draft and current section when browser storage is available. If storage cannot save an edited draft, the switch is blocked to prevent data loss.
+[English interface after activation](https://adeebnoor.github.io/SulTaN/?lang=en) · [Arabic interface after activation](https://adeebnoor.github.io/SulTaN/?lang=ar)
+
+To activate: open **Settings → Pages → Build and deployment → Source → GitHub Actions**, then rerun **Test and package SULTAN**. The publication workflow deploys only an artifact that passed the full browser checks. It never requests an administrative credential from the application or silently reports a missing site as live.
+
+Start with the **fictional example**, change one choice or weight, then export a strategy draft. You can also start with a blank project. The language control changes the interface, not user-entered project text. Switching languages preserves the local draft and current section when browser storage is available. If storage cannot save an edited draft, the switch is blocked to prevent data loss.
 
 ## What works in version 0.6
 
@@ -29,7 +33,7 @@ Strategic value is **not** multiplied by current readiness or historical perform
 
 Project inputs stay in local browser storage. They are **not encrypted**, synchronized, or backed up by SULTAN. Export a JSON copy regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
 
-There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after an explicit user action. GitHub issues are public and require a GitHub account; email feedback does not.
+There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after an explicit user action. GitHub issues are public and require a GitHub account; email feedback does not require GitHub.
 
 A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Scores represent entered preferences, not probabilities of success. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
 
@@ -56,7 +60,7 @@ python3 -m playwright install chromium
 python3 tests/beta_browser.py
 ```
 
-`SULTAN_RENDER_ONLY=1` is for isolated, inline rendering environments; it explicitly skips real-origin persistence and language-navigation checks. It is not a substitute for the full browser release check. `CHROMIUM_PATH` can point to an installed Chromium binary.
+`SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it explicitly skips real-origin persistence and language-navigation checks. It is not a substitute for the full browser release check. `CHROMIUM_PATH` can point to an installed Chromium binary.
 
 ## Repository organization
 
@@ -64,6 +68,6 @@ python3 tests/beta_browser.py
 
 The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic scoring criteria are design choices for this beta, not a transfer of teacher-ranking rules into strategy. No original client documents or personal transfer records are included.
 
-Hosted beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
+Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.6.0 — public beta for non-sensitive planning and feedback.**
+**Version 0.6.0 — beta for non-sensitive planning and feedback.**
