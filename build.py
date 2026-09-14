@@ -5,7 +5,7 @@ base = Path(__file__).resolve().parent
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
 html = html.replace('<link rel="stylesheet" href="src/style.css">', '<style>' + (base / 'src/style.css').read_text(encoding='utf-8') + '</style>')
-for name in ('engine.js', 'import.js', 'app.js'):
+for name in ('engine.js', 'import.js', 'app.js', 'usability.js'):
     code = (base / 'src' / name).read_text(encoding='utf-8')
     if '</script' in code.lower():
         raise ValueError('Unexpected closing script token in ' + name)
