@@ -33,7 +33,9 @@ jobs:
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
       - name: Test Arabic and English at a real browser origin
-        run: python tests/beta_browser.py
+        run: |
+          python tests/beta_browser.py
+          python tests/hardening_browser.py
       - name: Package application and verification evidence
         if: always()
         uses: actions/upload-artifact@v4
