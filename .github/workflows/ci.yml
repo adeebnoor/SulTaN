@@ -1,0 +1,43 @@
+name: Test and package SULTAN
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify JavaScript and model cases
+        run: |
+          node --check src/engine.js
+          node --check src/import.js
+          node --check src/app.js
+          node tests/engine.test.js
+      - name: Build standalone product
+        run: python build.py
+      - name: Install browser test runtime
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Browser acceptance checks
+        run: python tests/browser.py
+      - name: Package product and test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultan-product
+          path: |
+            public/
+            release/
+            qa/
+          retention-days: 14
