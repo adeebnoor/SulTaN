@@ -1,36 +1,92 @@
-name: Publish SULTAN to GitHub Pages
+name: Publish tested SULTAN beta
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: [Test and package SULTAN]
+    types: [completed]
+    branches: [main]
 permissions:
-  contents: read
+  contents: write
+  actions: read
   pages: write
   id-token: write
 concurrency:
-  group: pages
+  group: sultan-publication
   cancel-in-progress: false
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Test and build
-        run: |
-          node tests/engine.test.js
-          python3 build.py
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: public
-  deploy:
-    needs: build
+  publish:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Retrieve the tested release, not an untested rebuild
+        uses: actions/download-artifact@v4
+        with:
+          name: sultan-product
+          path: tested
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+      - name: Check the artifact and expose a downloadable beta
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json
+          root=Path('tested')
+          report=json.loads((root/'qa/beta-browser-results.json').read_text())
+          assert report['mode']=='full-browser' and report['passed']==report['tests']
+          manifest=json.loads((root/'release/manifest.json').read_text())
+          assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
+          (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'public/index.html').read_bytes())
+          print('Verified full browser evidence and application SHA-256.')
+          PY
+          if ! gh release view v0.6.0 >/dev/null 2>&1; then
+            gh release create v0.6.0 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.6 — Free bilingual beta' --notes 'Free Arabic/English strategy workspace. Download SULTAN_Beta_AR_EN.html and open it in a browser, or use the hosted site once Pages is enabled. No account or API key is required. Includes validated project import/export, a fictional example and opt-in feedback. Use non-sensitive data only; this is not an accreditation or an automated approval service. See README.md for public hosting status and limits.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json
+          fi
+      - name: Check first-time hosting setup
+        id: hosting
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const {data:repo}=await github.rest.repos.get(context.repo);
+            core.setOutput('enabled',String(repo.has_pages));
+            if(!repo.has_pages){
+              core.notice('The beta is downloadable, but the website is NOT live. An administrator must enable Settings > Pages > GitHub Actions, then rerun Test and package SULTAN.');
+              await core.summary.addHeading('Website activation required').addRaw('The tested source and downloadable beta are available. The public website has not been deployed. Open repository Settings > Pages, select GitHub Actions, then rerun the Test and package SULTAN workflow. No deployment or administrative token is requested by the app.').write();
+            }
+      - uses: actions/configure-pages@v5
+        if: steps.hosting.outputs.enabled == 'true'
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.hosting.outputs.enabled == 'true'
+        with:
+          path: tested/public
+      - name: Deploy the tested website
         id: deployment
+        if: steps.hosting.outputs.enabled == 'true'
         uses: actions/deploy-pages@v4
+      - name: Verify public HTTP response
+        if: steps.hosting.outputs.enabled == 'true'
+        env:
+          SITE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          python3 - <<'PY'
+          import os,time,urllib.request
+          url=os.environ['SITE_URL']
+          for attempt in range(12):
+              try:
+                  with urllib.request.urlopen(url,timeout=30) as response:
+                      text=response.read().decode('utf-8')
+                      assert response.status==200 and 'SultanPortal' in text and 'SultanLocales' in text
+                      print('Verified live bilingual application:',url)
+                      break
+              except Exception:
+                  if attempt==11:raise
+                  time.sleep(10)
+          PY
