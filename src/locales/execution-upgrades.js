@@ -10,6 +10,7 @@ Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
   assumptionsLabel:'Key assumptions',risksLabel:'Strategic risks',assumptionsHelp:'What must be true for this choice to create the intended value?',risksHelp:'What could materially undermine this choice even if execution follows plan?',assumptionRegister:'Assumptions & risks',
   portfolioMatrix:'Value × Authority view',portfolioMatrixHelp:'A discussion view only. Strategic value remains separate from authority clearance; neither axis multiplies the other.',strategicValue:'Strategic value',authorityAxis:'Authority clearance',
   valueFunding:'Value and declared investment',declaredInvestment:'Declared initiative cost',fundingState:'Funding status',fundingConfirmed:'all linked initiative budgets reported confirmed',fundingMixed:'one or more linked initiative budgets unconfirmed',
+  criterionDirection:'Criterion direction',benefitCriterion:'Benefit — higher raw score is better',costCriterion:'Cost / burden — lower raw score is better',costCriterionHelp:'Cost criteria use 100 − raw score before weighting. Define the 0 and 100 anchors accordingly.',equalWeightsApplied:'All weights were zero, so SULTAN distributed 100% equally.',
   exportNeedsWork:'Add project content before exporting a strategy.'
 });
 Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
@@ -20,6 +21,7 @@ Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   assumptionsLabel:'الافتراضات الرئيسة',risksLabel:'المخاطر الاستراتيجية',assumptionsHelp:'ما الذي يجب أن يكون صحيحًا كي يحقق هذا الخيار قيمته المقصودة؟',risksHelp:'ما الذي قد يقوض هذا الخيار جوهريًا حتى لو تم التنفيذ كما خُطط؟',assumptionRegister:'الافتراضات والمخاطر',
   portfolioMatrix:'عرض القيمة × الصلاحية',portfolioMatrixHelp:'عرض للنقاش فقط. القيمة الاستراتيجية تبقى منفصلة عن حسم الصلاحية ولا يُضرب أحد المحورين في الآخر.',strategicValue:'القيمة الاستراتيجية',authorityAxis:'حسم الصلاحية',
   valueFunding:'القيمة والاستثمار المعلن',declaredInvestment:'تكلفة المبادرات المعلنة',fundingState:'حالة التمويل',fundingConfirmed:'كل ميزانيات المبادرات المرتبطة مسجلة كمؤكدة',fundingMixed:'ميزانية مبادرة مرتبطة واحدة أو أكثر غير مؤكدة',
+  criterionDirection:'اتجاه المعيار',benefitCriterion:'منفعة — الدرجة الخام الأعلى أفضل',costCriterion:'تكلفة / عبء — الدرجة الخام الأقل أفضل',costCriterionHelp:'في معيار التكلفة يستخدم سلطان 100 − الدرجة الخام قبل الوزن. عرّف مرساتي 0 و100 على هذا الأساس.',equalWeightsApplied:'كانت جميع الأوزان صفرًا، لذلك وزّع سلطان 100٪ بالتساوي.',
   exportNeedsWork:'أضف محتوى للمشروع قبل تصدير الاستراتيجية.'
 });
 })(globalThis);
