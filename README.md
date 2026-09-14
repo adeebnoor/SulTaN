@@ -2,41 +2,53 @@
 
 **A free Arabic/English strategy-building workspace by Prof. Adeeb Noor.**
 
-SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, annual transitions, enablers, initiatives, and a reviewable strategy draft. It supports building a new strategy or improving an existing one. It is not an automatic strategy generator or an accreditation service.
+SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, authority, annual transitions, enablers, initiatives, funding context, and a reviewable strategy. It supports building a new strategy or improving an existing one. It is not an automatic strategy generator, accreditation service, or success-prediction model.
 
-## Try the beta
+## Try the public beta
 
-**[Download the tested bilingual beta](https://github.com/adeebnoor/SulTaN/releases/tag/v0.6.1)** — open the `SULTAN_Beta_AR_EN.html` release asset in a browser. No subscription, account, payment card, installation, or API key is required.
+**Live beta:** https://sultan-strategy.onrender.com
 
-**Hosting activation is still required.** The repository owner must enable GitHub Pages before the following website addresses become available:
+**Tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.7.0 — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
-[English interface after activation](https://adeebnoor.github.io/SulTaN/?lang=en) · [Arabic interface after activation](https://adeebnoor.github.io/SulTaN/?lang=ar)
+If GitHub Pages is enabled for the repository, the same tested artifact can also be published at `https://adeebnoor.github.io/SulTaN/`.
 
-To activate: open **Settings → Pages → Build and deployment → Source → GitHub Actions**, then rerun **Test and package SULTAN**. The publication workflow deploys only an artifact that passed the full browser checks. It never requests an administrative credential from the application or silently reports a missing site as live.
+Start with the **fictional example**, change a choice, criterion or authority state, then inspect the review and exports. You can also start with a blank project. Project text is never automatically translated when the interface language changes.
 
-Start with the **fictional example**, change one choice or weight, then export a strategy draft. You can also start with a blank project. The language control changes the interface, not user-entered project text. Switching languages preserves the local draft and current section when browser storage is available. If storage cannot save an edited draft, the switch is blocked to prevent data loss.
+## What works in version 0.7
 
-## What works in version 0.6.1
-
-- Institution identity, beneficiaries, distinctive assets, context, vision, and mandate/contribution mapping.
-- Strategic alternatives, explicit trade-offs, moonshot footholds, and documented selection decisions.
+- Institution identity, beneficiaries, distinctive assets, context, vision, mandates, and chosen contribution.
+- Strategic alternatives, explicit trade-offs, moonshot footholds, assumptions, strategic risks, and documented selection decisions.
 - References and compatibility review, current/target states, annual milestones, acceptance evidence, and indicators.
-- Editable criteria, score anchors and weights, missing-score ranges, and limited local sensitivity checks.
-- Enablers covering authority, legislation, capability, incentives, and operating arrangements.
-- Linked initiatives, annual funding, dependencies, review notes, and actual measurements.
-- Local draft recovery, validated JSON import/export, and localized, script-free HTML strategy reports suitable for printing.
+- Multi-criteria comparison with editable weights and anchors, optional **Benefit** or **Cost/Burden** direction, missing-score ranges, live sensitivity preview, and **decision switch-point / break-even weight** analysis.
+- Mandatory requirements remain outside discretionary ranking. Strategic value is not multiplied by readiness, current capability, historical performance, or authority clearance.
+- **Authority Space** separates ownership clarity, decision-status clarity, and decision clearance. Unknown remains unknown. Small authority maps emphasize counts instead of misleading percentages.
+- Authority unknown, pending, and blocked states enter the same consistency-note system as the rest of the strategy.
+- Time-aware authority view plus an exportable **Escalation Pack** with decision owner, due year, activation/escalation route, and fallback if delayed or refused.
+- Linked initiatives, dependencies, annual funding, a visual execution timeline, and a review view that places strategic value beside declared investment without dividing one by the other.
+- **Value × Authority** matrix for discussion only; the axes are deliberately not multiplied.
+- Per-section issue/completion badges and stronger guardrails, including disabled strategy export on an empty project and automatic JSON backup before replacing populated work with a new project or example.
+- Local draft recovery, validated/whitelisted JSON import/export, and browser-history navigation.
+- Section-level JSON export/import for lightweight collaboration without a server: one owner can complete a section and another user can merge it into the project.
+- Separate **Internal** and **Leadership** HTML reports, including Authority Space, escalation information, and Gregorian + Hijri report dates. Browser print can be used to produce PDF.
 - Optional feedback through an email draft or public GitHub issue draft; neither channel automatically includes project data.
-- Stricter import whitelisting plus browser editing/recovery hardening without changing the strategic model or the 0.5-compatible project schema.
 
-Strategic value is **not** multiplied by current readiness or historical performance. Mandatory requirements are not automatically waived by a high preference score. A moonshot may need a learning and capability-building path rather than immediate full-scale execution.
+## Method notes
+
+SULTAN uses a transparent weighted additive comparison for discretionary alternatives. A Benefit criterion uses the entered 0–100 score directly. A Cost/Burden criterion uses `100 − raw score` before weighting, so a lower raw burden is better. Users define the 0 and 100 anchors themselves. Scores describe stated preference judgments; they are not probabilities of success.
+
+Weight normalization closes at exactly 100%. If every criterion weight is zero, SULTAN distributes 100% equally rather than producing NaN/Infinity. For sensitivity, the interface provides both a live hypothetical slider and the nearest weight at which the leading fully scored alternative changes while other weights are redistributed proportionally.
+
+Authority Space is descriptive, not predictive. It does not claim that authority has been legally verified, and it does not discount strategic ambition because authority or capability is incomplete.
 
 ## Privacy and beta limitations
 
-Project inputs stay in local browser storage. They are **not encrypted**, synchronized, or backed up by SULTAN. Export a JSON copy regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
+Project inputs stay in local browser storage. They are **not encrypted, synchronized, or backed up by SULTAN**. Export JSON regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
 
-There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after an explicit user action. GitHub issues are public and require a GitHub account; email feedback does not require GitHub.
+There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after explicit user action.
 
-A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Scores represent entered preferences, not probabilities of success. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
+A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
+
+Multi-user cloud collaboration, protected audit trails, direct DOCX generation, and task-level/quarterly project scheduling are outside this beta. Section-level exchange is the current collaboration mechanism.
 
 See [privacy](docs/PRIVACY.md), [product scope](docs/PRODUCT.md), and [feedback guide](docs/FEEDBACK.md).
 
@@ -52,7 +64,7 @@ python3 build.py
 python3 -m http.server 8000 --directory public
 ```
 
-Open `http://localhost:8000/?lang=en` or `?lang=ar`. The build emits a self-contained `public/index.html` and a source archive under `release/`.
+Open `http://localhost:8000/?lang=en` or `?lang=ar`.
 
 For full browser acceptance tests:
 
@@ -63,14 +75,14 @@ python3 tests/beta_browser.py
 python3 tests/hardening_browser.py
 ```
 
-`SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it explicitly skips real-origin persistence and language-navigation checks. It is not a substitute for the full browser release check. `CHROMIUM_PATH` can point to an installed Chromium binary.
+`SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it is not a substitute for the full browser release check.
 
 ## Repository organization
 
-`src/engine.js` contains deterministic model and validation rules. `src/app.js` contains the workspace. `src/portal.js` contains the public entrance and opt-in feedback. `src/locales/en.js` and `ar.js` hold translations; Arabic is confined to localization and language-test fixtures, while documentation, code identifiers, and contributor workflows use English.
+`src/engine.js` contains the base deterministic model and validation rules. The 0.7 modules add Authority Space, criterion polarity, execution upgrades, assumptions/risks, and executive review visuals while retaining compatibility with the 0.5 project schema. Arabic is confined to localization catalogs and interface content; code identifiers and maintainer documentation use English.
 
-The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic scoring criteria are design choices for this beta, not a transfer of teacher-ranking rules into strategy. No original client documents or personal transfer records are included.
+The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic criteria and Authority Space measures are product design choices, not a claim of field-validated universal equations.
 
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.6.1 — hardened beta for non-sensitive planning and feedback.**
+**Version 0.7.0 — execution-focused beta for non-sensitive planning and feedback.**
