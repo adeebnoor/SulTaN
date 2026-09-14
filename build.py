@@ -2,11 +2,12 @@
 from pathlib import Path
 import hashlib, json, zipfile
 base = Path(__file__).resolve().parent
+VERSION='0.6.1'
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
-html = html.replace('<link rel="stylesheet" href="src/style.css">', '<style>' + (base / 'src/style.css').read_text(encoding='utf-8') + '</style>')
-html = html.replace('<link rel="stylesheet" href="src/portal.css">', '<style>' + (base / 'src/portal.css').read_text(encoding='utf-8') + '</style>')
-for name in ('locales/en.js', 'locales/ar.js', 'i18n.js', 'engine.js', 'import.js', 'portal.js', 'app.js', 'usability.js'):
+for css_name in ('style.css','portal.css','authority-space.css'):
+    html = html.replace(f'<link rel="stylesheet" href="src/{css_name}">', '<style>' + (base / 'src' / css_name).read_text(encoding='utf-8') + '</style>')
+for name in ('locales/en.js', 'locales/ar.js', 'locales/authority-space.js', 'i18n.js', 'engine.js', 'import.js', 'portal.js', 'app.js', 'authority-space.js', 'usability.js'):
     code = (base / 'src' / name).read_text(encoding='utf-8')
     if '</script' in code.lower():
         raise ValueError('Unexpected closing script token in ' + name)
@@ -24,5 +25,5 @@ with zipfile.ZipFile(release / 'SULTAN_Strategy_Builder_Source.zip', 'w', zipfil
     for p in source_files:
         if p.exists(): z.write(p, p.relative_to(base))
     z.write(public / 'index.html', 'SULTAN_Strategy_Builder.html')
-(release / 'manifest.json').write_text(json.dumps({'version':'0.6.0','sha256':hashlib.sha256((public / 'index.html').read_bytes()).hexdigest(),'sourceFiles':[str(p.relative_to(base)) for p in source_files if p.exists()]}, indent=2), encoding='utf-8')
+(release / 'manifest.json').write_text(json.dumps({'version':VERSION,'sha256':hashlib.sha256((public / 'index.html').read_bytes()).hexdigest(),'sourceFiles':[str(p.relative_to(base)) for p in source_files if p.exists()]}, indent=2), encoding='utf-8')
 print('Built public/index.html:', len(html.encode('utf-8')), 'bytes')

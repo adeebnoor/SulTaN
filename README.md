@@ -6,7 +6,7 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 ## Try the beta
 
-**[Download the tested bilingual beta](https://github.com/adeebnoor/SulTaN/releases/tag/v0.6.0)** — open the `SULTAN_Beta_AR_EN.html` release asset in a browser. No subscription, account, payment card, installation, or API key is required.
+**[Download the tested bilingual beta](https://github.com/adeebnoor/SulTaN/releases/tag/v0.6.1)** — open the `SULTAN_Beta_AR_EN.html` release asset in a browser. No subscription, account, payment card, installation, or API key is required.
 
 **Hosting activation is still required.** The repository owner must enable GitHub Pages before the following website addresses become available:
 
@@ -16,7 +16,7 @@ To activate: open **Settings → Pages → Build and deployment → Source → G
 
 Start with the **fictional example**, change one choice or weight, then export a strategy draft. You can also start with a blank project. The language control changes the interface, not user-entered project text. Switching languages preserves the local draft and current section when browser storage is available. If storage cannot save an edited draft, the switch is blocked to prevent data loss.
 
-## What works in version 0.6
+## What works in version 0.6.1
 
 - Institution identity, beneficiaries, distinctive assets, context, vision, and mandate/contribution mapping.
 - Strategic alternatives, explicit trade-offs, moonshot footholds, and documented selection decisions.
@@ -26,6 +26,7 @@ Start with the **fictional example**, change one choice or weight, then export a
 - Linked initiatives, annual funding, dependencies, review notes, and actual measurements.
 - Local draft recovery, validated JSON import/export, and localized, script-free HTML strategy reports suitable for printing.
 - Optional feedback through an email draft or public GitHub issue draft; neither channel automatically includes project data.
+- Stricter import whitelisting plus browser editing/recovery hardening without changing the strategic model or the 0.5-compatible project schema.
 
 Strategic value is **not** multiplied by current readiness or historical performance. Mandatory requirements are not automatically waived by a high preference score. A moonshot may need a learning and capability-building path rather than immediate full-scale execution.
 
@@ -45,6 +46,7 @@ Use Node.js 22+ and Python 3. No third-party runtime dependencies are loaded by 
 
 ```sh
 node tests/engine.test.js
+node tests/hardening.test.js
 node tests/i18n.test.js
 python3 build.py
 python3 -m http.server 8000 --directory public
@@ -58,6 +60,7 @@ For full browser acceptance tests:
 python3 -m pip install playwright==1.57.0
 python3 -m playwright install chromium
 python3 tests/beta_browser.py
+python3 tests/hardening_browser.py
 ```
 
 `SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it explicitly skips real-origin persistence and language-navigation checks. It is not a substitute for the full browser release check. `CHROMIUM_PATH` can point to an installed Chromium binary.
@@ -70,4 +73,4 @@ The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, a
 
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.6.0 — beta for non-sensitive planning and feedback.**
+**Version 0.6.1 — hardened beta for non-sensitive planning and feedback.**

@@ -1,26 +1,35 @@
-/* Keep a newly created record visible and keyboard-accessible after rendering. */
+/* Product hardening: one revision per committed edit, draft recovery, cross-tab safety and stable UI state. */
 (function(){
 'use strict';
-let previous=null;
-document.addEventListener('click',function(e){
- const b=e.target.closest('[data-action="add"]');
- if(!b||!window.SultanApp)return;
- const kind=b.dataset.kind,project=SultanApp.getProject();
- previous={kind,count:Array.isArray(project[kind])?project[kind].length:0};
-},true);
-document.addEventListener('click',function(e){
- const b=e.target.closest('[data-action="add"]');
- if(!b||!previous||previous.kind!==b.dataset.kind)return;
- const kind=previous.kind,items=SultanApp.getProject()[kind];
- if(!Array.isArray(items)||items.length<=previous.count)return;
- const removers=Array.from(document.querySelectorAll('[data-action="remove"]')).filter(x=>x.dataset.kind===kind);
- const last=removers.at(-1);if(!last)return;
- const record=last.closest('details')||last.closest('article');
- if(!record)return;
- let ancestor=record;while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}
- record.scrollIntoView({block:'nearest',behavior:'auto'});
- const input=record.querySelector('input:not([type="checkbox"]),textarea,select');
- if(input)input.focus({preventScroll:true});
- previous=null;
-});
+const KEY='sultan.strategy.builder.v0.5',RECOVERY=KEY+'.recovery',T=SultanI18n.t;
+let previous=null,recoveryTimer=null,lastInput=null;const detailState=new Map();
+const get=(obj,path)=>path.split('.').reduce((v,k)=>v?.[k],obj);
+function set(obj,path,value){const keys=path.split('.');if(keys.some(k=>['__proto__','constructor','prototype'].includes(k)))return false;let o=obj;for(const k of keys.slice(0,-1)){if(o[k]===undefined)o[k]={};o=o[k];}o[keys.at(-1)]=value;return true;}
+function inputValue(el){if(el.type!=='number')return {ok:true,value:el.value};if(!el.checkValidity()||el.validity.badInput)return {ok:false};const raw=el.value.trim(),required=['institution.startYear','institution.endYear'].includes(el.dataset.path)||el.dataset.path.endsWith('.rf')||/^initiatives\.\d+\.(startYear|endYear)$/.test(el.dataset.path);if(required&&!raw)return {ok:false};return {ok:true,value:raw===''?null:Number(raw)};}
+function clearFieldError(el){if(!el.checkValidity())return;el.classList.remove('invalid');el.removeAttribute('aria-invalid');const error=el.closest('.field')?.querySelector('.field-error');if(error){error.hidden=true;error.textContent='';}}
+function notice(message,duration=4000){const el=document.getElementById('toast');if(!el)return;el.textContent=message;el.className='toast show';clearTimeout(notice.timer);notice.timer=setTimeout(()=>el.className='toast',duration);}
+function recoveryDraft(el){if(!window.SultanApp||!el?.dataset.path)return null;const parsed=inputValue(el);if(!parsed.ok)return null;const p=SultanApp.getProject();if(!set(p,el.dataset.path,parsed.value))return null;p.revision=(Number.isInteger(p.revision)?p.revision:0)+1;p.reviewedRevision=null;p.updatedAt=new Date().toISOString();p.log=Array.isArray(p.log)?p.log:[];p.log.push({at:p.updatedAt,action:T('s553'),path:el.dataset.path,revision:p.revision});p.log=p.log.slice(-100);try{return Sultan.validateImport(p);}catch{return null;}}
+function saveRecovery(){recoveryTimer=null;const draft=recoveryDraft(lastInput);if(!draft)return;try{localStorage.setItem(RECOVERY,JSON.stringify({at:Date.now(),project:draft}));}catch{}}
+function scheduleRecovery(el){lastInput=el;clearTimeout(recoveryTimer);recoveryTimer=setTimeout(saveRecovery,450);}
+function clearRecovery(){clearTimeout(recoveryTimer);recoveryTimer=null;lastInput=null;try{localStorage.removeItem(RECOVERY);}catch{}}
+function hasDirtyActive(){const el=document.activeElement;if(!el?.dataset.path||!window.SultanApp)return false;const parsed=inputValue(el);if(!parsed.ok)return true;return get(SultanApp.getProject(),el.dataset.path)!==parsed.value;}
+function stablePath(path,p){let cur=p;return path.split('.').map(part=>{if(Array.isArray(cur)&&/^\d+$/.test(part)){const item=cur[Number(part)],label=item?.id??item?.year??part;cur=item;return '['+label+']';}cur=cur?.[part];return part;}).join('.');}
+function detailsKey(d,p){const field=d.querySelector('[data-path]');if(field)return stablePath(field.dataset.path,p);const section=location.hash.slice(1)||'home',summary=d.querySelector('summary')?.textContent.trim()||'details';return section+'::'+summary;}
+function applyDetailsState(){if(!window.SultanApp)return;const p=SultanApp.getProject();document.querySelectorAll('#content details').forEach(d=>{const key=detailsKey(d,p);d.dataset.sultanDetailsKey=key;if(detailState.has(key))d.open=detailState.get(key);else detailState.set(key,d.open);});}
+function improveA11y(){document.querySelectorAll('.field').forEach(field=>{const control=field.querySelector('input[data-path],textarea[data-path],select[data-path]'),help=field.querySelector('.help'),error=field.querySelector('.field-error');if(!control||!error)return;if(!error.id)error.id=control.id+'_error';error.setAttribute('aria-live','polite');const ids=[help?.id,error.id].filter(Boolean);if(ids.length)control.setAttribute('aria-describedby',ids.join(' '));});}
+function improveSensitivity(){if(!window.SultanApp||location.hash!=='#priorities')return;const s=Sultan.sensitivity(SultanApp.getProject());if(s.trials.length)return;const card=Array.from(document.querySelectorAll('#content .card')).find(c=>c.querySelector('h2')?.textContent.trim()===T('s386'));if(!card)return;card.querySelector('.pill')?.remove();card.querySelector('details')?.remove();if(!card.querySelector('.sensitivity-empty')){const box=document.createElement('div');box.innerHTML=T('s384');const p=document.createElement('p');p.className='muted sensitivity-empty';p.textContent=box.textContent.trim();card.append(p);}}
+function formatTimes(){const re=/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g;document.querySelectorAll('.report header p,#content .card p').forEach(el=>{if(!re.test(el.textContent)){re.lastIndex=0;return;}re.lastIndex=0;el.textContent=el.textContent.replace(re,s=>{const d=new Date(s);return Number.isNaN(d.valueOf())?s:d.toLocaleString(SultanI18n.locale,{dateStyle:'medium',timeStyle:'short'});});});}
+function afterRender(){setTimeout(()=>{applyDetailsState();improveA11y();improveSensitivity();formatTimes();},0);}
+function restoreRecovery(){let item;try{item=JSON.parse(localStorage.getItem(RECOVERY)||'null');}catch{}if(!item?.project||!window.SultanApp)return;try{const current=SultanApp.getProject(),draft=Sultan.validateImport(item.project),draftTime=Date.parse(draft.updatedAt)||item.at||0,currentTime=Date.parse(current.updatedAt)||0;if(draftTime>currentTime){SultanApp.setProject(draft);document.getElementById('saveStatus').textContent=T('s244');}localStorage.removeItem(RECOVERY);}catch{try{localStorage.removeItem(RECOVERY);}catch{}}}
+/* Stop the legacy per-keystroke mutation. The normal change event still commits exactly once. */
+document.addEventListener('input',function(e){const el=e.target;if(!el.dataset.path||el.dataset.path==='__period')return;clearFieldError(el);scheduleRecovery(el);const status=document.getElementById('saveStatus');if(status)status.textContent=T('s243');e.stopImmediatePropagation();},true);
+document.addEventListener('change',function(e){if(e.target.dataset.path){clearRecovery();setTimeout(afterRender,0);}});
+document.addEventListener('toggle',function(e){const d=e.target;if(d?.matches?.('#content details')&&d.dataset.sultanDetailsKey)detailState.set(d.dataset.sultanDetailsKey,d.open);},true);
+window.addEventListener('beforeunload',()=>{if(recoveryTimer)saveRecovery();});
+window.addEventListener('storage',function(e){if(e.key!==KEY||!e.newValue||!window.SultanApp)return;if(hasDirtyActive()){document.activeElement.blur();return;}try{const remote=Sultan.validateImport(JSON.parse(e.newValue)),local=SultanApp.getProject();if(remote.updatedAt===local.updatedAt&&remote.revision===local.revision)return;SultanApp.setProject(remote);notice(T('s244'));}catch{}});
+document.addEventListener('sultan:render',afterRender);
+/* Keep a newly created record visible and keyboard-accessible after rendering. */
+document.addEventListener('click',function(e){const b=e.target.closest('[data-action="add"]');if(!b||!window.SultanApp)return;const kind=b.dataset.kind,project=SultanApp.getProject();previous={kind,count:Array.isArray(project[kind])?project[kind].length:0};},true);
+document.addEventListener('click',function(e){const b=e.target.closest('[data-action="add"]');if(!b||!previous||previous.kind!==b.dataset.kind)return;const kind=previous.kind,items=SultanApp.getProject()[kind];if(!Array.isArray(items)||items.length<=previous.count)return;const removers=Array.from(document.querySelectorAll('[data-action="remove"]')).filter(x=>x.dataset.kind===kind);const last=removers.at(-1);if(!last)return;const record=last.closest('details')||last.closest('article');if(!record)return;let ancestor=record;while(ancestor){if(ancestor.tagName==='DETAILS')ancestor.open=true;ancestor=ancestor.parentElement;}record.scrollIntoView({block:'nearest',behavior:'auto'});const input=record.querySelector('input:not([type="checkbox"]),textarea,select');if(input)input.focus({preventScroll:true});previous=null;});
+restoreRecovery();afterRender();
 })();
