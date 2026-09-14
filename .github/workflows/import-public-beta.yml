@@ -16,49 +16,51 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install the test browser
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
       - name: Retrieve integrity-pinned public release
         run: |
           python - <<'PY'
-          import urllib.request, urllib.parse, re, html, hashlib, io, zipfile, json
+          import re, hashlib, io, zipfile, json
           from pathlib import Path, PurePosixPath
-          from html.parser import HTMLParser
-          share = 'https://firestorage.ai/ja/f/ZVrQHP18Q7bv'
-          expected = '0552ae4f4d532cbe9232028ae1e64b8efc8068257d6d4bd22382191ca8798bf7'
-          class Links(HTMLParser):
-              def __init__(self): super().__init__(); self.links=[]
-              def handle_starttag(self,tag,attrs):
-                  for k,v in attrs:
-                      if k in ('href','src') and v: self.links.append(v)
-          def fetch(url):
-              req=urllib.request.Request(url,headers={'User-Agent':'SULTAN-public-release-import/0.6'})
-              with urllib.request.urlopen(req,timeout=45) as response: return response.read(3000000)
-          page=fetch(share).decode('utf-8'); parser=Links();parser.feed(page)
-          decoded=html.unescape(page).replace('\\"','"').replace('\\/','/')
-          candidates=parser.links+re.findall(r'https://[^\s<>"\\]+',decoded)
-          candidates += re.findall(r'"([^"\n]*download[^"\n]*)"',decoded)
-          urls=[]
-          for raw in candidates:
-              target=urllib.parse.urljoin(share,html.unescape(raw))
-              if target not in urls and urllib.parse.urlparse(target).scheme=='https' and ('download' in target or '.zip' in target): urls.append(target)
-          print('Download links found:',urls[:20])
+          from playwright.sync_api import sync_playwright
+          share='https://firestorage.ai/ja/f/ZVrQHP18Q7bv'
+          expected='0552ae4f4d532cbe9232028ae1e64b8efc8068257d6d4bd22382191ca8798bf7'
           blob=None
-          for target in urls[:20]:
-              try:
-                  data=fetch(target)
-                  if hashlib.sha256(data).hexdigest()==expected: blob=data; break
-              except Exception as e: print('Candidate unavailable:',type(e).__name__)
-          if blob is None:
-              Path('release-share-page.html').write_text(page)
-              print('Visible links:',parser.links[:80])
-              raise SystemExit('No release matching the pinned SHA-256 was found; no repository files were changed.')
+          with sync_playwright() as pw:
+              browser=pw.chromium.launch()
+              page=browser.new_page(accept_downloads=True)
+              page.goto(share,wait_until='networkidle',timeout=60000)
+              page.wait_for_timeout(4000)
+              print('Public source-download page:',page.locator('body').inner_text()[:6000])
+              print('Download controls:',page.locator('a,button').evaluate_all('(els)=>els.map(e=>({text:e.innerText,label:e.getAttribute("aria-label"),href:e.getAttribute("href")}))'))
+              controls=page.locator('a,button').filter(has_text=re.compile('ダウンロード|Download',re.I))
+              for i in range(min(controls.count(),8)):
+                  try:
+                      with page.expect_download(timeout=20000) as result: controls.nth(i).click()
+                      data=Path(result.value.path()).read_bytes()
+                      if hashlib.sha256(data).hexdigest()==expected: blob=data;break
+                      if zipfile.is_zipfile(io.BytesIO(data)):
+                          nested=zipfile.ZipFile(io.BytesIO(data))
+                          for name in nested.namelist():
+                              if name.endswith('SULTAN_Public_Beta_Source_v0_6.zip'):
+                                  part=nested.read(name)
+                                  if hashlib.sha256(part).hexdigest()==expected: blob=part;break
+                      if blob:break
+                  except Exception as e: print('Download control:',type(e).__name__)
+              Path('release-share-page.html').write_text(page.content())
+              browser.close()
+          if blob is None: raise SystemExit('No source matching the pinned SHA-256 was found; repository source remains unchanged.')
           archive=zipfile.ZipFile(io.BytesIO(blob));manifest=json.loads(archive.read('SOURCE_MANIFEST.json'))
           roots={'index.html','.nojekyll','.gitignore','README.md','CONTRIBUTING.md','CHANGELOG.md','build.py'}
           for name,digest in manifest.items():
               path=PurePosixPath(name)
-              if path.is_absolute() or '..' in path.parts: raise ValueError('Unsafe archive path')
-              if not(name in roots or name.startswith(('src/','tests/','docs/','.github/ISSUE_TEMPLATE/'))): raise ValueError('Unexpected release path: '+name)
+              if path.is_absolute() or '..' in path.parts:raise ValueError('Unsafe archive path')
+              if not(name in roots or name.startswith(('src/','tests/','docs/','.github/ISSUE_TEMPLATE/'))):raise ValueError('Unexpected release path: '+name)
               data=archive.read(name)
-              if hashlib.sha256(data).hexdigest()!=digest: raise ValueError('File checksum mismatch: '+name)
+              if hashlib.sha256(data).hexdigest()!=digest:raise ValueError('File checksum mismatch: '+name)
               data.decode('utf-8')
           for name in manifest:
               path=Path(name);path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(archive.read(name))
@@ -70,10 +72,7 @@ jobs:
           node tests/i18n.test.js
           python build.py
       - name: Test both languages in a real browser origin
-        run: |
-          python -m pip install playwright==1.57.0
-          python -m playwright install --with-deps chromium
-          python tests/beta_browser.py
+        run: python tests/beta_browser.py
       - name: Commit reviewed source files
         run: |
           git config user.name 'Prof. Adeeb Noor'
