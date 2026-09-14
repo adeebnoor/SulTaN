@@ -1,4 +1,4 @@
-"""Regression checks for edit semantics, recovery and accessibility hardening."""
+"""Regression checks for edit semantics, recovery, accessibility and Authority Space."""
 from pathlib import Path
 import functools, http.server, json, threading
 from playwright.sync_api import sync_playwright
@@ -23,7 +23,6 @@ try:
   assert end==start+1, (start,end)
   assert page.evaluate('SultanApp.getProject().institution.name')=='One committed edit'
   assert page.locator('[data-path="institution.name"]').get_attribute('aria-describedby').endswith('_error')
-  # Recovery is written after an uncommitted pause and restored on reload.
   field=page.locator('[data-path="institution.name"]');field.focus();field.fill('Recovered draft')
   page.wait_for_timeout(650)
   recovery=page.evaluate("JSON.parse(localStorage.getItem('sultan.strategy.builder.v0.5.recovery'))")
@@ -31,12 +30,21 @@ try:
   page.reload();page.wait_for_timeout(150)
   assert page.evaluate('SultanApp.getProject().institution.name')=='Recovered draft'
   assert page.evaluate("localStorage.getItem('sultan.strategy.builder.v0.5.recovery')") is None
-  # User-controlled details state survives re-rendering in the same session.
   page.evaluate('SultanApp.navigate("priorities")')
   detail=page.locator('#content details').first
   detail.evaluate('(d)=>d.open=false');page.wait_for_timeout(30)
   page.locator('[data-path="criteria.0.weight"]').fill('24');page.locator('[data-path="criteria.0.weight"]').press('Tab');page.wait_for_timeout(100)
   assert detail.evaluate('(d)=>d.open') is False
+  page.evaluate('SultanApp.navigate("enablers")');page.wait_for_timeout(120)
+  panel=page.locator('.authority-space')
+  assert panel.is_visible()
+  assert 'Authority Space' in panel.inner_text()
+  model=page.evaluate('Sultan.authoritySpace(SultanApp.getProject())')
+  o1=next(x for x in model if x['optionId']=='o1')
+  o2=next(x for x in model if x['optionId']=='o2')
+  assert o1['clarity']==100 and o1['clearance']==0 and o1['action']=='escalate'
+  assert o2['clarity']==100 and o2['clearance']==0 and o2['action']=='learn'
+  assert 'Pending decision' in panel.inner_text() and 'Unknown' in panel.inner_text()
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   ctx.close();browser.close()
 finally:
