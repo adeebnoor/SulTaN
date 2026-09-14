@@ -5,7 +5,8 @@ on:
     paths:
       - .github/workflows/import-v07.yml
       - .release/v07.patch00
-      - .release/v07.patch01
+      - .release/v07.patch01a
+      - .release/v07.patch01b
       - .release/v07.patch02
       - .release/v07.patch03
 permissions:
@@ -25,7 +26,7 @@ jobs:
           python-version: '3.12'
       - name: Reconstruct and verify reviewed patch
         run: |
-          cat .release/v07.patch00 .release/v07.patch01 .release/v07.patch02 .release/v07.patch03 > /tmp/changes.diff.gz.b64
+          cat .release/v07.patch00 .release/v07.patch01a .release/v07.patch01b .release/v07.patch02 .release/v07.patch03 > /tmp/changes.diff.gz.b64
           base64 -d /tmp/changes.diff.gz.b64 | gzip -d > /tmp/changes.diff
           echo 'dae043bf6bee9f7ad83d971b32dffdd6340839a8e6798019654c340353d624d0  /tmp/changes.diff' | sha256sum -c -
           python - <<'PY'
