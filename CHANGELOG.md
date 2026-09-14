@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.1 — Hardening release
+
+- Reject unexpected fields during project import while preserving the 0.5-compatible project schema.
+- Commit a field edit once instead of incrementing the project revision on every keystroke.
+- Add short-lived local recovery for uncommitted edits and safer synchronization between open tabs.
+- Preserve user-controlled disclosure state across workspace re-renders.
+- Improve field error accessibility and add regression coverage for import hardening and browser editing behavior.
+- Keep the strategic model, scoring logic, example content, and bilingual product flow unchanged.
+
 ## 0.6.0 — Free bilingual public beta
 
 - Separate public product entrance with a fictional interactive preview, guided first-use journey, and clear free/no-account positioning.
