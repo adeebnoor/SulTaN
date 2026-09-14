@@ -33,8 +33,8 @@ try:
   page.evaluate('SultanApp.navigate("priorities")')
   detail=page.locator('#content details').first
   detail.evaluate('(d)=>d.open=false');page.wait_for_timeout(30)
-  page.locator('[data-path="criteria.0.weight"]').fill('24');page.locator('[data-path="criteria.0.weight"]').press('Tab');page.wait_for_timeout(100)
-  assert detail.evaluate('(d)=>d.open') is False
+  page.locator('[data-action="normalize"]').click();page.wait_for_timeout(100)
+  assert page.locator('#content details').first.evaluate('(d)=>d.open') is False
   page.evaluate('SultanApp.navigate("enablers")');page.wait_for_timeout(120)
   panel=page.locator('.authority-space')
   assert panel.is_visible()
