@@ -5,9 +5,9 @@ base = Path(__file__).resolve().parent
 VERSION='0.6.1'
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
-html = html.replace('<link rel="stylesheet" href="src/style.css">', '<style>' + (base / 'src/style.css').read_text(encoding='utf-8') + '</style>')
-html = html.replace('<link rel="stylesheet" href="src/portal.css">', '<style>' + (base / 'src/portal.css').read_text(encoding='utf-8') + '</style>')
-for name in ('locales/en.js', 'locales/ar.js', 'i18n.js', 'engine.js', 'import.js', 'portal.js', 'app.js', 'usability.js'):
+for css_name in ('style.css','portal.css','authority-space.css'):
+    html = html.replace(f'<link rel="stylesheet" href="src/{css_name}">', '<style>' + (base / 'src' / css_name).read_text(encoding='utf-8') + '</style>')
+for name in ('locales/en.js', 'locales/ar.js', 'locales/authority-space.js', 'i18n.js', 'engine.js', 'import.js', 'portal.js', 'app.js', 'authority-space.js', 'usability.js'):
     code = (base / 'src' / name).read_text(encoding='utf-8')
     if '</script' in code.lower():
         raise ValueError('Unexpected closing script token in ' + name)
