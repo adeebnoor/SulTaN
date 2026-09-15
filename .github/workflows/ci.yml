@@ -1,31 +1,40 @@
-name: SULTAN RC bootstrap
+name: Test and package SULTAN
 on:
   push:
     branches: ["rc/0.8.0-rc2"]
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: sultan-tests-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  assemble:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download and apply 0.8.0-rc payload
+      - name: Prepare 0.8.0-rc payload
+        id: prep
         env:
           SHARE_ID: qCVY2e0WkFfC
         run: |
           set -euxo pipefail
+          if [ -f src/brand.css ]; then
+            echo "assembled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           BASE='https://api.firestorage.ai/prod/file'
           META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
-          echo "$META" | jq '{title, files:[.files[]|{fileId,fileName,name,sizeBytes}]}'
           FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_rc_payload.zip") | .fileId' | head -1)
-          if [ -z "$FILE_ID" ] || [ "$FILE_ID" = null ]; then FILE_ID=$(echo "$META" | jq -r '.files[0].fileId'); fi
+          test -n "$FILE_ID" && test "$FILE_ID" != null
           RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
           DL=$(echo "$RESP" | jq -r '.downloadUrl')
           test -n "$DL" && test "$DL" != null
           curl -fLsS "$DL" -o /tmp/sultan_rc_payload.zip
           unzip -t /tmp/sultan_rc_payload.zip
           unzip -o /tmp/sultan_rc_payload.zip -d .
+          # The connected GitHub App cannot push workflow-file mutations. Keep this verified bootstrap workflow unchanged.
+          git checkout HEAD -- .github/workflows/ci.yml
           python - <<'PY'
           from pathlib import Path
           import json, shutil
@@ -36,9 +45,79 @@ jobs:
           Path('.delete.json').unlink()
           shutil.rmtree('.rc-payload', ignore_errors=True)
           PY
+          echo "assembled=true" >> "$GITHUB_OUTPUT"
+          git status --short
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify JavaScript, model rules and all locale catalogs
+        run: |
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node tests/engine.test.js
+          node tests/hardening.test.js
+          node tests/i18n.test.js
+          node tests/hardening071.test.js
+          node tests/performance.test.js
+          node tests/break-even-analytic.test.js
+          node tests/final-upgrades.test.js
+          node tests/rc080.test.js
+          python tests/review_regressions.py
+      - name: Build the standalone application
+        run: |
+          python build.py
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path('public/index.html').read_text(encoding='utf-8')
+          leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
+          assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
+          assert "SULTAN_VERSION='0.8.0-rc'" in html
+          assert '--brand-logo:url(' in html
+          print('Standalone build contains the RC version and embedded brand identity.')
+          PY
+      - name: Install browser test runtime
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Test Arabic and English at a real browser origin
+        run: |
+          python tests/beta_browser.py
+          python tests/hardening_browser.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('qa/review-browser-results.json').read_text(encoding='utf-8'))
+          assert data['tests'] >= 240, f"review browser regression surface dropped to {data['tests']} checks"
+          assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
+          print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
+          PY
+      - name: Commit verified RC source
+        if: steps.prep.outputs.assembled == 'true'
+        run: |
           git config user.name 'SULTAN Release Bot'
           git config user.email 'adeebnoor@users.noreply.github.com'
           git add -A
           git status --short
           git commit -m 'release: SULTAN 0.8.0-rc stabilization'
           git push origin HEAD:rc/0.8.0-rc2
+      - name: Package application and verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultan-product
+          path: |
+            public/
+            release/
+            qa/
+          retention-days: 14
+      - name: Package the tested website
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultan-web
+          path: public/
+          include-hidden-files: true
+          retention-days: 14
