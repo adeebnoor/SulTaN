@@ -27,8 +27,18 @@ jobs:
           node tests/hardening.test.js
           node tests/i18n.test.js
           node tests/hardening071.test.js
+          node tests/performance.test.js
       - name: Build the standalone application
-        run: python build.py
+        run: |
+          python build.py
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path('public/index.html').read_text(encoding='utf-8')
+          leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
+          assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
+          print('Standalone build contains no src/ asset references.')
+          PY
       - name: Install browser test runtime
         run: |
           python -m pip install playwright==1.57.0
