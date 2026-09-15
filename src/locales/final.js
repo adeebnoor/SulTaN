@@ -86,7 +86,18 @@ const en={
  noData:'No data yet',
  releasedResources:'Released resources',
  decisionRequired:'Decision required',
- notApplicable:'Not applicable'
+ notApplicable:'Not applicable',
+ clientDeliverables:'Client deliverables',
+ decisionExtensions:'SULTAN decision extensions',
+ exportStartFailed:'The export could not be started. Your document number was not changed.',
+ pdfPopupBlocked:'The print window could not be opened. Allow pop-ups for SULTAN and try again.',
+ qualitativeRecorded:'Observation recorded',
+ qualitativeTrackNote:'Qualitative track — recorded observations are evidence and are not plotted on a numeric scale.',
+ trajectoryBaseline:'Baseline',
+ trajectoryTarget:'Target',
+ trajectoryActual:'Actual',
+ trajectoryLegend:'Trajectory legend',
+
 };
 const ar={
  versionLabel:'الإصدار',
@@ -173,7 +184,18 @@ const ar={
  noData:'لا توجد بيانات بعد',
  releasedResources:'الموارد المحررة',
  decisionRequired:'قرار مطلوب',
- notApplicable:'غير منطبق'
+ notApplicable:'غير منطبق',
+ clientDeliverables:'مخرجات العميل',
+ decisionExtensions:'امتدادات قرار SULTAN',
+ exportStartFailed:'تعذر بدء التصدير. لم يتغير رقم الوثيقة.',
+ pdfPopupBlocked:'تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة لموقع SULTAN ثم حاول مرة أخرى.',
+ qualitativeRecorded:'ملاحظة مسجلة',
+ qualitativeTrackNote:'مسار وصفي — تُعامل الملاحظات المسجلة كدليل ولا تُرسم على مقياس رقمي.',
+ trajectoryBaseline:'خط الأساس',
+ trajectoryTarget:'المستهدف',
+ trajectoryActual:'الفعلي',
+ trajectoryLegend:'مفتاح مسار المؤشر',
+
 };
 root.SultanLocales=root.SultanLocales||{};
 root.SultanLocales.en=Object.assign(root.SultanLocales.en||{},en);

@@ -2,11 +2,10 @@
 const assert=require('node:assert/strict');
 global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
 // Extend dictionaries exactly as the browser does before i18n is initialized.
-require('../src/final-locales.js');
+require('../src/locales/final.js');
 global.SultanI18n=require('../src/i18n.js');
 global.Sultan=require('../src/import.js');
 require('../src/final-core.js');
-require('../src/final-core-patch.js');
 const E=global.Sultan;
 function validBase(){
  const p=E.blank();Object.assign(p.institution,{name:'X',mission:'M',beneficiaries:'B',assets:'A',liabilities:'L',context:'C',culture:'K',vision:'V'});p.weightRationale='R';return p;

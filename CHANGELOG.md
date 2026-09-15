@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.0-rc — Client export and execution-view stabilization
+
+- Replace the canvas/`foreignObject` PDF generator with the browser print-to-PDF path; remove the tainted-canvas failure mode and raw DOM exception alerts.
+- Allocate document numbers only after a download or print route is successfully initiated, so failed PDF pop-up attempts do not burn document numbers.
+- Move the final locale extension into `src/locales/final.js`, bringing final bilingual keys under the standard parity test.
+- Localize client-deliverable and decision-extension headings and escalation route/fallback labels.
+- Render full-horizon KPI/KRI trajectories with visible target and actual markers and preserve qualitative observations as recorded evidence.
+- Show the four-state status legend once per progress panel instead of repeating it under every indicator.
+- Apply the official SULTAN navy/gold identity layer and logomark assets.
+- Consolidate final report/dashboard/version patches into the final integration layer, reducing loaded scripts from 27 to 21 and reducing report wrapping to one final wrapper.
+- Expand release-candidate browser regressions around exports, document numbering, trajectories, qualitative status, localization and responsive rendering.
+
 ## 0.7.4 — Exact Decision Sensitivity
 
 - Replace the normal 0.5%-step decision switch-point scan with an exact analytical solver for complete, non-degenerate comparisons under proportional redistribution of the remaining criterion weights.

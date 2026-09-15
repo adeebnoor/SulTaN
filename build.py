@@ -3,7 +3,7 @@ from pathlib import Path
 import hashlib, json, re, zipfile
 
 base = Path(__file__).resolve().parent
-VERSION = '0.7.4'
+VERSION = '0.8.0-rc'
 version_file = base / 'src' / 'version.js'
 version_file.write_text(
     "/* Generated from build.py VERSION during packaging. */\n"

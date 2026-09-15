@@ -1,1 +1,0 @@
-(function(root){'use strict';function render(){const el=document.querySelector('.final-version');if(el)el.textContent=(root.SultanI18n?.t?.('versionLabel')||'Version')+' '+String(root.SULTAN_VERSION||'');}document.addEventListener('sultan:render',()=>setTimeout(render,0));setTimeout(render,0);})(globalThis);

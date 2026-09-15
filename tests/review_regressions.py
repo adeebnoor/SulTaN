@@ -103,6 +103,69 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
 
                 navigate(page, 'review')
                 expect(page.locator('.executive-summary')).to_be_visible()
+
+                # 0.8 RC: full-horizon dashboard, localized client exports and success-only document numbering.
+                rc_labels = page.evaluate('Object.fromEntries(["clientDeliverables","decisionExtensions","pdfPopupBlocked","qualitativeRecorded"].map(k=>[k,SultanI18n.t(k)]))')
+                check(prefix + 'visible release candidate version', '0.8.0-rc' in page.locator('.final-version').inner_text())
+                menu(page)
+                check(prefix + 'client deliverables heading localized', page.locator('.final-deliverables > b').inner_text().strip() == rc_labels['clientDeliverables'])
+                check(prefix + 'single status legend for progress panel', page.locator('.dashboard-progress .dashboard-status-legend').count() == 1)
+                check(prefix + 'single trajectory legend for progress panel', page.locator('.dashboard-progress .trajectory-legend').count() == 1)
+                numeric_track = page.locator('.track-card[data-transition-id="t1"]')
+                qualitative_track = page.locator('.track-card[data-transition-id="t2"]')
+                check(prefix + 'numeric target path is rendered', numeric_track.locator('path.target-line[data-series="target"]').count() == 1)
+                check(prefix + 'numeric baseline marker is rendered', numeric_track.locator('circle.baseline-dot[data-series="baseline"]').count() == 1)
+                check(prefix + 'all annual target markers are rendered', numeric_track.locator('circle.target-dot[data-series="target"]').count() == 4)
+                check(prefix + 'actual reading marker is rendered', numeric_track.locator('circle.actual-dot[data-series="actual"]').count() >= 1)
+                axis_text = numeric_track.locator('svg text').all_text_contents()
+                check(prefix + 'full 2027-2030 horizon visible at once', all(str(y) in axis_text for y in [2027,2028,2029,2030]))
+                check(prefix + 'qualitative track is rendered without numeric SVG', qualitative_track.locator('.qualitative-track').count() == 1 and qualitative_track.locator('svg').count() == 0)
+                check(prefix + 'qualitative track starts without fabricated numeric status', qualitative_track.locator('.status.noReading').count() == 1)
+                note = 'Recorded governance observation' if lang == 'en' else 'ملاحظة حوكمة مسجلة'
+                page.evaluate('(note)=>{const p=SultanApp.getProject();const t=p.transitions.find(x=>x.id==="t2");t.annual[0].observation=note;t.annual[0].actualSource="Workshop note";SultanApp.setProject(p);SultanApp.navigate("review");}', note)
+                page.wait_for_timeout(80)
+                qualitative_track = page.locator('.track-card[data-transition-id="t2"]')
+                check(prefix + 'qualitative observation becomes recorded state', qualitative_track.locator('.status.recorded').count() == 1 and rc_labels['qualitativeRecorded'] in qualitative_track.inner_text())
+                check(prefix + 'qualitative observation is visible to leadership', note in qualitative_track.inner_text())
+                check(prefix + 'qualitative observation is not no-reading', qualitative_track.locator('.status.noReading').count() == 0)
+
+                # A blocked print window must not consume a document number or surface a raw DOM exception.
+                before_doc = page.evaluate('SultanApp.getProject().documentNumber')
+                page.evaluate('window.__sultanOpen=window.open;window.open=()=>null')
+                menu(page); page.locator('[data-final-export="strategy"][data-format="pdf"]').click(); page.wait_for_timeout(40)
+                page.evaluate('window.open=window.__sultanOpen')
+                check(prefix + 'blocked PDF does not consume document number', page.evaluate('SultanApp.getProject().documentNumber') == before_doc)
+                check(prefix + 'blocked PDF error is localized and human readable', page.locator('.export-status').inner_text().strip() == rc_labels['pdfPopupBlocked'])
+                check(prefix + 'blocked PDF has no raw SecurityError dialog', not any('SecurityError' in d for d in dialogs))
+
+                # Successful client HTML/Word/PDF routes advance one document number each.
+                menu(page)
+                with page.expect_download() as client_html_event:
+                    page.locator('[data-final-export="strategy"][data-format="html"]').click()
+                client_html = client_html_event.value; html_no = before_doc + 1
+                client_html_path = qa/f'client-strategy-{lang}-{width}.html'; client_html.save_as(str(client_html_path))
+                check(prefix + 'successful client HTML increments document number once', page.evaluate('SultanApp.getProject().documentNumber') == html_no)
+                check(prefix + 'client HTML filename uses committed document number', f'_D{html_no}.html' in client_html.suggested_filename)
+                client_doc = page.context.new_page(); client_doc.set_content(client_html_path.read_text(encoding='utf-8'))
+                check(prefix + 'decision-extension heading localized in client document', client_doc.locator('.extension-report h2').inner_text().strip() == rc_labels['decisionExtensions'])
+                check(prefix + 'client document carries its document number', str(html_no) in client_doc.locator('[data-doc-number]').first.inner_text())
+                client_doc.close()
+
+                menu(page)
+                with page.expect_download() as client_word_event:
+                    page.locator('[data-final-export="strategy"][data-format="word"]').click()
+                word_no = html_no + 1
+                check(prefix + 'successful Word increments document number once', page.evaluate('SultanApp.getProject().documentNumber') == word_no)
+                check(prefix + 'Word filename uses committed document number', f'_D{word_no}.doc' in client_word_event.value.suggested_filename)
+
+                menu(page)
+                with page.expect_popup() as client_pdf_event:
+                    page.locator('[data-final-export="strategy"][data-format="pdf"]').click()
+                client_pdf = client_pdf_event.value; client_pdf.wait_for_timeout(40); pdf_no = word_no + 1
+                check(prefix + 'PDF uses browser print route', client_pdf.evaluate('window.__printCalls||0') == 1)
+                check(prefix + 'successful PDF increments document number once', page.evaluate('SultanApp.getProject().documentNumber') == pdf_no)
+                check(prefix + 'PDF print document contains no canvas renderer', client_pdf.locator('canvas').count() == 0)
+                client_pdf.close()
                 expect(page.locator('.matrix-unplotted [data-option-id="o4"]')).to_be_visible()
                 check(prefix + 'unmapped choice is not drawn at zero', page.locator('.matrix-dot[data-option-id="o4"]').count() == 0)
                 expect(page.locator('.matrix-tick')).to_have_count(4)

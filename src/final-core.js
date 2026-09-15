@@ -165,4 +165,21 @@ E.check=function(p){
 E.nextDocumentNumber=function(p){p.documentNumber=(Number.isInteger(p.documentNumber)&&p.documentNumber>0?p.documentNumber:1)+1;return p.documentNumber;};
 E.recordContribution=function(p,section,name,note){normalizeProject(p);p.collaboration.contributions.push({at:new Date().toISOString(),section:SECTIONS.includes(section)?section:'review',name:String(name||''),note:String(note||'')});p.collaboration.contributions=p.collaboration.contributions.slice(-250);return p;};
 E.normalizeFinalProject=normalizeProject;
+
+/* Normalize the legacy demo factory through the final extension schema in one core layer. */
+const baseDemo=E.demo;
+E.demo=function(){
+ const p=normalizeProject(baseDemo());
+ p.institution.liabilities=root.SultanI18n.language==='ar'?'التزامات تشغيلية قائمة وقدرة تنفيذية محدودة في بعض المسارات.':'Existing operating commitments and constrained execution capacity in selected paths.';
+ p.options.forEach((o,i)=>{
+  if(!o.riskSource&&typeof o.risks==='string'&&o.risks.trim())o.riskSource=o.risks;
+  if(!o.riskSource)o.riskSource=root.SultanI18n.language==='ar'?'سجل مخاطر افتراضي — بند '+(i+1):'Fictional risk register — item '+(i+1);
+  o.riskDate='2026-09-15';
+  if(o.type==='moonshot'&&!o.stopEvidence)o.stopEvidence=root.SultanI18n.language==='ar'?'إيقاف المسار إذا لم يتحقق دليل القبول المحدد عند بوابة التعلم.':'Stop the path if the defined acceptance evidence is not met at the learning gate.';
+  o.assumptions=(o.assumptions||[]).map(a=>Object.assign(a,{expectedPersistence:a.expectedPersistence||'24 months',owner:a.owner||(root.SultanI18n.language==='ar'?'مالك الاختيار':'Choice owner'),testDate:a.testDate||'2027-06-30',testEvidence:a.testEvidence||(root.SultanI18n.language==='ar'?'دليل تحقق موثق':'Documented validation evidence'),failureImpact:a.failureImpact||(root.SultanI18n.language==='ar'?'إعادة فتح الاختيار وإعادة تخصيص الموارد':'Reopen the choice and reallocate resources')}));
+ });
+ p.initiatives.forEach(i=>{if(i.kind==='learn')i.budget.forEach(b=>{if(num(b.amount)&&b.amount>0&&!b.releaseEvidence)b.releaseEvidence=root.SultanI18n.language==='ar'?'تحقق دليل القبول قبل فتح الدفعة.':'Acceptance evidence verified before release.';});});
+ return p;
+};
+
 })(globalThis);
