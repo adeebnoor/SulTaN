@@ -43,13 +43,13 @@ jobs:
           report=json.loads((root/'qa/beta-browser-results.json').read_text())
           assert report['mode']=='full-browser' and report['passed']==report['tests']
           manifest=json.loads((root/'release/manifest.json').read_text())
-          assert manifest['version']=='0.7.0'
+          assert manifest['version']=='0.7.1'
           assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
           (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'public/index.html').read_bytes())
           print('Verified full browser evidence and application SHA-256.')
           PY
-          if ! gh release view v0.7.0 >/dev/null 2>&1; then
-            gh release create v0.7.0 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7 — Execution beta' --notes 'Execution-focused SULTAN beta. Authority Space now separates ownership clarity, status clarity, and decision clearance; unknown/pending/blocked authority states enter the consistency system; the release adds an escalation pack, internal and leadership reports, section-level collaboration files, break-even and live sensitivity analysis, benefit/cost criteria, assumptions and risks, execution timeline, value-authority review, and funding context. Strategic value remains separate from readiness and authority. Use non-sensitive data only.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json
+          if ! gh release view v0.7.1 >/dev/null 2>&1; then
+            gh release create v0.7.1 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.1 — Hardened execution beta' --notes 'Hardening release for the free Arabic/English SULTAN strategy workspace. Fixes bilingual and leadership reports, RTL/unknown handling in the Value × Authority view, decision switch-point reporting, unestimated investment visibility, escalation-pack identity and scope, criterion-polarity safeguards, backup timing, and export UX. Moves polarity, authority validation and switch-point logic into the deterministic engine and expands regression/i18n coverage. Strategic value remains separate from capability/readiness and authorization. Use non-sensitive data only.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json
           fi
       - name: Check first-time hosting setup
         id: hosting
