@@ -13,33 +13,7 @@ version_file.write_text(
 
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
-html = html.replace('<title>SULTAN | Free Strategy Builder</title>', '<title>SULTAN | Decision Accountability for Strategy</title>')
-html = html.replace(
-    '<meta name="description" content="A free Arabic and English strategy workspace by Prof. Adeeb Noor. Connect institutional identity, ambition, choices, authority, enablers, annual roadmaps and review.">',
-    '<meta name="description" content="SULTAN turns strategy into an explainable, executable decision by connecting choices to evidence, authority, initiatives, funding conditions and visible uncertainty.">',
-)
-html = html.replace(
-    '<meta property="og:title" content="SULTAN | Strategy, with a reason.">',
-    '<meta property="og:title" content="SULTAN | Strategy decisions you can explain and execute">',
-)
-html = html.replace(
-    '<meta property="og:description" content="Build a strategy that belongs to your institution. Free Arabic/English public beta. No account required.">',
-    '<meta property="og:description" content="Make strategic choices, authority, evidence, uncertainty and execution conditions explicit before a plan is approved.">',
-)
-
-# Add public value, named methodology, palette and post-integration hardening layers
-# as normal local assets BEFORE inlining. Palette/accessibility are loaded after the
-# content layers so legacy portal colours cannot leak back into the public surface.
-html = html.replace(
-    '</head>',
-    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/methodology-layer.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"><link rel="stylesheet" href="src/rev3-handoff.css"></head>',
-    1,
-)
-html = html.replace(
-    '</body>',
-    '<script src="src/locales/home-value.js"></script><script src="src/locales/methodology.js"></script><script src="src/home-value.js"></script><script src="src/methodology-layer.js"></script><script src="src/audit-fixes.js"></script><script src="src/rev3-handoff.js"></script></body>',
-    1,
-)
+# The source index is the canonical load graph. The build only inlines those declared assets.
 
 # Inline every local stylesheet/script referenced by index.html, in document order.
 # This keeps the standalone edition from silently falling behind when a new module is added.

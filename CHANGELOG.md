@@ -1,3 +1,10 @@
+### 0.8.0-rc — freeze gate: D1 / N1 / N2 / N3
+- Close D1 with Render on `main`, `python build.py`, `public`, commit-triggered auto-deploy, and byte-for-byte live verification.
+- N1 section badges now distinguish `—` not started, numbered open issues, and `✓` complete-and-checked; a blank project can never display a completion tick.
+- N2 removes duplicate R1–R5 locale definitions; the canonical numbering is asserted by exact Arabic/English text.
+- N3 makes `index.html` the single visible runtime load graph; `build.py` only performs standalone transforms/inlining instead of injecting hidden application layers.
+- Feature development is frozen after this correctness/traceability gate; N4/N5 remain usability backlog and the SVG brand asset remains an external designer dependency.
+
 ### 0.8.0-rc — surfacing completion
 - Fictional example now demonstrates all four choice types, including a selected stop/merge decision with released-resource redeployment, plus delta, maturity and KRI tracks.
 - Client documents now surface evidence-gated funding, dated risk sources and maturity families.
