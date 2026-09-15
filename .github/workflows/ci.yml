@@ -1,10 +1,11 @@
 name: Test and package SULTAN
 on:
   push:
-    branches: ["rc/0.8.0-rc2"]
+    branches: [main, "rc/**", "release/**"]
+  pull_request:
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: sultan-tests-${{ github.ref }}
   cancel-in-progress: true
@@ -13,40 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Prepare 0.8.0-rc payload
-        id: prep
-        env:
-          SHARE_ID: DyDRDJ2Zrgq8
-        run: |
-          set -euxo pipefail
-          if [ -f src/brand.css ]; then
-            echo "assembled=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          BASE='https://api.firestorage.ai/prod/file'
-          META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
-          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_rc_payload_v2.zip") | .fileId' | head -1)
-          test -n "$FILE_ID" && test "$FILE_ID" != null
-          RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
-          DL=$(echo "$RESP" | jq -r '.downloadUrl')
-          test -n "$DL" && test "$DL" != null
-          curl -fLsS "$DL" -o /tmp/sultan_rc_payload.zip
-          unzip -t /tmp/sultan_rc_payload.zip
-          unzip -o /tmp/sultan_rc_payload.zip -d .
-          # The connected GitHub App cannot push workflow-file mutations. Keep this verified bootstrap workflow unchanged.
-          git checkout HEAD -- .github/workflows/ci.yml
-          python - <<'PY'
-          from pathlib import Path
-          import json, shutil
-          for rel in json.loads(Path('.delete.json').read_text()):
-              p=Path(rel)
-              if p.is_dir(): shutil.rmtree(p)
-              elif p.exists(): p.unlink()
-          Path('.delete.json').unlink()
-          shutil.rmtree('.rc-payload', ignore_errors=True)
-          PY
-          echo "assembled=true" >> "$GITHUB_OUTPUT"
-          git status --short
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -96,15 +63,6 @@ jobs:
           assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
           print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
           PY
-      - name: Commit verified RC source
-        if: steps.prep.outputs.assembled == 'true'
-        run: |
-          git config user.name 'SULTAN Release Bot'
-          git config user.email 'adeebnoor@users.noreply.github.com'
-          git add -A
-          git status --short
-          git commit -m 'release: SULTAN 0.8.0-rc stabilization'
-          git push origin HEAD:rc/0.8.0-rc2
       - name: Package application and verification evidence
         if: always()
         uses: actions/upload-artifact@v4
