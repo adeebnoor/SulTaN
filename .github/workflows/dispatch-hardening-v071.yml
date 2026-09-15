@@ -46,7 +46,7 @@ jobs:
         run: |
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
           node tests/engine.test.js
-          node tests/authority.test.js
+          node tests/hardening.test.js
           node tests/i18n.test.js
           node tests/hardening071.test.js
           python build.py
