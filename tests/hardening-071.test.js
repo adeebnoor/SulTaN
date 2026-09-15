@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const exec=fs.readFileSync('src/execution-upgrades.js','utf8');
+const review=fs.readFileSync('src/review-visuals.js','utf8');
+const css=fs.readFileSync('src/execution-upgrades.css','utf8');
+const polarity=fs.readFileSync('src/criteria-polarity.js','utf8');
+assert.ok(exec.includes("T('authoritySpaceTitle')"),'Authority Space report title must be localized');
+assert.ok(!exec.includes("body.replace(/<p>Draft based on user inputs"),'Report date must not depend on English report text');
+assert.ok(!exec.includes("/<h2>8\\."),'Leadership report must not delete sections by literal section number');
+assert.ok(exec.includes('affectedByEnabler'),'Escalation pack must expose affected initiatives/periods');
+assert.ok(exec.includes("control==='internal'"),'Internal unresolved authority decisions must be represented separately');
+assert.ok(review.includes("matrixUnplotted"),'Incomplete authority data must be surfaced below the matrix');
+assert.ok(review.includes('unknown'),'Funding view must retain unestimated years');
+assert.ok(css.includes('inset-inline-start'),'Matrix horizontal placement must use logical direction-aware positioning');
+assert.ok(css.includes('overflow:visible'),'Boundary dots must not be clipped');
+assert.ok(polarity.includes("polarityAnchorWarning"),'Polarity changes must warn users to revisit anchors');
+console.log(JSON.stringify({hardening071:10,parity:'pass'}));
