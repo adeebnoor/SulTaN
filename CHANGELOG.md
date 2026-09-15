@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.3 — Performance and standalone-build hardening
+
+- Cache decision switch-point analysis until criteria weights/direction, option scores, or output labels change; unrelated project edits reuse the prior result.
+- Keep the existing 0.5%-step break-even solver unchanged in this release while eliminating repeated recomputation on unrelated re-renders.
+- Fail the standalone build if any `src/` JavaScript or stylesheet reference survives in the generated HTML.
+- Add cache-invalidation tests and a CI assertion that the standalone artifact contains no external `src/` asset references.
+- Preserve the existing Arabic/English, authority, report, mobile and review-regression gates.
+
 ## 0.7.2 — Review semantics and behavioral verification
 
 - Distinguish no initiatives, missing estimates, explicit zero cost, and reported budget confirmation. Missing annual rows are counted as unestimated.
