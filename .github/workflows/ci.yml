@@ -1,7 +1,7 @@
 name: Test and package SULTAN
 on:
   push:
-    branches: [main]
+    branches: [main, rc/0.8.0-final]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -14,6 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Inspect staged RC payload
+        if: hashFiles('.rc-final/part*') != ''
+        run: |
+          cat .rc-final/part* | base64 -d > /tmp/sultan-rc.gz
+          file /tmp/sultan-rc.gz
+          gzip -dc /tmp/sultan-rc.gz > /tmp/sultan-rc.payload
+          file /tmp/sultan-rc.payload
+          head -c 160 /tmp/sultan-rc.payload | od -An -tx1c
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
