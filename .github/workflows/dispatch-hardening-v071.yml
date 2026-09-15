@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Repair one-shot script escaping
+      - name: Repair one-shot script escaping and regression fixture
         run: |
           python - <<'PY'
           from pathlib import Path
@@ -34,6 +34,7 @@ jobs:
           if old not in s:
               raise SystemExit('Semantic report-section patch anchor missing')
           s=s.replace(old,new,1)
+          s=s.replace("x.entity==='e2'&&x.code==='authorityIssueUnknownControl'","x.entity==='e2'&&x.code==='authorityIssueUnknownStatus'")
           p.write_text(s)
           PY
       - name: Apply hardening transformations
