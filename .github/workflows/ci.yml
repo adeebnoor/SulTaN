@@ -4,24 +4,41 @@ on:
     branches: ["rc/0.8.0-rc2"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
-  inspect:
+  assemble:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Discover payload client routes
+      - name: Download and apply 0.8.0-rc payload
+        env:
+          SHARE_ID: qCVY2e0WkFfC
         run: |
           set -euxo pipefail
-          BASE='https://firestorage.ai'
-          URL="$BASE/ja/f/qCVY2e0WkFfC"
-          curl -LsS -A 'Mozilla/5.0' "$URL" -o /tmp/page.html
-          : > /tmp/all.js
-          grep -oE 'src="/[^"]+\.js"' /tmp/page.html | sed 's/^src="//;s/"$//' | sort -u > /tmp/jspaths
-          while read -r p; do echo "FETCH $p"; curl -LsS "$BASE$p" >> /tmp/all.js; echo >> /tmp/all.js; done < /tmp/jspaths
-          echo '--- API-like paths ---'
-          grep -oE '/[A-Za-z0-9_?&=./{}:-]{3,160}' /tmp/all.js | grep -Ei '(api|download|share|file|presign|storage)' | sort -u | head -250 || true
-          echo '--- fetch contexts ---'
-          grep -oE '.{0,160}(fetch\(|download|presign|shareId|publicId|fileId).{0,360}' /tmp/all.js | head -160 || true
-          echo '--- share page RSC markers ---'
-          grep -oE '.{0,160}(qCVY2e0WkFfC|2UZPTNJ4sz0YJYVY|sultan_rc_payload).{0,800}' /tmp/page.html | head -60 || true
+          BASE='https://api.firestorage.ai/prod/file'
+          META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
+          echo "$META" | jq '{title, files:[.files[]|{fileId,fileName,name,sizeBytes}]}'
+          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_rc_payload.zip") | .fileId' | head -1)
+          if [ -z "$FILE_ID" ] || [ "$FILE_ID" = null ]; then FILE_ID=$(echo "$META" | jq -r '.files[0].fileId'); fi
+          RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
+          DL=$(echo "$RESP" | jq -r '.downloadUrl')
+          test -n "$DL" && test "$DL" != null
+          curl -fLsS "$DL" -o /tmp/sultan_rc_payload.zip
+          unzip -t /tmp/sultan_rc_payload.zip
+          unzip -o /tmp/sultan_rc_payload.zip -d .
+          python - <<'PY'
+          from pathlib import Path
+          import json, shutil
+          for rel in json.loads(Path('.delete.json').read_text()):
+              p=Path(rel)
+              if p.is_dir(): shutil.rmtree(p)
+              elif p.exists(): p.unlink()
+          Path('.delete.json').unlink()
+          shutil.rmtree('.rc-payload', ignore_errors=True)
+          PY
+          git config user.name 'SULTAN Release Bot'
+          git config user.email 'adeebnoor@users.noreply.github.com'
+          git add -A
+          git status --short
+          git commit -m 'release: SULTAN 0.8.0-rc stabilization'
+          git push origin HEAD:rc/0.8.0-rc2
