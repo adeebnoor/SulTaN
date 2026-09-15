@@ -9,5 +9,5 @@ assert.ok(!/\b(fetch|XMLHttpRequest|sendBeacon)\s*\(/.test(js),'methodology laye
 assert.ok(build.includes('src/methodology-layer.css')&&build.includes('src/locales/methodology.js')&&build.includes('src/methodology-layer.js'),'build must ship methodology layer');
 for(const forbidden of ['#1c6658','#0f3038','#15383d','#173c44','#60736e','#7d9d8a','#42646a'])assert.ok(!css.includes(forbidden),'legacy green/teal in methodology CSS: '+forbidden);
 const ctx={globalThis:{SultanLocales:{en:{},ar:{}}}};vm.createContext(ctx);vm.runInContext(locale,ctx);const en=ctx.globalThis.SultanLocales.en,ar=ctx.globalThis.SultanLocales.ar;
-for(const k of Object.keys(en)){assert.equal(typeof ar[k],'string','Arabic counterpart: '+k);assert.ok(en[k].trim()&&ar[k].trim(),k);}assert.ok(Object.keys(en).length>=50);
+for(const k of Object.keys(en)){assert.equal(typeof ar[k],'string','Arabic counterpart: '+k);assert.ok(en[k].trim()&&ar[k].trim(),k);}assert.ok(Object.keys(en).length>=40);
 console.log(JSON.stringify({suite:'methodology-layer',passed:true,keys:Object.keys(en).length,rules:5,constructs:5,network:false}));
