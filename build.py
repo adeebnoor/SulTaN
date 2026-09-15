@@ -27,15 +27,19 @@ html = html.replace(
     '<meta property="og:description" content="Make strategic choices, authority, evidence, uncertainty and execution conditions explicit before a plan is approved.">',
 )
 
-# Add the public homepage layers as normal local assets BEFORE inlining. Palette
-# consistency is loaded last so legacy portal colours cannot leak back into the
-# final public surface.
+# Add the public homepage and post-integration hardening layers as normal local
+# assets BEFORE inlining. Palette consistency and accessibility are loaded last so
+# legacy portal colours cannot leak back into the final public surface.
 html = html.replace(
     '</head>',
-    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/palette-unify.css"></head>',
+    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"></head>',
     1,
 )
-html = html.replace('</body>', '<script src="src/locales/home-value.js"></script><script src="src/home-value.js"></script></body>', 1)
+html = html.replace(
+    '</body>',
+    '<script src="src/locales/home-value.js"></script><script src="src/home-value.js"></script><script src="src/audit-fixes.js"></script></body>',
+    1,
+)
 
 # Inline every local stylesheet/script referenced by index.html, in document order.
 # This keeps the standalone edition from silently falling behind when a new module is added.
