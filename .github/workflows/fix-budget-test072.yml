@@ -1,0 +1,32 @@
+name: Correct budget disclosure interaction
+on:
+  push:
+    branches: [fix/review-0.7.2]
+    paths: [.github/workflows/fix-budget-test072.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/review-0.7.2
+      - name: Open nested budget disclosures before entering estimates
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          p=Path('tests/review_regressions.py');s=p.read_text()
+          sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+          assert sha(s)=='19f2c18e1f42a14b0f8ba74b720a79c4932de964fd2ba9c4170244fdcf3f51ce'
+          s=s.replace("        field.fill(value)\n", "        # Expand ordinary disclosures by clicking their summaries, just as a user would.\n        for details in page.locator('details').filter(has=field).all():\n            if not details.evaluate('(d)=>d.open'):\n                details.locator(':scope > summary').click()\n        expect(field).to_be_visible()\n        field.fill(value)\n")
+          assert sha(s)=='5e7502dda0b3b29d536668ad6e577e13e3f2e99e2ac05ea3a0ca54b497c9a8ec'
+          p.write_text(s)
+          PY
+          python3 -m py_compile tests/review_regressions.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add tests/review_regressions.py
+          git commit -m 'test: open budget disclosures through actual summary clicks'
+          git push origin HEAD:fix/review-0.7.2
