@@ -1,0 +1,11 @@
+services:
+  - type: web
+    runtime: static
+    name: sultan-strategy-beta
+    repo: https://github.com/adeebnoor/SulTaN
+    branch: main
+    buildCommand: python3 build.py
+    staticPublishPath: ./public
+    autoDeployTrigger: checksPass
+    previews:
+      generation: off
