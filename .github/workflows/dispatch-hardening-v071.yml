@@ -39,6 +39,18 @@ jobs:
           PY
       - name: Apply hardening transformations
         run: python .github/scripts/harden_v071.py
+      - name: Align browser regression with export menu
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('tests/hardening_browser.py')
+          s=p.read_text()
+          old='  with page.expect_download() as dl:page.locator(\'[data-exec="leadership-report"]\').click()'
+          new='  page.locator(\'.export-menu > summary\').click()\n  with page.expect_download() as dl:page.locator(\'[data-exec="leadership-report"]\').click()'
+          if old not in s:
+              raise SystemExit('Leadership browser-test anchor missing')
+          p.write_text(s.replace(old,new,1))
+          PY
       - name: Remove branch-only patch machinery
         run: |
           rm -f .github/scripts/harden_v071.py
