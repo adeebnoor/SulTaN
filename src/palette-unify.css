@@ -1,0 +1,109 @@
+/* Final colour-consistency layer.
+   Brand surfaces use SULTAN navy + gold + ivory/neutral only.
+   Red/amber remain reserved for semantic risk/warning states; decorative green/teal is intentionally removed. */
+
+:root{
+ --sultan-ivory:#fbf8f1;
+ --sultan-paper:#ffffff;
+ --sultan-neutral-050:#f6f7fb;
+ --sultan-neutral-100:#eef2fa;
+ --sultan-neutral-200:#dce3ef;
+ --sultan-neutral-300:#c5d1e8;
+ --sultan-neutral-500:#6b7693;
+ --sultan-neutral-700:#46536f;
+}
+
+/* Public chrome */
+.public-header{border-bottom-color:var(--sultan-neutral-200)}
+.public-brand{color:var(--brand-navy-900)}
+.public-brand small{color:var(--sultan-neutral-500)}
+.header-links button,.language-button{color:var(--brand-navy)}
+.language-button{border-color:var(--sultan-neutral-200);background:#fff}
+.header-links button:hover,.header-links button:focus-visible,.language-button:hover,.language-button:focus-visible{color:var(--brand-navy-900)}
+
+/* Hero and preview */
+.hero-overline{color:#e8d7aa}
+.status-light{background:var(--brand-gold-300)}
+.hero-copy>p{color:#d8dfec}
+.hero-copy .btn.primary{color:var(--brand-navy-900)}
+.hero-copy .btn.ghost{color:#fff;border-color:#8294b8}
+.hero-copy .fineprint{color:#b7c3d9}
+.hero-origin{color:#c8b98f;border-top-color:#6b7898}
+.preview-kicker{color:#d8dfec}
+.preview-window{color:#12203f;border-color:#aebbd3}
+.preview-top{background:var(--sultan-neutral-050);border-bottom-color:var(--sultan-neutral-200);color:var(--sultan-neutral-500)}
+.window-dots i{background:#c9d3e6}
+.preview-tabs{border-bottom-color:var(--sultan-neutral-200)}
+.preview-tabs button{color:var(--sultan-neutral-500)}
+.preview-tabs button[aria-selected=true]{border-color:var(--brand-gold);color:var(--brand-navy);font-weight:700}
+.overline{color:var(--brand-gold-700)}
+.state-pair>div{border-color:var(--sultan-neutral-200);background:var(--sultan-neutral-050)}
+.state-pair>div:last-child{background:var(--brand-navy-050);border-color:var(--sultan-neutral-300)}
+.state-pair small{color:var(--sultan-neutral-500)}
+.path-steps span{color:var(--brand-navy-500)}
+.path-steps i{background:var(--sultan-neutral-200)}
+.path-steps i:before{background:var(--brand-gold)}
+.path-steps>div:last-child i{background:linear-gradient(90deg,var(--sultan-neutral-200),transparent)}
+.path-steps b{color:var(--sultan-neutral-700)}
+.preview-footer{background:var(--sultan-neutral-050);border-top-color:var(--sultan-neutral-200);color:var(--sultan-neutral-500)}
+
+/* Pills, choices, enablers */
+.mini-pill{background:var(--brand-navy-050);border-color:var(--sultan-neutral-300);color:var(--brand-navy)}
+.mini-pill.purple{background:var(--brand-gold-100);border-color:var(--brand-gold-300);color:var(--brand-gold-700)}
+.marker{background:var(--brand-navy)}
+.marker.purple{background:var(--brand-gold)}
+.marker.gray{background:#b8c0d1}
+.choice-line{border-bottom-color:var(--sultan-neutral-200)}
+.preview-note{color:var(--sultan-neutral-500)}
+.enabler-line{border-bottom-color:var(--sultan-neutral-200)}
+
+/* Landing sections */
+.proof-strip{border-bottom-color:var(--sultan-neutral-200)}
+.proof-strip>div+div{border-inline-start-color:var(--sultan-neutral-200)}
+.proof-strip p,.section-intro p,.faq-grid>div>p,.feature-grid p,.faq-grid details p,.bottom-cta p,.public-footer p{color:var(--sultan-neutral-500)}
+.feature-grid article{border-color:var(--sultan-neutral-200);background:#fff}
+.feature-index{color:#8791aa}
+.feature-symbol{background:var(--brand-navy-050);color:var(--brand-navy)}
+.quick-section{background:var(--sultan-neutral-100)}
+.quick-grid>div{border-top-color:var(--sultan-neutral-300)}
+.quick-grid span{color:var(--brand-gold-700)}
+.faq-grid details{border-bottom-color:var(--sultan-neutral-200)}
+.bottom-cta{border-color:#dfd2b7;background:var(--sultan-ivory)}
+.public-footer{background:var(--sultan-neutral-050);border-top-color:var(--sultan-neutral-200)}
+
+/* Feedback and secondary public surfaces */
+dialog{border-color:var(--sultan-neutral-300);color:#12203f;box-shadow:0 20px 100px #06173733}
+dialog>p,#feedbackStatus{color:var(--sultan-neutral-500)}
+#feedbackPreview{border-color:var(--sultan-neutral-200)}
+.public-issue-box{border-top-color:var(--sultan-neutral-200)}
+.consent input{accent-color:var(--brand-navy)}
+
+/* First-glance value layer: force the same system even if old CSS is cached/inlined. */
+.hv-section-heading h2,.hv-contrast-intro h2,.hv-pillar h3{color:var(--brand-navy-800)}
+.hv-section-heading p,.hv-contrast-intro p,.hv-pillar p,.hv-proof-note{color:var(--sultan-neutral-500)!important}
+.hv-pillar{border-color:var(--sultan-neutral-200);box-shadow:0 12px 34px #0b2d6310}
+.hv-mini-svg{background:var(--sultan-neutral-050)}
+.hv-mini-svg text{fill:var(--sultan-neutral-500)}
+.hv-track{fill:#e3e8f3}
+.hv-fill{fill:var(--brand-navy-300)}
+.hv-primary-fill{fill:var(--brand-navy)}
+.hv-axis{stroke:#aab6cf}
+.hv-known-box{fill:#eaf0fa;stroke:#c5d1e8}
+.hv-contrast{background:var(--brand-navy-900)}
+.hv-contrast-intro p{color:#c9d4e8!important}
+.hv-contrast-card{border-color:#425b89}
+.hv-contrast-card>span{color:#d5dfef}
+.hv-contrast-card li{color:#edf2fa}
+.hv-contrast-card li:before{color:#9cabc7}
+.hv-contrast-card.sultan{border-color:var(--brand-gold-600)}
+
+/* Dynamic evidence layer. */
+.v-authority-grid .v-cell.known-ready{fill:var(--brand-navy-050)!important;stroke:#c5d1e8!important}
+
+/* Workspace inputs and links inherit the same brand direction. */
+a{color:var(--brand-navy)}
+input:focus,textarea:focus,select:focus{border-color:var(--brand-navy-300)!important;box-shadow:0 0 0 3px #0b2d6314!important}
+
+@media(max-width:760px){
+ .proof-strip>div+div{border-inline-start-color:transparent}
+}
