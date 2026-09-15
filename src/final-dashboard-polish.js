@@ -35,11 +35,11 @@ function addStatusBars(){
  dashboard.querySelectorAll('.track-card').forEach(card=>{
   if(card.querySelector('.track-status-bar'))return;
   const status=card.querySelector('.status');if(!status)return;
-  const state=['ahead','onTrack','behind','noReading'].find(k=>status.classList.contains(k))||'noReading';
+  const state=status.classList.contains('observed')?'observed':(['ahead','onTrack','behind','noReading'].find(k=>status.classList.contains(k))||'noReading');
+  if(state==='observed')return;
   const keys=['ahead','onTrack','behind','noReading'];
   const bar=document.createElement('div');bar.className='track-status-bar';bar.setAttribute('role','img');bar.setAttribute('aria-label',T(state));
   bar.innerHTML=keys.map(k=>`<span class="${k}${k===state?' active':''}" title="${esc(T(k))}"></span>`).join('');
-  if(state==='observed')return;
   const svg=card.querySelector('.track-svg');if(svg)svg.insertAdjacentElement('beforebegin',bar);else card.append(bar);
  });
 }
