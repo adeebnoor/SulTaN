@@ -16,7 +16,7 @@ jobs:
       - name: Apply surfacing completion payload
         id: prep
         env:
-          SHARE_ID: N-abfEmwQOGs
+          SHARE_ID: d9ayiENINAyt
         run: |
           set -euxo pipefail
           if grep -q '0.8.0-rc — surfacing completion' CHANGELOG.md; then
@@ -25,13 +25,13 @@ jobs:
           fi
           BASE='https://api.firestorage.ai/prod/file'
           META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
-          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_surfacing_payload_v2.zip") | .fileId' | head -1)
+          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_surfacing_payload_v3.zip") | .fileId' | head -1)
           test -n "$FILE_ID" && test "$FILE_ID" != null
           RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
           DL=$(echo "$RESP" | jq -r '.downloadUrl')
           test -n "$DL" && test "$DL" != null
           curl -fLsS "$DL" -o /tmp/sultan_surfacing_payload.zip
-          echo 'de9a2291097dc0232c51cf2f908bdf2d54c469bb3e899202167059311b65bd4d  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
+          echo '0120c9ca01ef09168a52bf346e285028a67c43eb7e12822d171c257ea4983993  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
           unzip -t /tmp/sultan_surfacing_payload.zip
           unzip -o /tmp/sultan_surfacing_payload.zip -d .
           echo 'assembled=true' >> "$GITHUB_OUTPUT"
@@ -61,11 +61,10 @@ jobs:
           from pathlib import Path
           html=Path('public/index.html').read_text(encoding='utf-8')
           leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
-          assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
+          assert not leftover
           assert "SULTAN_VERSION='0.8.0-rc'" in html
           assert '--brand-logo:url(' in html
           assert '--brand-ivory:#f7f3ea' in html
-          print('Standalone build contains RC version and brand assets.')
           PY
       - name: Install browser test runtime
         run: |
@@ -80,8 +79,8 @@ jobs:
           import json
           from pathlib import Path
           data=json.loads(Path('qa/review-browser-results.json').read_text(encoding='utf-8'))
-          assert data['tests'] >= 240, f"review browser regression surface dropped to {data['tests']} checks"
-          assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
+          assert data['tests'] >= 240
+          assert data['passed'] == data['tests']
           print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
           PY
       - name: Commit verified surfacing source
