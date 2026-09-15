@@ -1,58 +1,112 @@
-name: Discover SULTAN RC bundle endpoint
+name: Assemble and verify SULTAN 0.8.0 RC
 on:
   push:
     branches: ["rc/0.8.0-bundle3"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
+concurrency:
+  group: sultan-rc-assembly-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  probe:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install browser
+      - name: Install browser runtime
         run: |
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
-      - name: Discover download route
+      - name: Fetch and assemble the prepared RC source
+        shell: bash
         run: |
           python - <<'PY'
+          from pathlib import Path
           from playwright.sync_api import sync_playwright
           url='https://firestorage.ai/ja/f/8o2AhZRiZNoc'
+          out=Path('/tmp/sultan_bundle2.tar.gz')
           with sync_playwright() as pw:
-            b=pw.chromium.launch(headless=True)
-            c=b.new_context(accept_downloads=True)
-            p=c.new_page()
-            req=[]; resp=[]; downloads=[]
-            p.on('request', lambda r: req.append((r.method,r.url)))
-            p.on('response', lambda r: resp.append((r.status,r.url,r.headers.get('content-type',''))))
-            def got(d):
-              path='/tmp/'+(d.suggested_filename or 'bundle.bin'); d.save_as(path); downloads.append(path); print('DOWNLOAD',path)
-            p.on('download',got)
-            p.goto(url,wait_until='networkidle',timeout=60000)
-            p.wait_for_timeout(6000)
-            print('TITLE',p.title())
-            print('BODY',p.locator('body').inner_text()[:6000])
-            print('BUTTONS',p.locator('button').all_inner_texts())
-            print('LINKS',[(x.inner_text(),x.get_attribute('href')) for x in p.locator('a').all()][:80])
-            for method,u in req:
-              if any(k in u.lower() for k in ['api','download','file','share','storage','blob','s3','cloudfront']): print('REQ',method,u)
-            for st,u,ct in resp:
-              if any(k in u.lower() for k in ['api','download','file','share','storage','blob','s3','cloudfront']): print('RESP',st,ct,u)
-            if not downloads:
-              for text in ['ダウンロード','Download','download']:
-                loc=p.get_by_text(text,exact=False)
-                for i in range(min(loc.count(),8)):
-                  try:
-                    print('CLICK',text,i,loc.nth(i).evaluate('(e)=>e.outerHTML'))
-                    loc.nth(i).click(timeout=3000)
-                    p.wait_for_timeout(4000)
-                  except Exception as e: print('CLICKERR',str(e)[:240])
-                  if downloads: break
-                if downloads: break
-            print('DOWNLOADS',downloads)
-            b.close()
+            browser=pw.chromium.launch(headless=True)
+            ctx=browser.new_context(accept_downloads=True)
+            page=ctx.new_page()
+            page.goto(url,wait_until='networkidle',timeout=60000)
+            button=page.get_by_role('button',name='ダウンロード',exact=True)
+            with page.expect_download(timeout=15000) as info:
+              button.click()
+            info.value.save_as(str(out))
+            browser.close()
+          print(out, out.stat().st_size)
           PY
+          echo 'c0446e5a57d0b6e4acebb61075cc83da84112d97fb189c3d76d36edb6f381d6c  /tmp/sultan_bundle2.tar.gz' | sha256sum -c -
+          rm -rf /tmp/sultan-rc && mkdir -p /tmp/sultan-rc
+          tar -xzf /tmp/sultan_bundle2.tar.gz -C /tmp/sultan-rc
+          rsync -a /tmp/sultan-rc/payload/ ./
+          while IFS= read -r f; do [ -z "$f" ] || rm -f -- "$f"; done < /tmp/sultan-rc/delete.txt
+          test ! -e src/final-locales.js
+          test -e src/locales/final.js
+          test -e src/brand.css
+      - name: Verify JavaScript, model rules and all locale catalogs
+        run: |
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node tests/engine.test.js
+          node tests/hardening.test.js
+          node tests/i18n.test.js
+          node tests/hardening071.test.js
+          node tests/performance.test.js
+          node tests/break-even-analytic.test.js
+          node tests/final-upgrades.test.js
+          node tests/rc080.test.js
+      - name: Build standalone application
+        run: |
+          python build.py
+          python - <<'PY'
+          import re
+          from pathlib import Path
+          html=Path('public/index.html').read_text(encoding='utf-8')
+          leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
+          assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
+          assert "SULTAN_VERSION='0.8.0-rc'" in html
+          print('Standalone build verified:',len(html.encode('utf-8')),'bytes')
+          PY
+      - name: Browser acceptance and regression gate
+        run: |
+          python tests/beta_browser.py
+          python tests/hardening_browser.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('qa/review-browser-results.json')
+          assert p.exists(), 'review browser results missing'
+          data=json.loads(p.read_text(encoding='utf-8'))
+          assert data['tests'] >= 240, f"review browser regression surface dropped to {data['tests']} checks"
+          assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
+          print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
+          PY
+      - name: Commit the exact tested source to the RC branch
+        run: |
+          git config user.name 'SULTAN Release Bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git status --short
+          git diff --cached --check
+          git commit -m 'release: SULTAN 0.8.0-rc'
+          git push origin HEAD:rc/0.8.0-bundle3
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultan-0.8.0-rc-verification
+          path: |
+            public/
+            release/
+            qa/
+          include-hidden-files: true
+          retention-days: 14
