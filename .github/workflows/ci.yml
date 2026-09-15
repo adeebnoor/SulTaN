@@ -10,12 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect payload share page
+      - name: Discover payload download endpoint
         run: |
           set -euxo pipefail
-          curl -LsS -A 'Mozilla/5.0' 'https://firestorage.ai/ja/f/qCVY2e0WkFfC' -o /tmp/page.html
-          wc -c /tmp/page.html
-          head -c 1200 /tmp/page.html
-          echo
-          grep -Eo 'https?://[^"'"'"' <>]+' /tmp/page.html | head -50 || true
-          grep -Eo '(href|src)="[^"]+"' /tmp/page.html | head -80 || true
+          URL='https://firestorage.ai/ja/f/qCVY2e0WkFfC'
+          curl -LsS -A 'Mozilla/5.0' "$URL" -o /tmp/page.html
+          echo '--- filename/share markers ---'
+          grep -oE '.{0,240}(sultan_rc_payload|qCVY2e0WkFfC|2UZPTNJ4sz0YJYVY|01a0a5237713731c846f88cb850dde87|download|presign|signed|api).{0,500}' /tmp/page.html | head -80 || true
+          echo '--- next data/scripts ---'
+          grep -oE '<script[^>]*>[^<]{0,4000}' /tmp/page.html | tail -20 || true
+          echo '--- page js markers ---'
+          curl -LsS 'https://firestorage.ai/_next/static/chunks/app/(files)/ja/f/page-4d19ae0a4ce39d79.js' -o /tmp/page.js
+          grep -oE '.{0,200}(download|presign|signed|shareId|publicId|fileId|api).{0,400}' /tmp/page.js | head -120 || true
