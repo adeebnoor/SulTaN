@@ -1,0 +1,15 @@
+/* Accessibility guard for the legacy header CTA.
+   V1 hides this duplicate action after enhancement; if it is visible before hydration
+   or during a partial render, it must remain readable against the light header. */
+.public-header #publicStart{
+ background:var(--brand-navy,#0b2d63)!important;
+ color:#fff!important;
+ border-color:var(--brand-navy,#0b2d63)!important;
+}
+.public-header #publicStart:hover,
+.public-header #publicStart:focus-visible{
+ background:var(--brand-navy-800,#0b2352)!important;
+ color:#fff!important;
+ outline:3px solid var(--brand-gold,#caa85e);
+ outline-offset:2px;
+}
