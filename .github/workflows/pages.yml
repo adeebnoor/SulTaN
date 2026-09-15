@@ -46,13 +46,13 @@ jobs:
           model=json.loads((root/'qa/model-hardening-results.json').read_text())
           assert model['tests']>0 and model['passed']==model['tests']
           manifest=json.loads((root/'release/manifest.json').read_text())
-          assert manifest['version']=='0.7.2'
+          assert manifest['version']=='0.7.3'
           assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
           (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'public/index.html').read_bytes())
           print('Verified full browser behavior, model evidence and application SHA-256.')
           PY
-          if ! gh release view v0.7.2 >/dev/null 2>&1; then
-            gh release create v0.7.2 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.2 — Evidence-led review fixes' --notes 'Distinguishes no initiatives, unestimated costs, explicit zero and funding confirmation. Enriches the fictional example with cost polarity, assumptions, risks, blocked authority and an unplotted choice while retaining original strategic scores. Uses Latin digits for Gregorian/Hijri report dates and localizes the revision label. Replaces duplicate export controls with one actual export menu. Adds matrix endpoints, directions and descriptive quadrants. Replaces source-string assertions with real DOM, geometry, export and print regressions in Arabic/English at desktop and mobile widths. Strategic value remains separate from readiness and authority. Use non-sensitive data only.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json
+          if ! gh release view v0.7.3 >/dev/null 2>&1; then
+            gh release create v0.7.3 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.3 — Performance hardening' --notes 'Performance and distribution hardening for the free Arabic/English SULTAN strategy workspace. Caches decision switch-point analysis until scoring inputs change, preserving exact invalidation for weights, criterion direction, scores and labels. The standalone builder now fails closed if any src/ JavaScript or stylesheet reference remains external, protecting file:// distribution. Existing model, authority, Arabic/English and mobile/desktop regression suites remain required. The break-even solver itself is unchanged in this release; an exact analytical replacement will only be adopted after equivalence testing.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json
           fi
       - name: Check first-time hosting setup
         id: hosting
