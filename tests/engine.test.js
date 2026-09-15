@@ -10,7 +10,7 @@ test('Maximum horizon',()=>{const p=E.demo();p.institution.endYear=2060;assert.t
 test('Weights must sum to 100',()=>{const p=E.demo();p.criteria[0].weight=20;assert.equal(E.score(p,p.options[0]).value,null)});
 test('Negative weight',()=>{const p=E.demo();p.criteria[0].weight=-1;assert(!E.weightInfo(p).valid)});
 test('Known weighted sum',()=>{const p=E.demo();near(E.score(p,p.options[0]).value,83)});
-test('Zero is observed',()=>{const p=E.demo();Object.values(p.options[0].scores).forEach(s=>s.value=0);near(E.score(p,p.options[0]).value,0)});
+test('Zero utility is observed with both criterion directions',()=>{const p=E.demo();p.criteria.forEach(c=>p.options[0].scores[c.id].value=c.polarity==='cost'?100:0);near(E.score(p,p.options[0]).value,0)});
 test('Missing scores are bounds not zero',()=>{const p=E.demo();p.options[0].scores.identity.value=null;const s=E.score(p,p.options[0]);assert.equal(s.value,null);near(s.high-s.low,25)});
 test('Partial excluded from ranking',()=>{const p=E.demo();delete p.options[0].scores.identity;assert(!E.ranking(p).some(r=>r.id==='o1'))});
 test('Zero weight unknown allowed',()=>{const p=E.demo();p.criteria[0].weight=0;p.criteria[1].weight+=25;delete p.options[0].scores.identity;assert(E.score(p,p.options[0]).value!==null)});

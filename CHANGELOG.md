@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.7.2 — Review semantics and behavioral verification
+
+- Distinguish no initiatives, missing estimates, explicit zero cost, and reported budget confirmation. Missing annual rows are counted as unestimated.
+- Enrich the fictional example with cost-direction anchors, four populated assumptions/risk entries, blocked and ready enablers, and a conditionally selected unmapped/uncosted choice. Original option values are preserved.
+- Use Latin digits for Gregorian/Hijri report dates and translate the escalation revision label.
+- Replace competing report/project/print buttons with one export menu. The primary strategy export and print now use the same complete internal report; leadership output remains separate.
+- Label 0/100 axis endpoints, all four quadrants, and axis directions in both languages; clarify that the midpoint is not an approval threshold.
+- Replace source-string assertions with behavioral model cases and rendered browser regressions invoked by hardening_browser.py at 1280, 390 and 320 pixels in Arabic and English.
+- Fix the live sensitivity listener to call the model rankingAt function. No project input is uploaded or synchronized.
+
 ## 0.7.1 — Hardening
 
 - Fix bilingual report dates, leadership numbering, Authority Space localization, RTL matrix geometry, unknown-authority visibility, meaningful switch-point reporting, unknown budget visibility, escalation-pack identity/scope, criterion-polarity warnings, and destructive-backup timing.

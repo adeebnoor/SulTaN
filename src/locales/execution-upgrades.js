@@ -32,4 +32,40 @@ Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   externalEscalations:'قرارات خارجية / مشتركة تتطلب إجراء',internalPendingDecisions:'قرارات داخلية لم تُحسم بعد',affectedWork:'المبادرة / سنة البدء المتأثرة',
   gregorianLabel:'ميلادي',hijriLabel:'هجري',preparedBy:'أُعد بواسطة',generatedOn:'تاريخ الإنشاء',exportMenu:'تصدير',projectDataExport:'ملف مشروع قابل للاستكمال',strategyDraftExport:'مسودة الاستراتيجية',leadershipExport:'تقرير القيادة',internalExport:'التقرير الداخلي',escalationExport:'حزمة التصعيد',sectionFileExport:'ملف القسم'
 });
+Object.assign(root.SultanLocales.en,{
+  "noInitiatives": "No initiatives declared",
+  "fundingNotApplicable": "Not assessed — no linked initiatives",
+  "costUnestimated": "Cost not yet estimated",
+  "revisionLabel": "Revision",
+  "printInternal": "Print / PDF — internal report",
+  "printPopupBlocked": "Allow the report window, then try printing again.",
+  "internalExport": "Internal strategy — details & issues",
+  "leadershipExport": "Leadership strategy — presentation",
+  "matrixLowLow": "Lower value · lower clearance",
+  "matrixHighLow": "Higher value · lower clearance",
+  "matrixLowHigh": "Lower value · higher clearance",
+  "matrixHighHigh": "Higher value · higher clearance",
+  "matrixGuide": "Axes run from 0 to 100. Midlines at 50 are visual guides, not approval thresholds. Higher strategic value is to the right; higher clearance is up. Unmapped choices stay outside the chart.",
+  "valueDirection": "Higher value →",
+  "authorityDirection": "Higher clearance ↑",
+  "unplottedAuthority": "Not plotted — value or authority data is insufficient"
+});
+Object.assign(root.SultanLocales.ar,{
+  "noInitiatives": "لم تُعلن مبادرات",
+  "fundingNotApplicable": "لم يُقيّم التمويل — لا توجد مبادرات مرتبطة",
+  "costUnestimated": "لم تُقدّر التكلفة بعد",
+  "revisionLabel": "النسخة",
+  "printInternal": "طباعة / PDF — النسخة الداخلية",
+  "printPopupBlocked": "اسمح بفتح نافذة التقرير، ثم أعد الطباعة.",
+  "internalExport": "استراتيجية داخلية — التفاصيل والملاحظات",
+  "leadershipExport": "استراتيجية للقيادة — للعرض",
+  "matrixLowLow": "قيمة أقل · حسم أقل",
+  "matrixHighLow": "قيمة أعلى · حسم أقل",
+  "matrixLowHigh": "قيمة أقل · حسم أعلى",
+  "matrixHighHigh": "قيمة أعلى · حسم أعلى",
+  "matrixGuide": "يمتد كل محور من 0 إلى 100. خطا المنتصف عند 50 دليل بصري وليسا عتبة اعتماد. القيمة الأعلى إلى اليسار، والحسم الأعلى إلى الأعلى. تبقى الخيارات غير المرسومة خارج المصفوفة.",
+  "valueDirection": "← قيمة أعلى",
+  "authorityDirection": "حسم أعلى ↑",
+  "unplottedAuthority": "غير مرسوم — بيانات القيمة أو الصلاحية غير كافية"
+});
 })(globalThis);
