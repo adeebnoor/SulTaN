@@ -58,7 +58,8 @@ try:
                 page.set_content(html)
             else:
                 page.goto(url + '?lang=' + lang, wait_until='load')
-            page.wait_for_selector('[data-evidence="chain"]')
+            # Rev-3 keeps all five evidence cards in the DOM but intentionally shows one tab at a time.
+            page.wait_for_selector('[data-evidence="chain"]', state='attached')
             page.wait_for_timeout(120)
             prefix = lang + ' / '
             check(prefix + 'four real public links', page.locator('[data-v-anchor]').count() == 4)
