@@ -50,6 +50,7 @@ jobs:
           python tests/beta_browser.py
           python tests/hardening_browser.py
           python tests/surfacing_browser.py
+          python tests/rev3_browser.py
           python - <<'PY'
           import json
           from pathlib import Path
