@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
 // Extend dictionaries exactly as the browser does before i18n is initialized.
-require('../src/final-locales.js');
+require('../src/locales/final.js');
 global.SultanI18n=require('../src/i18n.js');
 global.Sultan=require('../src/import.js');
 require('../src/final-core.js');
