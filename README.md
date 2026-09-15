@@ -86,3 +86,9 @@ The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, a
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
 **Version 0.7.0 — execution-focused beta for non-sensitive planning and feedback.**
+
+### 0.7.2 review checks
+
+The example deliberately contains unresolved and unmapped choices; it is not a completed strategy template. No initiatives means no cost estimate or budget-confirmation judgment. An explicitly entered zero remains zero. The sole Export menu provides the internal strategy, leadership strategy, escalation pack, reusable project JSON and print/PDF of the internal strategy; section exchange remains a separate control.
+
+`tests/hardening071.test.js` now contains model behavior checks only. `tests/hardening_browser.py` invokes `tests/review_regressions.py` for actual DOM, geometry, report, print and user-edit checks in Arabic/English at three viewport widths. `SULTAN_BASE_URL` can run the same browser suite against the public mirror. Reports under `qa/` state whether a run used a local real origin or the live URL.

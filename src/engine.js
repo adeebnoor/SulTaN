@@ -32,6 +32,18 @@ function progress(t,row){if(!num(t.baseline)||!num(row?.actual)||!num(row?.targe
 function selected(p){return p.options.filter(o=>o.decision==='select');}
 function selectedInitiatives(p){const ids=new Set(selected(p).map(o=>o.id));return p.initiatives.filter(i=>ids.has(i.optionId));}
 function budgetSummary(p){const ins=selectedInitiatives(p);return years(p).map(year=>{let declared=0,unknown=0;for(const i of ins){if(year<i.startYear||year>i.endYear)continue;const b=i.budget.find(b=>b.year===year);if(num(b?.amount))declared+=b.amount;else unknown++;}const cap=p.funding.find(f=>f.year===year)?.available;return {year,declared,unknown,available:num(cap)?cap:null,gap:num(cap)?Math.max(0,declared-cap):null};});}
+function choiceCost(p,optionId){
+ const ins=p.initiatives.filter(i=>i.optionId===optionId);
+ if(!ins.length)return {total:null,known:0,unknown:0,confirmed:null,count:0,state:'no-initiatives'};
+ let total=0,known=0,unknown=0;
+ for(const i of ins)for(const year of years(p)){
+  if(year<i.startYear||year>i.endYear)continue;
+  const amount=i.budget.find(b=>b.year===year)?.amount;
+  if(num(amount)){total+=amount;known++;}else unknown++;
+ }
+ const confirmed=ins.every(i=>i.budgetStatus==='confirmed');
+ return {total,known,unknown,confirmed,count:ins.length,state:confirmed?'confirmed':'unconfirmed'};
+}
 function cycles(p){const ids=new Set(p.initiatives.map(i=>i.id));const map=Object.fromEntries(p.initiatives.map(i=>[i.id,i.dependsOn.filter(x=>ids.has(x))]));const on=new Set(),done=new Set(),out=[];function visit(x,path){if(on.has(x)){out.push([...path,x]);return;}if(done.has(x))return;on.add(x);for(const d of map[x]||[])visit(d,[...path,x]);on.delete(x);done.add(x);}for(const id of ids)visit(id,[]);return out;}
 function authorityIssues(p){const selectedSet=new Set(selected(p).map(o=>o.id)),out=[];for(const e of p.enablers){if(!selectedSet.has(e.optionId))continue;if(e.control==='unknown')out.push({section:'enablers',level:'missing',code:'authorityIssueUnknownControl',entity:e.id,title:e.title||''});if(e.status==='unknown')out.push({section:'enablers',level:'missing',code:'authorityIssueUnknownStatus',entity:e.id,title:e.title||''});if(e.status==='pending')out.push({section:'enablers',level:'warning',code:'authorityIssuePending',entity:e.id,title:e.title||''});if(e.status==='blocked')out.push({section:'enablers',level:'blocking',code:'authorityIssueBlocked',entity:e.id,title:e.title||''});}return out;}
 function check(p){
@@ -100,6 +112,7 @@ function validateImport(raw){
 }
 function demo(){
  const p=blank();p.isDemo=true;
+ const D=typeof module!=='undefined'&&module.exports?require('./locales/demo.js').en:root.SultanLocales[root.SultanI18n.language];
  Object.assign(p.institution,{name:T('s123'),sector:T('s124'),mission:T('s125'),beneficiaries:T('s126'),assets:T('s127'),context:T('s128'),culture:T('s129'),vision:T('s130'),notDoing:T('s131')});
  p.weightRationale=T('s132');
  p.mandates=[{id:'m1',title:T('s133'),relationship:'contribution',source:T('s134'),contribution:T('s135')}];
@@ -113,7 +126,16 @@ function demo(){
  p.enablers=[{...enabler(),id:'e1',optionId:'o1',title:T('s189'),kind:'operating',action:'amend',control:'internal',owner:T('s190'),status:'pending',dueYear:2027,source:T('s191'),route:T('s192'),fallback:T('s193')},{...enabler(),id:'e2',optionId:'o2',title:T('s194'),kind:'authority',action:'activate',control:'external',owner:T('s195'),status:'unknown',dueYear:2028,source:T('s196'),route:T('s197'),fallback:T('s198')}];
  const make=(id,opt,tr,title,start,end,amounts,deps=[],ens=[])=>({...initiative(p),id,optionId:opt,transitionId:tr,title,startYear:start,endYear:end,kind:id==='i2'?'learn':'build',owner:T('s199'),output:id==='i2'?T('s200'):T('s201'),acceptance:T('s202'),capacity:T('s203'),budgetStatus:'unconfirmed',dependsOn:deps,enablerIds:ens,budget:years(p).map(year=>({year,amount:amounts[year]??null}))});
  p.initiatives=[make('i1','o1','t1',T('s204'),2027,2028,{2027:200000,2028:300000},[],['e1']),make('i2','o2','t2',T('s205'),2027,2028,{2027:150000,2028:250000}),make('i3','o2','t2',T('s206'),2029,2030,{2029:1000000,2030:1200000},['i2'],['e2'])];
- p.funding=years(p).map((year,k)=>({year,available:[500000,500000,1000000,1300000][k]}));return p;
+ p.funding=years(p).map((year,k)=>({year,available:[500000,500000,1000000,1300000][k]}));
+ // A cost anchor is inverted with its raw scores, preserving the original preference values.
+ Object.assign(p.criteria[3],{name:D.demoBurden,polarity:'cost',low:D.demoBurdenLow,high:D.demoBurdenHigh});
+ p.options.forEach((o,k)=>{o.scores.sustain.value=100-o.scores.sustain.value;o.assumptions=D['demoAssumption'+(k+1)];o.risks=D['demoRisk'+(k+1)];});
+ // A conditional choice deliberately lacks mapped authority and initiatives; neither is a zero cost.
+ p.options.push({...option(),id:'o4',title:D.demoPilot,decision:'select',decisionReason:D.demoPilotDecision,outcome:D.demoPilotOutcome,whyUs:D.demoPilotWhy,tradeoff:D.demoPilotTradeoff,owner:D.demoPilotOwner,assumptions:D.demoAssumption4,risks:D.demoRisk4,scores:Object.fromEntries(p.criteria.map((c,k)=>[c.id,{value:[75,70,60,40][k],note:D.demoScoreNote}]))});
+ p.enablers.push({...enabler(),id:'e3',optionId:'o1',title:D.demoBlocker,kind:'authority',control:'external',owner:D.demoBlockerOwner,status:'blocked',dueYear:2027,source:D.demoBlockerSource,route:D.demoBlockerRoute,fallback:D.demoBlockerFallback});
+ p.enablers.push({...enabler(),id:'e4',optionId:'o1',title:D.demoReady,kind:'capability',control:'internal',owner:D.demoPilotOwner,status:'ready',dueYear:2027,source:D.demoReadySource,route:D.demoReadyRoute,fallback:''});
+ p.initiatives[0].enablerIds.push('e3','e4');p.initiatives[0].budgetStatus='confirmed';
+ return p;
 }
-const api={SCHEMA,clone,num,text,uid,years,blank,option,reference,transition,enabler,initiative,weightInfo,score,ranking,sensitivity,breakEven,rankingAt,authorityIssues,historySummary,progress,selected,selectedInitiatives,budgetSummary,cycles,check,syncYears,validateImport,demo};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.Sultan=api;
+const api={SCHEMA,clone,num,text,uid,years,blank,option,reference,transition,enabler,initiative,weightInfo,score,ranking,sensitivity,breakEven,rankingAt,authorityIssues,historySummary,progress,selected,selectedInitiatives,budgetSummary,choiceCost,cycles,check,syncYears,validateImport,demo};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.Sultan=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

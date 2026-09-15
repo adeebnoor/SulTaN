@@ -40,16 +40,19 @@ jobs:
           from pathlib import Path
           import hashlib,json
           root=Path('tested')
-          report=json.loads((root/'qa/beta-browser-results.json').read_text())
-          assert report['mode']=='full-browser' and report['passed']==report['tests']
+          for name in ['beta-browser-results.json','review-browser-results.json']:
+              report=json.loads((root/'qa'/name).read_text())
+              assert report['mode']=='full-browser' and report['tests']>0 and report['passed']==report['tests'], name
+          model=json.loads((root/'qa/model-hardening-results.json').read_text())
+          assert model['tests']>0 and model['passed']==model['tests']
           manifest=json.loads((root/'release/manifest.json').read_text())
-          assert manifest['version']=='0.7.1'
+          assert manifest['version']=='0.7.2'
           assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
           (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'public/index.html').read_bytes())
-          print('Verified full browser evidence and application SHA-256.')
+          print('Verified full browser behavior, model evidence and application SHA-256.')
           PY
-          if ! gh release view v0.7.1 >/dev/null 2>&1; then
-            gh release create v0.7.1 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.1 — Hardened execution beta' --notes 'Hardening release for the free Arabic/English SULTAN strategy workspace. Fixes bilingual and leadership reports, RTL/unknown handling in the Value × Authority view, decision switch-point reporting, unestimated investment visibility, escalation-pack identity and scope, criterion-polarity safeguards, backup timing, and export UX. Moves polarity, authority validation and switch-point logic into the deterministic engine and expands regression/i18n coverage. Strategic value remains separate from capability/readiness and authorization. Use non-sensitive data only.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json
+          if ! gh release view v0.7.2 >/dev/null 2>&1; then
+            gh release create v0.7.2 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.2 — Evidence-led review fixes' --notes 'Distinguishes no initiatives, unestimated costs, explicit zero and funding confirmation. Enriches the fictional example with cost polarity, assumptions, risks, blocked authority and an unplotted choice while retaining original strategic scores. Uses Latin digits for Gregorian/Hijri report dates and localizes the revision label. Replaces duplicate export controls with one actual export menu. Adds matrix endpoints, directions and descriptive quadrants. Replaces source-string assertions with real DOM, geometry, export and print regressions in Arabic/English at desktop and mobile widths. Strategic value remains separate from readiness and authority. Use non-sensitive data only.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json
           fi
       - name: Check first-time hosting setup
         id: hosting
@@ -59,7 +62,7 @@ jobs:
             const {data:repo}=await github.rest.repos.get(context.repo);
             core.setOutput('enabled',String(repo.has_pages));
             if(!repo.has_pages){
-              core.notice('The beta is downloadable, but GitHub Pages is not enabled. The Render public beta remains available; an administrator can enable Settings > Pages > GitHub Actions later.');
+              core.notice('The beta is downloadable, but repository Pages is not enabled. Publish the tested artifact through the existing personal-site mirror.');
             }
       - uses: actions/configure-pages@v5
         if: steps.hosting.outputs.enabled == 'true'
@@ -77,14 +80,14 @@ jobs:
           SITE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
           python3 - <<'PY'
-          import os,time,urllib.request
-          url=os.environ['SITE_URL']
+          import os,time,urllib.request,hashlib,json
+          expected=json.load(open('tested/release/manifest.json'))['sha256']
           for attempt in range(12):
               try:
-                  with urllib.request.urlopen(url,timeout=30) as response:
-                      text=response.read().decode('utf-8')
-                      assert response.status==200 and 'SultanPortal' in text and 'SultanLocales' in text
-                      print('Verified live bilingual application:',url)
+                  with urllib.request.urlopen(os.environ['SITE_URL'],timeout=30) as response:
+                      assert response.status==200
+                      assert hashlib.sha256(response.read()).hexdigest()==expected
+                      print('Verified exact tested public application:',os.environ['SITE_URL'])
                       break
               except Exception:
                   if attempt==11:raise
