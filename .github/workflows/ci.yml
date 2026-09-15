@@ -10,15 +10,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Probe temporary transfer
+      - name: Inspect firestorage share implementation
         shell: bash
         run: |
-          set -euxo pipefail
-          curl -L --fail --silent --show-error -D /tmp/headers 'https://firestorage.ai/ja/f/8o2AhZRiZNoc' -o /tmp/page
-          cat /tmp/headers
-          file /tmp/page
-          wc -c /tmp/page
-          head -c 1200 /tmp/page || true
-          echo
-          grep -Eo 'https?://[^"<> ]+' /tmp/page | head -40 || true
-          grep -Eo 'href="[^"]+"' /tmp/page | head -40 || true
+          set -euo pipefail
+          curl -L --fail --silent --show-error 'https://firestorage.ai/ja/f/8o2AhZRiZNoc' -o /tmp/page
+          curl -L --fail --silent --show-error 'https://firestorage.ai/_next/static/chunks/app/(files)/ja/f/page-4d19ae0a4ce39d79.js' -o /tmp/app.js
+          python - <<'PY'
+          from pathlib import Path
+          for name in ['page','app.js']:
+              s=Path('/tmp/'+name).read_text(errors='replace')
+              print('\n###',name,len(s))
+              for needle in ['download','api/','public_id','file_id','share','8o2AhZRiZNoc','2BXyPhpR2WaSEmqT','01a0a52ac31b7211b55cbde20d259e62']:
+                  print('---',needle)
+                  start=0
+                  for _ in range(8):
+                      i=s.lower().find(needle.lower(),start)
+                      if i<0: break
+                      print(s[max(0,i-240):i+500].replace('\n',' '))
+                      start=i+len(needle)
+          PY
