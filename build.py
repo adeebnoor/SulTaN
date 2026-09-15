@@ -9,7 +9,7 @@ html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
 for css_name in ('style.css','portal.css','authority-space.css','execution-upgrades.css','final.css'):
     html = html.replace(f'<link rel="stylesheet" href="src/{css_name}">', '<style>' + (base / 'src' / css_name).read_text(encoding='utf-8') + '</style>')
-for name in ('version.js','locales/en.js','locales/ar.js','locales/authority-space.js','locales/execution-upgrades.js','locales/demo.js','final-locales.js','i18n.js','engine.js','break-even-analytic.js','performance.js','import.js','final-core.js','final-core-patch.js','portal.js','app.js','criteria-polarity.js','authority-space.js','execution-upgrades.js','review-visuals.js','usability.js','final-ui.js','final-report-patch.js','version-patch.js'):
+for name in ('version.js','locales/en.js','locales/ar.js','locales/authority-space.js','locales/execution-upgrades.js','locales/demo.js','final-locales.js','i18n.js','engine.js','break-even-analytic.js','performance.js','import.js','final-core.js','final-core-patch.js','portal.js','app.js','criteria-polarity.js','authority-space.js','final-export-hook.js','execution-upgrades.js','review-visuals.js','usability.js','final-ui.js','final-report-patch.js','version-patch.js'):
     code = (base / 'src' / name).read_text(encoding='utf-8')
     if '</script' in code.lower():
         raise ValueError('Unexpected closing script token in ' + name)
