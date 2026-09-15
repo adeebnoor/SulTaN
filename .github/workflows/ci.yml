@@ -16,7 +16,7 @@ jobs:
       - name: Apply surfacing completion payload
         id: prep
         env:
-          SHARE_ID: _YaRPcckDa_o
+          SHARE_ID: 5AnDMFi1JE78
         run: |
           set -euxo pipefail
           if grep -q '0.8.0-rc — surfacing completion' CHANGELOG.md; then
@@ -31,7 +31,7 @@ jobs:
           DL=$(echo "$RESP" | jq -r '.downloadUrl')
           test -n "$DL" && test "$DL" != null
           curl -fLsS "$DL" -o /tmp/sultan_surfacing_payload.zip
-          echo 'b1ff5a9b7878a1f7728d77a1066b5a6a8a7e07897389ecd9a54bf513d746d3d5  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
+          echo 'b75be09fbd38cbbe4eac5844982cca119a04a6a975b442c7478d2fe590c475f9  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
           unzip -t /tmp/sultan_surfacing_payload.zip
           unzip -o /tmp/sultan_surfacing_payload.zip -d .
           echo 'assembled=true' >> "$GITHUB_OUTPUT"
