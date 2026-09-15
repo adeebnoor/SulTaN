@@ -27,17 +27,17 @@ html = html.replace(
     '<meta property="og:description" content="Make strategic choices, authority, evidence, uncertainty and execution conditions explicit before a plan is approved.">',
 )
 
-# Add the public homepage and post-integration hardening layers as normal local
-# assets BEFORE inlining. Palette consistency and accessibility are loaded last so
-# legacy portal colours cannot leak back into the final public surface.
+# Add public value, named methodology, palette and post-integration hardening layers
+# as normal local assets BEFORE inlining. Palette/accessibility are loaded after the
+# content layers so legacy portal colours cannot leak back into the public surface.
 html = html.replace(
     '</head>',
-    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"></head>',
+    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/methodology-layer.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"></head>',
     1,
 )
 html = html.replace(
     '</body>',
-    '<script src="src/locales/home-value.js"></script><script src="src/home-value.js"></script><script src="src/audit-fixes.js"></script></body>',
+    '<script src="src/locales/home-value.js"></script><script src="src/locales/methodology.js"></script><script src="src/home-value.js"></script><script src="src/methodology-layer.js"></script><script src="src/audit-fixes.js"></script></body>',
     1,
 )
 
