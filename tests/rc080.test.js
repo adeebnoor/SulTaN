@@ -13,6 +13,7 @@ assert.ok(ui.includes("window.open('','_blank')")&&ui.includes('w.print()'),'PDF
 assert.ok(ui.includes("T('clientDeliverables')")&&ui.includes("T('decisionExtensions')"),'client headings must be localized');
 assert.ok(ui.includes('circle.baseline-dot')||ui.includes('baseline-dot'),'trajectory markers must be present');
 assert.ok(ui.includes("T('gatedFundingTitle')")&&ui.includes("T('riskSource')")&&ui.includes("T('maturityFamily')"),'client report must surface gated funding, risk source and maturity family');
-const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=21,'final patch stack should remain consolidated');
+/* 22 includes the bundled Vision 2030 reference list. */
+const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=22,'final patch stack should remain consolidated');
 for(const removed of ['final-core-patch.js','final-export-hook.js','final-report-patch.js','final-polish.js','final-dashboard-polish.js','version-patch.js'])assert.ok(!index.includes(removed),'obsolete patch loaded: '+removed);
 console.log(JSON.stringify({suite:'rc080',passed:true,scripts}));
