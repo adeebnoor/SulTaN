@@ -95,8 +95,11 @@ try:
                 continue
             if not RENDER_ONLY:
                 page.goto(url + '?lang=' + lang + '#outputs')
+                # A fragment-only goto may stay in the same document. Test an actual reload.
+                page.reload(wait_until='load')
                 page.wait_for_selector('#outputs')
                 page.wait_for_timeout(160)
+                measurements['deepLink-' + lang] = page.evaluate('({hash:location.hash, initial:SultanVision.initialAnchor, focus:document.activeElement?.outerHTML})')
                 check(prefix + 'direct public deep link survives reload', page.evaluate('location.hash==="#outputs" && document.querySelector("#outputs").contains(document.activeElement)'))
             # Project creation increments revision; it must still get blank-state guidance.
             page.locator('.hero-copy [data-action="new"]').click()
