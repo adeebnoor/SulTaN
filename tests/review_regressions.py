@@ -47,6 +47,11 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
 
     def fill_field(page, path, value):
         field = page.locator(f'[data-path="{path}"]')
+        # Expand ordinary disclosures by clicking their summaries, just as a user would.
+        for details in page.locator('details').filter(has=field).all():
+            if not details.evaluate('(d)=>d.open'):
+                details.locator(':scope > summary').click()
+        expect(field).to_be_visible()
         field.fill(value)
         field.press('Tab')
 
