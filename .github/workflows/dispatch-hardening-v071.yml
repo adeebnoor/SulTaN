@@ -69,10 +69,11 @@ jobs:
           python -m playwright install --with-deps chromium
           python tests/beta_browser.py
           python tests/hardening_browser.py
-      - name: Commit tested hardening to feature branch
+      - name: Commit tested product changes to feature branch
         run: |
           git config user.name 'Prof. Adeeb Noor'
           git config user.email 'adeebnoor@users.noreply.github.com'
+          git restore --source=HEAD -- .github/workflows/ci.yml
           git add -A
           git commit -m 'fix: harden SULTAN 0.7 reports, authority UX and test architecture'
           git push origin HEAD:hardening/v0.7.1
