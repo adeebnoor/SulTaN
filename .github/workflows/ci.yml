@@ -31,8 +31,8 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           from playwright.sync_api import sync_playwright
-          url='https://firestorage.ai/ja/f/8o2AhZRiZNoc'
-          out=Path('/tmp/sultan_bundle2.tar.gz')
+          url='https://firestorage.ai/ja/f/8ycWvvwPnAOz'
+          out=Path('/tmp/sultan_bundle3.tar.gz')
           with sync_playwright() as pw:
             browser=pw.chromium.launch(headless=True)
             ctx=browser.new_context(accept_downloads=True)
@@ -45,9 +45,9 @@ jobs:
             browser.close()
           print(out, out.stat().st_size)
           PY
-          echo 'c0446e5a57d0b6e4acebb61075cc83da84112d97fb189c3d76d36edb6f381d6c  /tmp/sultan_bundle2.tar.gz' | sha256sum -c -
+          echo 'cb4b4e33a111d15b865c812982d6205c7fb7be99fbd0e7c5ddbe0424a21728a1  /tmp/sultan_bundle3.tar.gz' | sha256sum -c -
           rm -rf /tmp/sultan-rc && mkdir -p /tmp/sultan-rc
-          tar -xzf /tmp/sultan_bundle2.tar.gz -C /tmp/sultan-rc
+          tar -xzf /tmp/sultan_bundle3.tar.gz -C /tmp/sultan-rc
           rsync -a /tmp/sultan-rc/payload/ ./
           while IFS= read -r f; do [ -z "$f" ] || rm -f -- "$f"; done < /tmp/sultan-rc/delete.txt
           test ! -e src/final-locales.js
