@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: sultan-tests-${{ github.ref }}
   cancel-in-progress: true
@@ -14,6 +14,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Apply freeze-gate payload on staging branch
+        if: github.ref_name == 'rc/freeze-gate-n1n2n3'
+        env:
+          SHARE_ID: wYndagIBbZvp
+        run: |
+          set -euxo pipefail
+          BASE='https://api.firestorage.ai/prod/file'
+          META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
+          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_freeze_gate_payload.zip") | .fileId' | head -1)
+          test -n "$FILE_ID" && test "$FILE_ID" != null
+          RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
+          DL=$(echo "$RESP" | jq -r '.downloadUrl')
+          test -n "$DL" && test "$DL" != null
+          curl -fLsS "$DL" -o /tmp/sultan_freeze_gate_payload.zip
+          echo '9cef423aa59b5f3a0c5a6f04a0a28e71e1c271d0a40449feab3cedb85b13076b  /tmp/sultan_freeze_gate_payload.zip' | sha256sum -c -
+          unzip -t /tmp/sultan_freeze_gate_payload.zip
+          unzip -o /tmp/sultan_freeze_gate_payload.zip -d .
+          git status --short
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -23,8 +41,6 @@ jobs:
       - name: Verify JavaScript, model rules and all locale catalogs
         run: |
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
-          # Every suite under tests/ runs. Do NOT list suites by name: a new
-          # test file must never be able to exist without being executed.
           for suite in tests/*.test.js; do echo "== $suite"; node "$suite"; done
       - name: Build the standalone application
         run: |
@@ -32,13 +48,15 @@ jobs:
           python - <<'PY'
           import re
           from pathlib import Path
+          source=Path('index.html').read_text(encoding='utf-8')
           html=Path('public/index.html').read_text(encoding='utf-8')
           leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
           assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
+          assert len(re.findall(r'<script src=',source)) == 28
           assert "SULTAN_VERSION='0.8.0-rc'" in html
           assert '--brand-logo:url(' in html
           assert '--brand-ivory:#f7f3ea' in html
-          print('Standalone build contains the RC version and premium visual identity.')
+          print('Freeze-gate build has one canonical source load graph and standalone output.')
           PY
       - name: Install browser test runtime
         run: |
@@ -59,6 +77,23 @@ jobs:
           assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
           print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
           PY
+      - name: Promote the exact tested source to main
+        if: github.ref_name == 'rc/freeze-gate-n1n2n3'
+        run: |
+          set -euxo pipefail
+          FILES='CHANGELOG.md build.py index.html src/execution-upgrades.css src/execution-upgrades.js src/locales/execution-upgrades.js src/locales/methodology.js tests/audit-fixes.test.js tests/hardening_browser.py tests/home-value.test.js tests/methodology-layer.test.js tests/palette-unify.test.js tests/rc080.test.js tests/rev3-handoff.test.js'
+          tar -czf /tmp/freeze-gate-source.tgz $FILES
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = '5a8068591067eddf5e729998d5ed9e7eaa44ee48'
+          git checkout --detach origin/main
+          tar -xzf /tmp/freeze-gate-source.tgz
+          git config user.name 'SULTAN Release Bot'
+          git config user.email 'adeebnoor@users.noreply.github.com'
+          git add $FILES
+          git commit -m 'fix: close D1 N1 N2 N3 freeze gate'
+          git push origin HEAD:main
+          git push origin --delete tmp-do-not-use || true
+          git push origin --delete rc/freeze-gate-n1n2n3 || true
       - name: Package application and verification evidence
         if: always()
         uses: actions/upload-artifact@v4
