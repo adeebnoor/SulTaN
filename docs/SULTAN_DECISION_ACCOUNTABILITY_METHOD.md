@@ -29,11 +29,11 @@ Resources are released against named evidence or acceptance conditions. Funding 
 
 These are advisory semantic hints. They are intentionally excluded from `check()` and do not become approval blockers by themselves.
 
-- **R1 — Advantage grounding:** flag a selected discretionary choice when its “why us” has no visible anchor in institutional assets or context.
-- **R2 — Trade-off connection:** flag a stated “not doing” boundary when no option trade-off visibly carries that boundary into the choice set.
-- **R3 — Boundary contradiction:** flag when something declared as “not doing” materially overlaps a selected choice, outcome, or rationale.
+- **R1 — Unapproved borrowed target:** flag when a numeric target appears literally inside its linked reference while that reference is not approved for use or adaptation.
+- **R2 — Boundary contradiction:** flag when something declared as “not doing” materially overlaps a selected choice, outcome, or rationale.
+- **R3 — Trade-off omission:** flag a stated “not doing” boundary when no option trade-off visibly carries that boundary into the choice set.
 - **R4 — Choice distinctiveness:** flag selected choices whose outcomes are so similar that they may be duplicates rather than real alternatives.
-- **R5 — Reference fitness:** flag a numeric target that relies on a reference not explicitly classified for use or adaptation in the institution’s context.
+- **R5 — Advantage grounding:** flag a selected discretionary choice when its “why us” has no visible anchor in institutional assets or context.
 
 These rules are deliberately deterministic and explainable. They are not presented as AI judgement and do not change the formal review result.
 
