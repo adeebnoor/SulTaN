@@ -1,15 +1,18 @@
 /* Vision 2030 realization programs — bundled reference list. No network calls.
-   Verified 2026-09-15 against the official Vision 2030 programs page and the
-   2025 annual report. The official programs page still surfaces eleven program
-   names; the 2025 report states that Fiscal Sustainability and Privatization
-   concluded after fulfilling their objectives. Preserve all eleven as open-list
-   reference suggestions and keep status explicit instead of deleting history.
+   Program names retained from the supplied reference and official directory.
+   Completion status rechecked 2026-09-15 against the official CEDA statement
+   published by SPA on 2026-04-27 (SultanVision.statusSource). Preserve the
+   eleven supplied program names as reference suggestions, with concluded
+   programs explicitly marked rather than silently deleting history.
    Re-verify before each release. SULTAN is not affiliated with any programme. */
 (function(root){
 'use strict';
 root.SultanVision=root.SultanVision||{};
 root.SultanVision.verifiedOn='2026-09-15';
 root.SultanVision.source='https://www.vision2030.gov.sa/ar/explore/programs';
+root.SultanVision.statusSource='https://www.spa.gov.sa/en/N2572343';
+/* Capture a public deep link before the workspace router initializes. */
+root.SultanVision.initialAnchor=typeof location==='undefined'?'':location.hash.slice(1);
 root.SultanVision.programs=[
 {id:'ntp',code:'NTP',status:'active',ar:'برنامج التحول الوطني',en:'National Transformation Program'},
 {id:'hcdp',code:'HCDP',status:'active',ar:'برنامج تنمية القدرات البشرية',en:'Human Capability Development Program'},
@@ -26,6 +29,140 @@ root.SultanVision.active=root.SultanVision.programs.filter(function(x){return x.
 root.SultanVision.completed=root.SultanVision.programs.filter(function(x){return x.status==='completed';});
 root.SultanVision.titles=function(lang){return root.SultanVision.programs.map(function(x){return lang==='en'?x.en:x.ar;});};
 root.SultanLocales=root.SultanLocales||{};
-Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {visionListLabel:'Vision 2030 realization programs',visionListHint:'Suggestions only. Type any mandate — a programme, a royal decree, a board resolution, a regulator requirement, or a historical programme mandate.',visionListDisclaimer:'Reference list bundled with SULTAN, verified %{1}. SULTAN is not affiliated with and does not represent any programme. The official programs page surfaces eleven program names; the 2025 annual report states that Privatization and Fiscal Sustainability concluded after fulfilling their objectives. Confirm current status before publishing.',visionListVerified:'Programme list verified %{1}',sectorList:'Government · central|Government · regional|Healthcare|Higher education|School education|Financial services|Energy & utilities|Industry & logistics|Telecom & digital|Transport|Tourism & culture|Non-profit|Regulator|Research centre',unitList:'%|minutes|hours|days|months|count|per 1,000|per 100,000|SAR|SAR million|index point|level (1–5)|percentage point|beneficiary',freqList:'Monthly|Quarterly|Semi-annual|Annual|On each release|On each incident'});
-Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {visionListLabel:'برامج تحقيق رؤية ٢٠٣٠',visionListHint:'اقتراحات فقط. اكتب أي ولاية تلتزم بها — برنامجًا، أو أمرًا ساميًا، أو قرار مجلس، أو مطلبًا تنظيميًا، أو تكليفًا تاريخيًا مرتبطًا ببرنامج مكتمل.',visionListDisclaimer:'قائمة مرجعية مضمّنة في سلطان، مُتحقَّق منها في %{1}. سلطان غير مرتبط بأي برنامج ولا يمثّله. تعرض الصفحة الرسمية أحد عشر اسمًا للبرامج، بينما يذكر التقرير السنوي ٢٠٢٥ أن برنامجي التخصيص والاستدامة المالية اختتما بعد تحقيق أهدافهما. تأكّد من الحالة الحالية قبل النشر.',visionListVerified:'قائمة البرامج مُتحقَّق منها في %{1}',sectorList:'جهة حكومية · مركزية|جهة حكومية · منطقة|الرعاية الصحية|التعليم العالي|التعليم العام|الخدمات المالية|الطاقة والمرافق|الصناعة واللوجستيات|الاتصالات والرقمنة|النقل|السياحة والثقافة|قطاع غير ربحي|جهة تنظيمية|مركز بحثي',unitList:'٪|دقيقة|ساعة|يوم|شهر|عدد|لكل ١٠٠٠|لكل ١٠٠٠٠٠|ريال|مليون ريال|نقطة مؤشر|مستوى (١–٥)|نقطة مئوية|مستفيد',freqList:'شهري|ربع سنوي|نصف سنوي|سنوي|عند كل إصدار|عند كل حادثة'});
+Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {visionListLabel:'Vision 2030 realization programs',visionListHint:'Suggestions only. Type any mandate — a programme, a royal decree, a board resolution, a regulator requirement, or a historical programme mandate.',visionListDisclaimer:'Reference list bundled with SULTAN, verified %{0}. SULTAN is not affiliated with and does not represent any programme. This reference retains eleven program names; the official CEDA statement of 27 April 2026 confirms that Privatization and Fiscal Sustainability concluded after fulfilling their objectives. Confirm current status before publishing.',visionListVerified:'Programme list verified %{0}',sectorList:'Government · central|Government · regional|Healthcare|Higher education|School education|Financial services|Energy & utilities|Industry & logistics|Telecom & digital|Transport|Tourism & culture|Non-profit|Regulator|Research centre',unitList:'%|minutes|hours|days|months|count|per 1,000|per 100,000|SAR|SAR million|index point|level (1–5)|percentage point|beneficiary',freqList:'Monthly|Quarterly|Semi-annual|Annual|On each release|On each incident'});
+Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {visionListLabel:'برامج تحقيق رؤية ٢٠٣٠',visionListHint:'اقتراحات فقط. اكتب أي ولاية تلتزم بها — برنامجًا، أو أمرًا ساميًا، أو قرار مجلس، أو مطلبًا تنظيميًا، أو تكليفًا تاريخيًا مرتبطًا ببرنامج مكتمل.',visionListDisclaimer:'قائمة مرجعية مضمّنة في سلطان، مُتحقَّق منها في %{0}. سلطان غير مرتبط بأي برنامج ولا يمثّله. تحتفظ هذه القائمة بأحد عشر اسمًا مرجعيًا للبرامج، بينما يؤكد بيان مجلس الشؤون الاقتصادية والتنمية في 27 أبريل 2026 اختتام برنامجي التخصيص والاستدامة المالية بعد تحقيق أهدافهما. تأكّد من الحالة الحالية قبل النشر.',visionListVerified:'قائمة البرامج مُتحقَّق منها في %{0}',sectorList:'جهة حكومية · مركزية|جهة حكومية · منطقة|الرعاية الصحية|التعليم العالي|التعليم العام|الخدمات المالية|الطاقة والمرافق|الصناعة واللوجستيات|الاتصالات والرقمنة|النقل|السياحة والثقافة|قطاع غير ربحي|جهة تنظيمية|مركز بحثي',unitList:'٪|دقيقة|ساعة|يوم|شهر|عدد|لكل ١٠٠٠|لكل ١٠٠٠٠٠|ريال|مليون ريال|نقطة مؤشر|مستوى (١–٥)|نقطة مئوية|مستفيد',freqList:'شهري|ربع سنوي|نصف سنوي|سنوي|عند كل إصدار|عند كل حادثة'});
+Object.assign(root.SultanLocales.en, {
+  "vNavMethod": "Method",
+  "vNavOutputs": "Outputs",
+  "vNavPrivacy": "Privacy & limits",
+  "vNavAbout": "About",
+  "vFeedback": "Share feedback",
+  "vEvidenceTitle": "See what makes a strategy executable.",
+  "vEvidenceIntro": "Five views of the same fictional example: authority, trade-offs, progress, decision links and unresolved conditions. No project data is sent to a server.",
+  "vAuthorityTitle": "Authority space",
+  "vAuthorityHelp": "Who controls each enabler, and what is its status? Clarity is not the same as clearance.",
+  "vNoEnablers": "No enablers declared — clearance is unknown, not zero.",
+  "vBreakTitle": "Break-even point",
+  "vBreakHelp": "The lines use the actual scores and proportional redistribution of the remaining criterion weights.",
+  "vWeightAxis": "Criterion weight (%)",
+  "vValueAxis": "Strategic value",
+  "vCurrentWeight": "Current weight",
+  "vSwitch": "Leadership switches at",
+  "vNoSwitch": "No switch found within this criterion’s tested range. This is not a guarantee about other assumptions.",
+  "vInsufficientChart": "The available weights or scores do not support this chart. Missing evidence is not plotted as zero.",
+  "vTrackTitle": "Target versus actual",
+  "vTrackHelp": "Baseline, annual targets and recorded results — missing readings remain missing.",
+  "vChainTitle": "One connected decision",
+  "vRisk": "Risk evidence",
+  "vChoice": "Strategic choice",
+  "vPath": "Transition",
+  "vInitiative": "Initiative",
+  "vGate": "Funding condition",
+  "vNoGate": "No release condition declared",
+  "vNoRisk": "No risk evidence declared",
+  "vBlockTitle": "Conditions still to resolve",
+  "vBlockHelp": "Blocking and missing-data conditions, not a completion percentage or approval score.",
+  "vBlockCount": "conditions",
+  "vWarnings": "Other warnings",
+  "vAllClear": "No blocking or missing-data conditions detected. Human review is still required.",
+  "vOutputsTitle": "Outputs for the decision-maker.",
+  "vOutput1": "Client document",
+  "vOutput1Help": "Choices, trade-offs, evidence, pathways and conditional funding.",
+  "vOutput2": "Internal report",
+  "vOutput2Help": "Working detail, unresolved notes and review history.",
+  "vOutput3": "Escalation pack",
+  "vOutput3Help": "External decisions, responsible owners, dates and fallback routes.",
+  "vOutput4": "Project JSON",
+  "vOutput4Help": "A portable project to save, import and continue editing.",
+  "vVisionTitle": "Name the mandate. Explain your contribution.",
+  "vVisionIntro": "Use Vision 2030 programs as reference suggestions in the existing mandate field. A royal decree, board decision or another mandate can be entered just as freely.",
+  "vVisionSource": "Official program directory ↗",
+  "vVisionStatusSource": "Official program-status source ↗",
+  "vCompleted": "Program concluded",
+  "vVisionNoAffiliation": "SULTAN is not affiliated with and does not represent any programme.",
+  "vAboutTitle": "A method with accountable authorship.",
+  "vAboutText": "Developed by Prof. Adeeb Noor to connect institutional identity to choices, evidence, authority and delivery. SULTAN makes trade-offs explicit and keeps unknowns visible.",
+  "vAboutBeta": "Free public beta for practical use and feedback.",
+  "vAboutLink": "About the developer ↗",
+  "vMethodNote": "Seven connected stages: identity, choices, references and pathways, priorities, enablers, roadmap, and review. A borrowed target needs evidence and adaptation to your institution, not just a citation.",
+  "vPrivacyLimits": "SULTAN does not verify the truth of your evidence, grant official approval or replace professional judgement. Keep confidential data out of the public beta. Local browser storage is not encrypted or synchronized; keep a project backup.",
+  "vPristine": "Start with what you know. These are starting prompts, not mistakes. All approval conditions remain visible in Review; none of the validation rules are relaxed.",
+  "vAnnualOpen": "Open annual target and evidence",
+  "vAnnualMissing": "Missing evidence",
+  "vAnnualEvidence": "Evidence recorded",
+  "vAnnualTargets": "annual targets",
+  "vAnnualMissingYears": "Evidence missing in",
+  "vMaturityList": "Governance|Data and evidence|People and capabilities|Processes|Technology|Service quality",
+  "vOwnerHelp": "Suggestions come from the owners already entered in this project. You may type another name.",
+  "vDemoLabel": "Fictional example — not your project",
+  "vDirectionKnown": "Known control",
+  "vUnrecorded": "Not recorded"
+});
+Object.assign(root.SultanLocales.ar, {
+  "vNavMethod": "المنهجية",
+  "vNavOutputs": "المخرجات",
+  "vNavPrivacy": "الخصوصية والحدود",
+  "vNavAbout": "من نحن",
+  "vFeedback": "شاركنا ملاحظاتك",
+  "vEvidenceTitle": "انظر كيف تصبح الاستراتيجية قابلة للتنفيذ.",
+  "vEvidenceIntro": "خمس زوايا للمثال الافتراضي نفسه: الصلاحية، والمفاضلة، والتقدم، وترابط القرار، والشروط غير المحسومة. لا تُرسل بيانات مشروعك إلى خادم.",
+  "vAuthorityTitle": "مساحة الصلاحية",
+  "vAuthorityHelp": "من يملك كل ممكّن، وما حالته؟ وضوح المسؤولية لا يعني اكتمال الموافقات.",
+  "vNoEnablers": "لم تُعلن ممكّنات — خلوص القرار مجهول، وليس صفرًا.",
+  "vBreakTitle": "نقطة التبادل",
+  "vBreakHelp": "الخطوط محسوبة من درجات الخيارات الفعلية، مع إعادة توزيع بقية أوزان المعايير تناسبيًا.",
+  "vWeightAxis": "وزن المعيار (%)",
+  "vValueAxis": "القيمة الاستراتيجية",
+  "vCurrentWeight": "الوزن الحالي",
+  "vSwitch": "تتغير الصدارة عند",
+  "vNoSwitch": "لم تُرصد نقطة تبادل ضمن النطاق المفحوص لهذا المعيار؛ هذا ليس ضمانًا تجاه تغير الافتراضات الأخرى.",
+  "vInsufficientChart": "الأوزان أو الدرجات المتاحة لا تكفي لرسم هذا المنحنى. لا نحول البيانات الناقصة إلى صفر.",
+  "vTrackTitle": "المستهدف مقابل الفعلي",
+  "vTrackHelp": "خط الأساس والمستهدفات السنوية والنتائج المسجلة؛ القراءة المفقودة تظل مفقودة.",
+  "vChainTitle": "قرار واحد مترابط",
+  "vRisk": "دليل الخطر",
+  "vChoice": "الاختيار الاستراتيجي",
+  "vPath": "المسار",
+  "vInitiative": "المبادرة",
+  "vGate": "شرط التمويل",
+  "vNoGate": "لم يُعلن شرط لفتح الدفعة",
+  "vNoRisk": "لم يُعلن دليل للخطر",
+  "vBlockTitle": "شروط ما زالت تحتاج معالجة",
+  "vBlockHelp": "الشروط المانعة والبيانات الناقصة؛ ليست نسبة اكتمال أو درجة اعتماد.",
+  "vBlockCount": "شرطًا",
+  "vWarnings": "تحذيرات أخرى",
+  "vAllClear": "لم تُرصد شروط مانعة أو بيانات ناقصة؛ تظل المراجعة البشرية لازمة.",
+  "vOutputsTitle": "مخرجات يقرأها صانع القرار.",
+  "vOutput1": "وثيقة العميل",
+  "vOutput1Help": "الخيارات والمفاضلات والأدلة والمسارات والتمويل المشروط.",
+  "vOutput2": "التقرير الداخلي",
+  "vOutput2Help": "تفاصيل العمل والملحوظات غير المحسومة وسجل المراجعة.",
+  "vOutput3": "حزمة التصعيد",
+  "vOutput3Help": "القرارات الخارجية ومالكوها ومواعيدها ومساراتها البديلة.",
+  "vOutput4": "ملف المشروع JSON",
+  "vOutput4Help": "نسخة قابلة للحفظ والاستيراد واستكمال العمل.",
+  "vVisionTitle": "سمِّ التكليف. وحدد مساهمتك.",
+  "vVisionIntro": "استعن ببرامج تحقيق رؤية 2030 كاقتراحات في حقل التكليف القائم. ويمكنك كتابة أمر سامٍ أو قرار مجلس أو أي تكليف آخر دون التقيد بالقائمة.",
+  "vVisionSource": "الدليل الرسمي للبرامج ↗",
+  "vVisionStatusSource": "المصدر الرسمي لحالة البرامج ↗",
+  "vCompleted": "برنامج مختتم",
+  "vVisionNoAffiliation": "سلطان غير مرتبط بأي برنامج ولا يمثّله.",
+  "vAboutTitle": "منهج له صاحب ومسؤولية واضحة.",
+  "vAboutText": "طوّره الأستاذ الدكتور أديب نور لربط هوية الجهة بالاختيارات والأدلة والصلاحيات والتنفيذ. يجعل سلطان المفاضلات صريحة، ويُبقي المجهول ظاهرًا.",
+  "vAboutBeta": "نسخة تجريبية عامة مجانية للاستخدام العملي وجمع الملاحظات.",
+  "vAboutLink": "عن المطوّر ↗",
+  "vMethodNote": "سبع مراحل مترابطة: الهوية، والاختيارات، والمراجع والمسارات، والأولويات، والممكّنات، والخارطة، والمراجعة. المستهدف المستعار يحتاج دليلًا وتكييفًا مع جهتك، وليس ذكر مصدره فقط.",
+  "vPrivacyLimits": "لا يتحقق سلطان من صحة أدلتك، ولا يمنح اعتمادًا رسميًا، ولا يستبدل الحكم المهني. تجنب البيانات السرية في النسخة العامة. الحفظ في المتصفح غير مشفّر وغير متزامن؛ احتفظ بنسخة من ملف مشروعك.",
+  "vPristine": "ابدأ بما تعرفه. هذه ملاحظات بدء، وليست أخطاء ارتكبتها. تظل شروط الاعتماد كاملة في قسم المراجعة، ولا تُخفّف أي قاعدة تحقق.",
+  "vAnnualOpen": "افتح المستهدف السنوي والدليل",
+  "vAnnualMissing": "دليل ناقص",
+  "vAnnualEvidence": "دليل مسجل",
+  "vAnnualTargets": "مستهدفات سنوية",
+  "vAnnualMissingYears": "دليل ناقص في",
+  "vMaturityList": "الحوكمة|البيانات والأدلة|الأفراد والقدرات|العمليات|التقنية|جودة الخدمة",
+  "vOwnerHelp": "الاقتراحات من أسماء المالكين المكتوبة في هذا المشروع. يمكنك كتابة اسم آخر.",
+  "vDemoLabel": "مثال افتراضي — ليس مشروعك",
+  "vDirectionKnown": "صلاحية معلومة",
+  "vUnrecorded": "لم يُسجّل"
+});
 })(globalThis);

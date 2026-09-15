@@ -1,0 +1,54 @@
+name: Verify live SULTAN on Render
+on:
+  create:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    # A verification branch is created only after the tested build is deployed.
+    # This check never participates in a pre-deployment checksPass dependency.
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.event.ref, 'verify-live/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build the same revision for byte-level comparison
+        run: python3 build.py
+      - name: Wait for the exact public build
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request
+          from pathlib import Path
+          expected=json.loads(Path('release/manifest.json').read_text())['sha256']
+          url='https://sultan-strategy-beta.onrender.com/'
+          for attempt in range(20):
+              try:
+                  with urllib.request.urlopen(url,timeout=30) as response:
+                      actual=hashlib.sha256(response.read()).hexdigest()
+                      assert response.status==200 and actual==expected, 'Public application differs from this revision'
+                  print('Verified exact live build SHA-256:',expected,flush=True)
+                  break
+              except Exception as error:
+                  if attempt==19:raise
+                  print('Waiting for Render:',str(error),flush=True)
+                  time.sleep(15)
+          PY
+      - name: Install browser runtime
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Exercise the deployed Arabic and English application
+        env:
+          SULTAN_LIVE_URL: https://sultan-strategy-beta.onrender.com/
+        run: python tests/surfacing_browser.py
+      - name: Preserve live verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sultan-live-evidence
+          path: qa/
+          retention-days: 14

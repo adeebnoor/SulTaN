@@ -54,7 +54,7 @@ release = base / 'release'
 release.mkdir(exist_ok=True)
 source_files = [
     base / 'README.md', base / 'index.html', base / 'build.py', base / '.gitignore',
-    base / '.nojekyll', base / 'CHANGELOG.md', base / 'CONTRIBUTING.md'
+    base / '.nojekyll', base / 'CHANGELOG.md', base / 'CONTRIBUTING.md', base / 'render.yaml'
 ]
 for folder in ('src', 'tests', '.github', 'docs'):
     source_files.extend(p for p in (base / folder).rglob('*') if p.is_file())

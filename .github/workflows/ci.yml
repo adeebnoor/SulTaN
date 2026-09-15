@@ -49,11 +49,12 @@ jobs:
           python tests/review_regressions.py
           python tests/beta_browser.py
           python tests/hardening_browser.py
+          python tests/surfacing_browser.py
           python - <<'PY'
           import json
           from pathlib import Path
           data=json.loads(Path('qa/review-browser-results.json').read_text(encoding='utf-8'))
-          assert data['tests'] >= 315, f"review browser regression surface dropped to {data['tests']} checks"
+          assert data['tests'] >= 369, f"review browser regression surface dropped to {data['tests']} checks"
           assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
           print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
           PY
