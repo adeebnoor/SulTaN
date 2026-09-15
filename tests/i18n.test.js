@@ -4,6 +4,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const baseEn=require('../src/locales/en.js'),baseAr=require('../src/locales/ar.js');
 const dictionaries={en:{...baseEn},ar:{...baseAr}},context={globalThis:{SultanLocales:dictionaries}};vm.createContext(context);
 for(const file of fs.readdirSync(path.join(__dirname,'../src/locales')).filter(x=>x.endsWith('.js')&&!['en.js','ar.js'].includes(x)).sort())vm.runInContext(fs.readFileSync(path.join(__dirname,'../src/locales',file),'utf8'),context,{filename:file});
+assert.ok(fs.existsSync(path.join(__dirname,'../src/locales/final.js')),'final locale extension must live under src/locales');assert.ok(!fs.existsSync(path.join(__dirname,'../src/final-locales.js')),'no locale extension may bypass src/locales');
 const en=context.globalThis.SultanLocales.en,ar=context.globalThis.SultanLocales.ar;assert.deepEqual(Object.keys(en).sort(),Object.keys(ar).sort());
 for(const key of Object.keys(en)){assert.equal(typeof en[key],'string');assert.equal(typeof ar[key],'string');const vars=s=>[...s.matchAll(/%\{\d+\}/g)].map(x=>x[0]).sort();assert.deepEqual(vars(en[key]),vars(ar[key]),'Placeholder mismatch: '+key);}
 console.log(JSON.stringify({translationKeys:Object.keys(en).length,localeFiles:fs.readdirSync(path.join(__dirname,'../src/locales')).filter(x=>x.endsWith('.js')).length,parity:'pass'}));
