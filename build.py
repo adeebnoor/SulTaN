@@ -13,6 +13,19 @@ version_file.write_text(
 
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
+html = html.replace('<title>SULTAN | Free Strategy Builder</title>', '<title>SULTAN | Decision Accountability for Strategy</title>')
+html = html.replace(
+    '<meta name="description" content="A free Arabic and English strategy workspace by Prof. Adeeb Noor. Connect institutional identity, ambition, choices, authority, enablers, annual roadmaps and review.">',
+    '<meta name="description" content="SULTAN turns strategy into an explainable, executable decision by connecting choices to evidence, authority, initiatives, funding conditions and visible uncertainty.">',
+)
+html = html.replace(
+    '<meta property="og:title" content="SULTAN | Strategy, with a reason.">',
+    '<meta property="og:title" content="SULTAN | Strategy decisions you can explain and execute">',
+)
+html = html.replace(
+    '<meta property="og:description" content="Build a strategy that belongs to your institution. Free Arabic/English public beta. No account required.">',
+    '<meta property="og:description" content="Make strategic choices, authority, evidence, uncertainty and execution conditions explicit before a plan is approved.">',
+)
 
 # Inline every local stylesheet/script referenced by index.html, in document order.
 # This keeps the standalone edition from silently falling behind when a new module is added.
@@ -40,6 +53,17 @@ def inline_js(match):
 
 html = re.sub(r'<link\s+rel="stylesheet"\s+href="(src/[^"]+\.css)">', inline_css, html)
 html = re.sub(r'<script\s+src="(src/[^"]+\.js)"></script>', inline_js, html)
+
+# Homepage positioning is a presentation layer loaded after the core product so it
+# cannot alter the project schema or engine. Keep the locale payload separate from
+# the renderer to preserve bilingual copy discipline.
+home_css = local_asset('src/home-value.css').read_text(encoding='utf-8')
+home_locale = local_asset('src/locales/home-value.js').read_text(encoding='utf-8')
+home_js = local_asset('src/home-value.js').read_text(encoding='utf-8')
+if any('</script' in code.lower() for code in (home_locale, home_js)):
+    raise ValueError('Unexpected closing script token in homepage value layer')
+html = html.replace('</head>', '<style>' + home_css + '</style></head>')
+html = html.replace('</body>', '<script>' + home_locale + '</script><script>' + home_js + '</script></body>')
 
 leftover = re.findall(r'(?:src|href)="(src/[^"]+)"', html)
 if leftover:
