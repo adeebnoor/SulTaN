@@ -16,7 +16,7 @@ jobs:
       - name: Apply surfacing completion payload
         id: prep
         env:
-          SHARE_ID: -X-2TRjR0TAk
+          SHARE_ID: 39Hjel_w37nk
         run: |
           set -euxo pipefail
           if grep -q '0.8.0-rc — surfacing completion' CHANGELOG.md; then
@@ -25,13 +25,13 @@ jobs:
           fi
           BASE='https://api.firestorage.ai/prod/file'
           META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
-          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_surfacing_payload_v5.zip") | .fileId' | head -1)
+          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_surfacing_payload_v6.zip") | .fileId' | head -1)
           test -n "$FILE_ID" && test "$FILE_ID" != null
           RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
           DL=$(echo "$RESP" | jq -r '.downloadUrl')
           test -n "$DL" && test "$DL" != null
           curl -fLsS "$DL" -o /tmp/sultan_surfacing_payload.zip
-          echo '40abac93c319640e40da0c1eb04887f4df1804b0aecf271cdb6332daf9c894d0  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
+          echo 'a98edfc5a0958885fa2d87b0eff8af0848c9690b08ca6ac145db08b456692833  /tmp/sultan_surfacing_payload.zip' | sha256sum -c -
           unzip -t /tmp/sultan_surfacing_payload.zip
           unzip -o /tmp/sultan_surfacing_payload.zip -d .
           echo 'assembled=true' >> "$GITHUB_OUTPUT"
