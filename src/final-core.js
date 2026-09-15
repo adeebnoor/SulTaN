@@ -8,7 +8,15 @@ const KEY='sultan.strategy.builder.v0.5';
 const clone=x=>JSON.parse(JSON.stringify(x));
 const num=x=>typeof x==='number'&&Number.isFinite(x);
 const text=x=>typeof x==='string'&&x.trim().length>0;
-const isoDate=x=>typeof x==='string'&&(/^\d{4}-\d{2}-\d{2}$/.test(x)||x==='');
+const normalizeRiskDate=x=>{
+ if(x===null||x===undefined||x==='')return '';
+ if(Number.isInteger(x)&&x>=1900&&x<=2200)return String(x)+'-01-01';
+ if(typeof x!=='string')return null;const v=x.trim();
+ if(/^\d{4}$/.test(v))return v+'-01-01';
+ if(/^\d{4}-\d{2}$/.test(v))return v+'-01';
+ if(/^\d{4}-\d{2}-\d{2}$/.test(v))return v;
+ return null;
+};
 const SECTIONS=['identity','choices','references','priorities','enablers','roadmap','review'];
 const optionDefaults=()=>({
  stopEvidence:'',riskSource:'',riskDate:'',
@@ -31,7 +39,7 @@ function normalizeProject(p){
  for(const k of SECTIONS)if(typeof p.collaboration.owners[k]!=='string')p.collaboration.owners[k]='';
  if(!Array.isArray(p.collaboration.contributions))p.collaboration.contributions=[];
  p.collaboration.contributions=p.collaboration.contributions.slice(-250).map(x=>({at:String(x?.at||''),section:SECTIONS.includes(x?.section)?x.section:'review',name:String(x?.name||''),note:String(x?.note||'')}));
- for(const o of p.options||[]){for(const [k,v] of Object.entries(optionDefaults()))if(o[k]===undefined)o[k]=clone(v);o.assumptions=normalizeAssumptions(o.assumptions);if(o.type==='divest'&&o.releasedResources===undefined)o.releasedResources=null;}
+ for(const o of p.options||[]){for(const [k,v] of Object.entries(optionDefaults()))if(o[k]===undefined)o[k]=clone(v);o.assumptions=normalizeAssumptions(o.assumptions);const rd=normalizeRiskDate(o.riskDate);o.riskDate=rd===null?'':rd;if(o.type==='divest'&&o.releasedResources===undefined)o.releasedResources=null;}
  for(const t of p.transitions||[]){for(const [k,v] of Object.entries(transitionDefaults()))if(t[k]===undefined)t[k]=v;}
  for(const i of p.initiatives||[])for(const b of i.budget||[])if(typeof b.releaseEvidence!=='string')b.releaseEvidence='';
  return p;
@@ -47,7 +55,7 @@ E.initiative=function(p){const i=baseInitiative(p);for(const b of i.budget)b.rel
 const baseValidate=E.validateImport;
 function extractExtensions(raw){
  const x={documentNumber:raw?.documentNumber,institutionLiabilities:raw?.institution?.liabilities,collaboration:clone(raw?.collaboration||collaborationDefaults()),options:[],transitions:[],budgets:[]};
- for(const o of raw?.options||[])x.options.push({stopEvidence:o?.stopEvidence,riskSource:o?.riskSource,riskDate:o?.riskDate,divestStop:o?.divestStop,releasedResources:o?.releasedResources,redeployTo:o?.redeployTo,divestEvidence:o?.divestEvidence,divestImpact:o?.divestImpact,assumptions:clone(o?.assumptions)});
+ for(const o of raw?.options||[])x.options.push({stopEvidence:o?.stopEvidence,riskSource:o?.riskSource,riskDate:normalizeRiskDate(o?.riskDate),divestStop:o?.divestStop,releasedResources:o?.releasedResources,redeployTo:o?.redeployTo,divestEvidence:o?.divestEvidence,divestImpact:o?.divestImpact,assumptions:clone(o?.assumptions)});
  for(const t of raw?.transitions||[])x.transitions.push({trackType:t?.trackType,maturityFamily:t?.maturityFamily,indicatorType:t?.indicatorType});
  for(const i of raw?.initiatives||[])x.budgets.push((i?.budget||[]).map(b=>b?.releaseEvidence));
  return x;
@@ -66,8 +74,8 @@ function validateExtensionShape(raw,x){
  for(let i=0;i<(raw?.options||[]).length;i++){
   const o=raw.options[i],e=x.options[i]||{};
   if(!['requirement','differentiation','moonshot','divest'].includes(o.type))throw Error('Invalid option type');
-  for(const k of ['stopEvidence','riskSource','riskDate','divestStop','redeployTo','divestEvidence','divestImpact'])if(e[k]!==undefined&&typeof e[k]!=='string')throw Error('Invalid option extension: '+k);
-  if(e.riskDate!==undefined&&!isoDate(e.riskDate))throw Error('Invalid riskDate');
+  for(const k of ['stopEvidence','riskSource','divestStop','redeployTo','divestEvidence','divestImpact'])if(e[k]!==undefined&&typeof e[k]!=='string')throw Error('Invalid option '+(i+1)+' field '+k);
+  if(e.riskDate===null)throw Error('Invalid option '+(i+1)+' field riskDate; use YYYY, YYYY-MM, or YYYY-MM-DD');
   if(e.releasedResources!==undefined&&e.releasedResources!==null&&(!num(e.releasedResources)||e.releasedResources<0))throw Error('Invalid releasedResources');
   if(e.assumptions!==undefined&&!Array.isArray(e.assumptions)&&typeof e.assumptions!=='string')throw Error('Invalid assumptions');
  }
@@ -144,6 +152,24 @@ E.check=function(p){
  return out;
 };
 
+/* Deterministic semantic hints. These are advisory and intentionally excluded from check(). */
+function words(v){return new Set(String(v||'').toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').split(/\s+/).filter(w=>w.length>=4));}
+function overlap(a,b){const A=words(a),B=words(b);let n=0;for(const w of A)if(B.has(w))n++;return n;}
+E.semanticIssues=function(p){
+ const hints=[],push=(rule,message,entity='')=>hints.push({level:'hint',rule,section:'review',message,entity});
+ const tr=k=>{try{return T().t(k);}catch{return k;}};
+ const selected=(p.options||[]).filter(o=>o.decision==='select');
+ for(const t of p.transitions||[]){const r=(p.references||[]).find(x=>x.id===t.referenceId);if(t.direction!=='qualitative'&&num(t.target)&&r&&!['use','adapt'].includes(r.status))push('S5',tr('semanticS5')+' '+(t.domain||''),t.id);}
+ if(text(p.institution?.notDoing)){
+  const nd=p.institution.notDoing;
+  for(const o of selected)if(overlap(nd,[o.title,o.outcome,o.whyUs].join(' '))>=2)push('S3',tr('semanticS3')+' '+(o.title||''),o.id);
+  if(!(p.options||[]).some(o=>overlap(nd,o.tradeoff)>=2))push('S2',tr('semanticS2'));
+ }
+ for(let i=0;i<selected.length;i++)for(let j=i+1;j<selected.length;j++){const a=selected[i],b=selected[j],A=words(a.outcome),B=words(b.outcome);if(A.size&&B.size){let inter=0;for(const w of A)if(B.has(w))inter++;const union=new Set([...A,...B]).size;if(inter/union>=.75)push('S4',tr('semanticS4')+' '+(a.title||'')+' / '+(b.title||''),a.id);}}
+ const anchor=[p.institution?.assets,p.institution?.context].join(' ');if(text(anchor))for(const o of selected.filter(x=>x.type!=='requirement'))if(text(o.whyUs)&&overlap(o.whyUs,anchor)===0)push('S1',tr('semanticS1')+' '+(o.title||''),o.id);
+ return hints;
+};
+
 /* Recovery shield: if the saved draft fails validation, never expose it to the app as a writable blank project. */
 (function installRecovery(){
  if(typeof window==='undefined'||typeof Storage==='undefined')return;
@@ -169,17 +195,46 @@ E.normalizeFinalProject=normalizeProject;
 /* Normalize the legacy demo factory through the final extension schema in one core layer. */
 const baseDemo=E.demo;
 E.demo=function(){
- const p=normalizeProject(baseDemo());
- p.institution.liabilities=root.SultanI18n.language==='ar'?'التزامات تشغيلية قائمة وقدرة تنفيذية محدودة في بعض المسارات.':'Existing operating commitments and constrained execution capacity in selected paths.';
+ const p=normalizeProject(baseDemo()),ar=root.SultanI18n.language==='ar';
+ p.institution.liabilities=ar?'التزامات تشغيلية قائمة وقدرة تنفيذية محدودة في بعض المسارات.':'Existing operating commitments and constrained execution capacity in selected paths.';
  p.options.forEach((o,i)=>{
   if(!o.riskSource&&typeof o.risks==='string'&&o.risks.trim())o.riskSource=o.risks;
-  if(!o.riskSource)o.riskSource=root.SultanI18n.language==='ar'?'سجل مخاطر افتراضي — بند '+(i+1):'Fictional risk register — item '+(i+1);
+  if(!o.riskSource)o.riskSource=ar?'سجل مخاطر افتراضي — بند '+(i+1):'Fictional risk register — item '+(i+1);
   o.riskDate='2026-09-15';
-  if(o.type==='moonshot'&&!o.stopEvidence)o.stopEvidence=root.SultanI18n.language==='ar'?'إيقاف المسار إذا لم يتحقق دليل القبول المحدد عند بوابة التعلم.':'Stop the path if the defined acceptance evidence is not met at the learning gate.';
-  o.assumptions=(o.assumptions||[]).map(a=>Object.assign(a,{expectedPersistence:a.expectedPersistence||'24 months',owner:a.owner||(root.SultanI18n.language==='ar'?'مالك الاختيار':'Choice owner'),testDate:a.testDate||'2027-06-30',testEvidence:a.testEvidence||(root.SultanI18n.language==='ar'?'دليل تحقق موثق':'Documented validation evidence'),failureImpact:a.failureImpact||(root.SultanI18n.language==='ar'?'إعادة فتح الاختيار وإعادة تخصيص الموارد':'Reopen the choice and reallocate resources')}));
+  if(o.type==='moonshot'&&!o.stopEvidence)o.stopEvidence=ar?'إيقاف المسار إذا لم يتحقق دليل القبول المحدد عند بوابة التعلم.':'Stop the path if the defined acceptance evidence is not met at the learning gate.';
+  o.assumptions=(o.assumptions||[]).map(a=>Object.assign(a,{expectedPersistence:a.expectedPersistence||'24 months',owner:a.owner||(ar?'مالك الاختيار':'Choice owner'),testDate:a.testDate||'2027-06-30',testEvidence:a.testEvidence||(ar?'دليل تحقق موثق':'Documented validation evidence'),failureImpact:a.failureImpact||(ar?'إعادة فتح الاختيار وإعادة تخصيص الموارد':'Reopen the choice and reallocate resources')}));
  });
- p.initiatives.forEach(i=>{if(i.kind==='learn')i.budget.forEach(b=>{if(num(b.amount)&&b.amount>0&&!b.releaseEvidence)b.releaseEvidence=root.SultanI18n.language==='ar'?'تحقق دليل القبول قبل فتح الدفعة.':'Acceptance evidence verified before release.';});});
- return p;
+ if(p.options[2])Object.assign(p.options[2],{
+  type:'divest',decision:'select',
+  title:ar?'إيقاف وحدتين منخفضتي الأثر ودمج الدعم المتكرر':'Stop two low-impact legacy units and merge duplicated support',
+  outcome:ar?'تحرير موارد لإعادة توجيهها إلى تجربة الزائر ذات الأولوية':'Release resources for the priority visitor-experience strategy',
+  whyUs:ar?'بيانات الاستخدام والأداء الداخلي تظهر تشتتًا وازدواجية يمكن إيقافهما':'Internal utilization and performance data show duplication that can be stopped',
+  tradeoff:ar?'انتقال منظم للموظفين والخدمات المتأثرة':'Managed transition for affected staff and services',
+  decisionReason:ar?'ثلاث سنوات من انخفاض الاستخدام وتكرار الوظائف':'Three years of low utilization and duplicated functions',
+  divestStop:ar?'إيقاف وحدتين قديمتين ودمج خدمات الدعم المتكررة':'Stop two legacy units and merge duplicated support services',
+  releasedResources:1800000,
+  redeployTo:ar?'فرق تجربة الزائر والتحليلات التطبيقية':'Visitor-experience teams and applied analytics',
+  divestEvidence:ar?'مراجعة أداء ثلاثية السنوات وقياس ازدواجية الخدمات':'Three-year performance review and service-duplication analysis',
+  divestImpact:ar?'نقل الموظفين المتأثرين بخطة انتقال ومهارات معلنة':'Transition affected staff through a published redeployment and reskilling plan'
+ });
+ /* Keep the base demo's conditional no-initiative choice visible so the product still demonstrates
+   that 'unknown/not declared' is different from zero cost. Add the mandatory requirement as a
+   separate fifth option instead of replacing that diagnostic example. */
+ const requirement=E.option();Object.assign(requirement,{
+  id:'o5',type:'requirement',decision:'select',
+  title:ar?'استيفاء متطلبات الحوكمة والموافقة الإلزامية':'Meet mandatory governance and consent obligations',
+  outcome:ar?'تشغيل أي شراكة أو استخدام بيانات ضمن الموافقات النظامية':'Operate any partnership or data use within mandatory approvals',
+  whyUs:ar?'التكليف النظامي يسبق أي توسع اختياري':'The regulatory mandate precedes discretionary expansion',
+  tradeoff:ar?'قد يؤخر بعض التجارب لكنه يمنع التزامًا غير مشروع':'May slow some experiments while preventing unlawful commitments',
+  owner:ar?'مالك الحوكمة':'Governance owner',
+  decisionReason:ar?'متطلب واجب لا يخضع للمفاضلة':'Mandatory requirement; not a discretionary alternative'
+ });
+ p.options.push(requirement);
+ if(p.transitions[0]){const t=p.transitions[0];t.direction='delta';t.baseline=1;t.target=5;t.targetState=ar?'من 1 إلى 6 فرق قادرة على التشغيل المشترك':'From 1 to 6 teams able to operate jointly';const ds=[1,3,4,5];t.annual.forEach((a,k)=>a.target=ds[k]??ds.at(-1));}
+ const maturity=E.transition(p);Object.assign(maturity,{id:'t3',optionId:requirement.id,referenceId:p.references[0]?.id||'',domain:ar?'نضج ضوابط الحوكمة والموافقة':'Governance and consent control maturity',current:ar?'ضوابط متفرقة وغير موحدة':'Fragmented, non-standardized controls',currentSource:ar?'تقييم داخلي افتراضي':'Fictional internal assessment',targetState:ar?'ضوابط موحدة قابلة للتدقيق':'Standardized, auditable controls',kpi:ar?'مستوى النضج':'Maturity level',unit:ar?'مستوى':'level',direction:'up',baseline:2,target:4,owner:ar?'مالك الحوكمة':'Governance owner',dataSource:ar?'سجل الضوابط':'Control register',frequency:ar?'سنوي':'Annual',trackType:'maturity',maturityFamily:ar?'حوكمة البيانات والأدلة':'Data governance and evidence controls',indicatorType:'performance'});maturity.annual.forEach((a,k)=>{a.milestone=ar?'رفع نضج الضوابط تدريجيًا':'Raise control maturity progressively';a.evidence=ar?'تقييم ضوابط موثق':'Documented control assessment';a.target=[2.5,3,3.5,4][k]??4;a.actual=k===0?2.4:null;a.actualSource=k===0?(ar?'تقييم تجريبي':'Fictional assessment'):'';});
+ const kri=E.transition(p);Object.assign(kri,{id:'t4',optionId:p.options[0]?.id||'o1',referenceId:p.references[0]?.id||'',domain:ar?'خطر تأخر الموافقات الخارجية':'External-approval delay risk',current:ar?'احتمال تأخر مرتفع':'High probability of delay',currentSource:ar?'سجل مخاطر افتراضي':'Fictional risk register',targetState:ar?'خطر متبقٍ منخفض ومراقب':'Low, monitored residual risk',kpi:ar?'احتمال التأخر':'Delay probability',unit:'%',direction:'down',baseline:30,target:10,owner:ar?'مالك الشراكة':'Partnership owner',dataSource:ar?'سجل المخاطر':'Risk register',frequency:ar?'ربع سنوي':'Quarterly',trackType:'outcome',maturityFamily:'',indicatorType:'risk'});kri.annual.forEach((a,k)=>{a.milestone=ar?'خفض خطر التأخر قبل الالتزام':'Reduce delay risk before commitment';a.evidence=ar?'تحديث موثق لسجل المخاطر':'Documented risk-register update';a.target=[25,20,15,10][k]??10;a.actual=k===0?28:null;a.actualSource=k===0?(ar?'قراءة افتراضية':'Fictional reading'):'';});
+ p.transitions.push(maturity,kri);
+ p.initiatives.forEach(i=>{if(i.kind==='learn')i.budget.forEach(b=>{if(num(b.amount)&&b.amount>0&&!b.releaseEvidence)b.releaseEvidence=ar?'تحقق دليل القبول قبل فتح الدفعة.':'Acceptance evidence verified before release.';});});
+ return normalizeProject(p);
 };
-
 })(globalThis);

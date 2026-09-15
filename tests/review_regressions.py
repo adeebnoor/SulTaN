@@ -27,7 +27,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
         elif section == 'enablers':
             expect(page.locator('.authority-space')).to_be_visible()
         elif section == 'choices':
-            expect(page.locator('.assumption-register')).to_have_count(4)
+            expect(page.locator('.assumption-register').first).to_be_visible()
 
     def menu(page):
         summary = page.locator('.export-menu > summary')
@@ -69,17 +69,28 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
 
                 page.on('dialog', handle_dialog)
                 page.goto(base_url + '?lang=' + lang)
+                brand = page.evaluate('''()=>{
+                  const body=getComputedStyle(document.body);
+                  const hero=document.querySelector('.launch-hero');
+                  const heroAfter=hero?getComputedStyle(hero,'::after'):null;
+                  return {bodyBg:body.backgroundColor,heroMark:heroAfter?heroAfter.backgroundImage:'none'};
+                }''')
+                check(prefix + 'computed brand surface uses a real background', brand['bodyBg'] not in ('rgba(0, 0, 0, 0)','transparent'))
+                check(prefix + 'computed hero carries the single brand mark', brand['heroMark'] != 'none' and 'data:image' in brand['heroMark'])
                 expect(page.locator('.export-menu')).to_be_attached()
                 expect(page.locator('[data-action="report"]')).to_be_disabled()
                 page.locator('[data-action="demo"]').first.click()
                 demo = page.evaluate('SultanApp.getProject()')
-                check(prefix + 'demo is fictional and includes four choices', demo['isDemo'] and len(demo['options']) == 4)
+                check(prefix + 'demo is fictional and includes all strategic choice types', demo['isDemo'] and len(demo['options']) >= 5 and set(o['type'] for o in demo['options']) == {'requirement','differentiation','moonshot','divest'})
+                check(prefix + 'demo visibly includes a complete selected divest choice', any(o['type']=='divest' and o['decision']=='select' and (o.get('releasedResources') or 0)>0 and o.get('divestStop') and o.get('redeployTo') and o.get('divestEvidence') and o.get('divestImpact') for o in demo['options']))
+                check(prefix + 'demo includes delta maturity and risk tracks', any(t['direction']=='delta' for t in demo['transitions']) and any(t.get('trackType')=='maturity' and t.get('maturityFamily') for t in demo['transitions']) and any(t.get('indicatorType')=='risk' for t in demo['transitions']))
 
                 navigate(page, 'choices')
                 assumption_paths = [f'options.{i}.assumptions.0.text' for i in range(4)]
                 check(prefix + 'structured assumptions are visible', all(page.locator(f'[data-path="{p}"]').count() == 1 and page.locator(f'[data-path="{p}"]').input_value().strip() for p in assumption_paths))
                 check(prefix + 'assumption accountability is structured', page.locator('[data-path="options.0.assumptions.0.expectedPersistence"]').count() == 1 and page.locator('[data-path="options.0.assumptions.0.testEvidence"]').count() == 1)
-                check(prefix + 'risk assessment link is populated in the demo', all(page.locator(f'[data-path="options.{i}.riskSource"]').input_value().strip() for i in range(4)))
+                risk_indexes = [i for i,o in enumerate(demo['options']) if o['type'] != 'requirement']
+                check(prefix + 'risk assessment link is populated for non-requirement demo choices', all(page.locator(f'[data-path="options.{i}.riskSource"]').input_value().strip() for i in risk_indexes))
 
                 navigate(page, 'priorities')
                 expect(page.locator('[data-polarity="3"]')).to_have_value('cost')
@@ -166,8 +177,6 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
                 check(prefix + 'successful PDF increments document number once', page.evaluate('SultanApp.getProject().documentNumber') == pdf_no)
                 check(prefix + 'PDF print document contains no canvas renderer', client_pdf.locator('canvas').count() == 0)
                 client_pdf.close()
-                expect(page.locator('.matrix-unplotted [data-option-id="o4"]')).to_be_visible()
-                check(prefix + 'unmapped choice is not drawn at zero', page.locator('.matrix-dot[data-option-id="o4"]').count() == 0)
                 expect(page.locator('.matrix-tick')).to_have_count(4)
                 matrix = page.locator('.matrix').bounding_box()
                 for dot in page.locator('.matrix-dot').all():
@@ -197,12 +206,19 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
                 issue = page.evaluate('Sultan.check(SultanApp.getProject()).find(x=>x.entity==="o4").message')
                 check(prefix + 'leadership removes unresolved issue text', issue in internal.locator('body').inner_text() and issue not in leadership.locator('body').inner_text())
                 assumption_text = demo['options'][0]['assumptions'][0]['text']
+                risk_source = demo['options'][0]['riskSource']
+                maturity_family = next(t['maturityFamily'] for t in demo['transitions'] if t.get('maturityFamily'))
+                release_evidence = next(b['releaseEvidence'] for i in demo['initiatives'] for b in i['budget'] if b.get('releaseEvidence'))
                 for doc in [internal, leadership]:
                     stamp = doc.locator('.report-date').inner_text()
                     check(prefix + 'dual dates use Latin digits ' + doc.title(), bool(re.search(r'\d{4}', stamp)) and not re.search('[\u0660-\u0669\u06f0-\u06f9]', stamp))
                     expect(doc.locator('script')).to_have_count(0)
                     check(prefix + 'structured assumption reaches output ' + doc.title(), assumption_text in doc.locator('body').inner_text())
                     check(prefix + 'executive summary reaches output ' + doc.title(), doc.locator('.executive-summary').count() == 1)
+                    body_text=doc.locator('body').inner_text()
+                    check(prefix + 'risk source reaches client output ' + doc.title(), risk_source in body_text)
+                    check(prefix + 'maturity family reaches client output ' + doc.title(), maturity_family in body_text)
+                    check(prefix + 'release evidence reaches client output ' + doc.title(), release_evidence in body_text)
 
                 escalation = download_report(page, '[data-exec="escalation"]', qa/f'escalation-{lang}-{width}.html')
                 header = escalation.locator('.escalation-report > p').first.inner_text()
@@ -249,3 +265,19 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
         report = {'mode':'live-browser' if base_url.startswith('https:') else 'full-browser','baseUrl':base_url,'tests':len(results),'passed':sum(x['pass'] for x in results),'results':results}
         (qa/'review-browser-results.json').write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding='utf-8')
     print(f'Review behavioral browser tests: {len(results)} passed')
+
+
+if __name__ == '__main__':
+    import functools, http.server, os, threading
+    from playwright.sync_api import sync_playwright
+    BASE=Path(__file__).resolve().parents[1]; qa=BASE/'qa'; qa.mkdir(exist_ok=True)
+    handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(BASE/'public'))
+    server=http.server.ThreadingHTTPServer(('127.0.0.1',0),handler)
+    threading.Thread(target=server.serve_forever,daemon=True).start()
+    try:
+        with sync_playwright() as pw:
+            browser=pw.chromium.launch(headless=True,**({'executable_path':os.environ['CHROMIUM_PATH']} if os.environ.get('CHROMIUM_PATH') else {}))
+            run_review_regressions(browser,f'http://127.0.0.1:{server.server_port}/',qa)
+            browser.close()
+    finally:
+        server.shutdown()

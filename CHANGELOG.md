@@ -1,3 +1,12 @@
+### 0.8.0-rc — surfacing completion
+- Fictional example now demonstrates all four choice types, including a selected stop/merge decision with released-resource redeployment, plus delta, maturity and KRI tracks.
+- Client documents now surface evidence-gated funding, dated risk sources and maturity families.
+- Public landing preview leads with Authority Space and makes the fictional example the primary CTA, with explicit local/offline/browser-verification evidence.
+- `riskDate` imports accept `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, `null` and empty values, normalized to ISO dates where applicable.
+- Deterministic semantic hints S1–S5 are advisory only and remain outside `check()` and approval badges.
+- Brand uses one consistent embedded mark, a single watermark, and bidi-safe RC version display.
+- Browser regression script is independently executable; CI seals the `v0.8.0-rc` tag only after the full browser gate passes.
+
 # Changelog
 
 ## 0.8.0-rc — Client export and execution-view stabilization

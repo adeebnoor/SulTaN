@@ -31,10 +31,10 @@ try:
    check(prefix+'language and direction',page.locator('html').get_attribute('lang')==lang and page.locator('html').get_attribute('dir')==('rtl' if lang=='ar' else 'ltr'))
    check(prefix+'public entrance distinct from workspace',page.locator('body').evaluate('(e)=>e.classList.contains("is-home")') and not page.locator('.sidebar').is_visible())
    page.screenshot(path=str(QA/f'launch-{lang}.png'),full_page=True)
-   for tab in ['choices','enablers','path']:
+   for tab in ['choices','enablers','authority']:
     page.locator('[data-preview="'+tab+'"]').click()
     check(prefix+'preview '+tab,page.locator('#preview-panel').get_attribute('aria-labelledby')=='preview-tab-'+tab)
-   page.locator('#preview-tab-path').press('End')
+   page.locator('#preview-tab-authority').press('End')
    check(prefix+'preview keyboard navigation',page.locator('#preview-tab-enablers').get_attribute('aria-selected')=='true')
    for width in [320,390,768,1440]:
     page.set_viewport_size({'width':width,'height':900})

@@ -30,6 +30,9 @@ function validBase(){
  const p=validBase(),o=E.option();Object.assign(o,{id:'o1',title:'A',outcome:'O',whyUs:'W',tradeoff:'T',owner:'X',decision:'select',decisionReason:'D',riskSource:'R',riskDate:'2026-09-15',scores:Object.fromEntries(p.criteria.map(c=>[c.id,{value:70,note:'n'}]))});p.options=[o];const t=E.transition(p);Object.assign(t,{optionId:o.id,direction:'delta',baseline:50,target:10});const row={target:10,actual:55};assert.equal(E.progress(t,row),50);t.indicatorType='risk';assert.equal(E.indicatorStatus(t,{target:10,actual:65}),'behind');
 }
 {
- const p=E.demo();assert.ok(Array.isArray(p.options[0].assumptions));assert.ok(p.options.every(o=>'riskSource' in o));assert.equal(p.documentNumber,1);assert.ok(p.collaboration&&p.collaboration.owners);
+ const p=E.demo();assert.ok(Array.isArray(p.options[0].assumptions));assert.ok(p.options.every(o=>'riskSource' in o));assert.equal(p.documentNumber,1);assert.ok(p.collaboration&&p.collaboration.owners);assert.deepEqual(new Set(p.options.map(o=>o.type)),new Set(['requirement','differentiation','moonshot','divest']));assert.ok(p.options.some(o=>o.type==='divest'&&o.decision==='select'&&o.releasedResources>0&&o.divestStop&&o.redeployTo&&o.divestEvidence&&o.divestImpact));assert.ok(p.transitions.some(t=>t.direction==='delta'));assert.ok(p.transitions.some(t=>t.trackType==='maturity'&&t.maturityFamily));assert.ok(p.transitions.some(t=>t.indicatorType==='risk'));assert.ok(p.initiatives.some(i=>i.budget.some(b=>b.releaseEvidence)));
 }
 console.log(JSON.stringify({suite:'final-upgrades',passed:true}));
+
+{ const p=E.demo(),raw=JSON.parse(JSON.stringify(p));raw.options[0].riskDate='2026';assert.equal(E.validateImport(raw).options[0].riskDate,'2026-01-01');raw.options[0].riskDate='2026-05';assert.equal(E.validateImport(raw).options[0].riskDate,'2026-05-01');raw.options[0].riskDate=null;assert.equal(E.validateImport(raw).options[0].riskDate,'');}
+{ const p=E.demo();p.institution.notDoing='legacy duplicated units';p.options[0].tradeoff='legacy duplicated units are explicitly excluded';assert.ok(Array.isArray(E.semanticIssues(p)));assert.ok(E.semanticIssues(p).every(x=>x.level==='hint'));}
