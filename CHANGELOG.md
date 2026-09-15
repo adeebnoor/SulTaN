@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.7.4 — Exact Decision Sensitivity
+
+- Replace the normal 0.5%-step decision switch-point scan with an exact analytical solver for complete, non-degenerate comparisons under proportional redistribution of the remaining criterion weights.
+- Preserve the previous scan as an explicit fallback for boundary criterion weights and tied current leaders.
+- Verify the analytical solver against representative benefit/cost cases, 250 randomized complete projects, 150 randomized incomplete projects, upper-envelope checks, and dense 0.1% numerical searches around reported thresholds.
+- Retain the 0.7.3 switch-point cache, so unrelated project edits reuse the prior result while score/weight/polarity/label changes invalidate it.
+- Keep exact decision sensitivity separate from strategic value, capability/readiness, and Authority Space; no new combined score is introduced.
+- Include analytical-solver evidence in CI and in the published release package.
+
 ## 0.7.3 — Performance and standalone-build hardening
 
 - Cache decision switch-point analysis until criteria weights/direction, option scores, or output labels change; unrelated project edits reuse the prior result.
@@ -27,8 +36,8 @@
 ## 0.7.0 — Execution upgrade
 
 - Redesign Authority Space to separate ownership clarity, status clarity, and decision clearance; show counts for small samples and preserve unknowns explicitly.
-- Surface authority unknown/pending/blocked states in the global consistency notes instead of allowing an apparently clean section.
-- Add time-aware authority summaries and an exportable escalation pack using decision owner, route, fallback, and due year.
+- Surface authority unknown/pending/blocked states in the global consistency-note system instead of allowing an apparently clean section.
+- Add time-aware authority summaries and an exportable **Escalation Pack** with decision owner, due year, activation/escalation route, and fallback if delayed or refused.
 - Add internal and leadership strategy exports that include Authority Space and escalation material, plus Gregorian and Hijri report dates.
 - Add section-level JSON export/import for lightweight collaboration without a server.
 - Add decision switch-point (break-even weight) analysis and a live sensitivity preview that does not mutate the project.
