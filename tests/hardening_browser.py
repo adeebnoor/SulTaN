@@ -27,11 +27,14 @@ try:
   recovery=page.evaluate("JSON.parse(localStorage.getItem('sultan.strategy.builder.v0.5.recovery'))");assert recovery and recovery['project']['institution']['name']=='Recovered draft'
   page.reload();page.wait_for_timeout(150);assert page.evaluate('SultanApp.getProject().institution.name')=='Recovered draft';assert page.evaluate("localStorage.getItem('sultan.strategy.builder.v0.5.recovery')") is None
 
-  # Every choice gets an assumptions/risk register; saving it must survive navigation.
+  # Every choice gets a structured assumption register; accountability fields survive navigation.
   page.evaluate('SultanApp.navigate("choices")');page.wait_for_timeout(100)
   assert page.locator('.assumption-register').count()>=3
-  assumptions=page.locator('[data-option-extra="assumptions"]').first;assumptions.fill('Demand remains strong');assumptions.press('Tab');page.wait_for_timeout(80)
-  assert page.evaluate('SultanApp.getProject().options[0].assumptions')=='Demand remains strong'
+  assumption=page.locator('[data-path="options.0.assumptions.0.text"]')
+  assumption.fill('Demand remains strong');assumption.press('Tab');page.wait_for_timeout(80)
+  assert page.evaluate('SultanApp.getProject().options[0].assumptions[0].text')=='Demand remains strong'
+  assert page.locator('[data-path="options.0.assumptions.0.expectedPersistence"]').count()==1
+  assert page.locator('[data-path="options.0.assumptions.0.testEvidence"]').count()==1
 
   # Decision switch points, live sensitivity, polarity and exact-zero normalization.
   page.evaluate('SultanApp.navigate("priorities")');page.wait_for_timeout(120)
@@ -60,14 +63,15 @@ try:
   with page.expect_download() as dl:page.locator('[data-exec="escalation"]').click()
   dl.value.save_as(str(BASE/'qa/escalation-pack.html'));assert 'Escalation pack' in (BASE/'qa/escalation-pack.html').read_text()
   with page.expect_download() as dl:page.locator('[data-exec="section-export"]').click()
-  dl.value.save_as(str(BASE/'qa/enablers-section.json'));frag=json.loads((BASE/'qa/enablers-section.json').read_text());assert frag['kind']=='sultan.section.v1' and frag['section']=='enablers'
+  dl.value.save_as(str(BASE/'qa/enablers-section.json'));frag=json.loads((BASE/'qa/enablers-section.json').read_text());assert frag['kind']=='sultan.section.v2' and frag['section']=='enablers' and 'owner' in frag and 'contributions' in frag
 
-  # Roadmap has a visual timeline; review has matrix + funding and leadership export.
+  # Roadmap has a visual timeline; review has matrix + funding, final dashboard and leadership export.
   page.evaluate('SultanApp.navigate("roadmap")');page.wait_for_timeout(120);assert page.locator('.exec-timeline').is_visible();assert page.locator('.timeline-cell.active').count()>0
   page.evaluate('SultanApp.navigate("review")');page.wait_for_timeout(120);assert page.locator('.portfolio-review').is_visible();assert page.locator('.matrix-dot').count()>=1
+  assert page.locator('.final-dashboard').is_visible() and page.locator('.executive-summary').count()>=1
   if not page.locator('.export-menu').evaluate('(d)=>d.open'):page.locator('.export-menu > summary').click()
   with page.expect_download() as dl:page.locator('[data-exec="leadership-report"]').click()
-  dl.value.save_as(str(BASE/'qa/leadership-report.html'));report=(BASE/'qa/leadership-report.html').read_text();assert 'Authority Space' in report and 'Escalation pack' in report
+  dl.value.save_as(str(BASE/'qa/leadership-report.html'));report=(BASE/'qa/leadership-report.html').read_text();assert 'Authority Space' in report and 'Escalation pack' in report and 'Executive decision summary' in report
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
   ctx.close()
   run_review_regressions(browser,base_url,BASE/'qa')
