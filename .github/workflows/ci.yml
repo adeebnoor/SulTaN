@@ -17,7 +17,8 @@ jobs:
       - name: Inspect staged RC payload
         if: hashFiles('.rc-final/part*') != ''
         run: |
-          cat .rc-final/part* | base64 -d > /tmp/sultan-rc.gz
+          : > /tmp/sultan-rc.gz
+          for f in .rc-final/part*; do base64 -d "$f" >> /tmp/sultan-rc.gz; done
           file /tmp/sultan-rc.gz
           gzip -dc /tmp/sultan-rc.gz > /tmp/sultan-rc.payload
           file /tmp/sultan-rc.payload
