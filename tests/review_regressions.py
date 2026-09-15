@@ -39,6 +39,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
         with page.expect_download() as event:
             page.locator(selector).click()
         event.value.save_as(str(destination))
+        expect(page.locator('.export-menu')).not_to_have_attribute('open', '')
         # Inspect the generated report as a document, not its serialization.
         doc = page.context.new_page()
         doc.set_content(destination.read_text(encoding='utf-8'))
@@ -181,7 +182,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
                 check(prefix + 'print uses the complete internal report', printed.evaluate('window.__printCalls') == 1)
                 expect(printed.locator('[data-report-section="issues"]')).to_have_count(1)
                 printed.close()
-                page.locator('.export-menu > summary').click()
+                expect(page.locator('.export-menu')).not_to_have_attribute('open', '')
                 page.locator('.portfolio-review').screenshot(path=str(qa/f'matrix-{lang}-{width}.png'))
                 check(prefix + 'review has no horizontal page overflow', page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
 

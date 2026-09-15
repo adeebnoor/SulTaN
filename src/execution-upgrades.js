@@ -63,6 +63,17 @@ function renderProgress(){
  bar.innerHTML=`<span>${esc(T('executionProgress'))}</span><button type="button" class="btn small" data-exec="section-export">${esc(T('sectionExport'))}</button><button type="button" class="btn small" data-exec="section-import">${esc(T('sectionImport'))}</button>`;
  content.prepend(bar);
 }
+// Dismiss the disclosure after selection so it cannot cover the next workspace action.
+document.addEventListener('click',e=>{
+ const menu=document.querySelector('.export-menu');if(!menu)return;
+ const item=e.target.closest('.export-menu-panel button');
+ if(item&&!item.disabled)setTimeout(()=>menu.open=false,0);
+ else if(!menu.contains(e.target))menu.open=false;
+},true);
+document.addEventListener('keydown',e=>{
+ const menu=document.querySelector('.export-menu');
+ if(e.key==='Escape'&&menu?.open){menu.open=false;menu.querySelector('summary').focus();e.preventDefault();}
+});
 function printInternal(){
  const w=window.open('','_blank');if(!w){alert(T('printPopupBlocked'));return;}
  w.opener=null;w.document.open();w.document.write(fullDocument(enhancedReport(root.SultanApp.getProject()),T('internalReport')));w.document.close();w.focus();w.print();
