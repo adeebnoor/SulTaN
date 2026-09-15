@@ -11,7 +11,11 @@ Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
   portfolioMatrix:'Value × Authority view',portfolioMatrixHelp:'A discussion view only. Strategic value remains separate from authority clearance; neither axis multiplies the other.',strategicValue:'Strategic value',authorityAxis:'Authority clearance',
   valueFunding:'Value and declared investment',declaredInvestment:'Declared initiative cost',fundingState:'Funding status',fundingConfirmed:'all linked initiative budgets reported confirmed',fundingMixed:'one or more linked initiative budgets unconfirmed',
   criterionDirection:'Criterion direction',benefitCriterion:'Benefit — higher raw score is better',costCriterion:'Cost / burden — lower raw score is better',costCriterionHelp:'Cost criteria use 100 − raw score before weighting. Define the 0 and 100 anchors accordingly.',equalWeightsApplied:'All weights were zero, so SULTAN distributed 100% equally.',
-  exportNeedsWork:'Add project content before exporting a strategy.'
+  exportNeedsWork:'Add project content before exporting a strategy.',
+  breakEvenNoSwitch:'No switch within the meaningful 0.5–99.5% range.',unplottedAuthority:'Not plotted — authority data is insufficient',unestimatedYears:'(+ %{0} unestimated year(s))',currencySAR:'SAR',
+  polarityAnchorWarning:'Changing criterion direction reverses the meaning of the scale. Review and rewrite the 0 and 100 anchors before relying on the ranking. Continue?',
+  externalEscalations:'External / shared decisions requiring action',internalPendingDecisions:'Internal decisions still unresolved',affectedWork:'Affected initiative / start year',
+  gregorianLabel:'Gregorian',hijriLabel:'Hijri',preparedBy:'Prepared by',generatedOn:'Generated on',exportMenu:'Export',projectDataExport:'Reusable project JSON',strategyDraftExport:'Strategy draft',leadershipExport:'Leadership report',internalExport:'Internal report',escalationExport:'Escalation pack',sectionFileExport:'Section file'
 });
 Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   executionProgress:'تبادل القسم والتقدم',sectionExport:'تصدير هذا القسم',sectionImport:'استيراد / دمج قسم',
@@ -22,6 +26,10 @@ Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   portfolioMatrix:'عرض القيمة × الصلاحية',portfolioMatrixHelp:'عرض للنقاش فقط. القيمة الاستراتيجية تبقى منفصلة عن حسم الصلاحية ولا يُضرب أحد المحورين في الآخر.',strategicValue:'القيمة الاستراتيجية',authorityAxis:'حسم الصلاحية',
   valueFunding:'القيمة والاستثمار المعلن',declaredInvestment:'تكلفة المبادرات المعلنة',fundingState:'حالة التمويل',fundingConfirmed:'كل ميزانيات المبادرات المرتبطة مسجلة كمؤكدة',fundingMixed:'ميزانية مبادرة مرتبطة واحدة أو أكثر غير مؤكدة',
   criterionDirection:'اتجاه المعيار',benefitCriterion:'منفعة — الدرجة الخام الأعلى أفضل',costCriterion:'تكلفة / عبء — الدرجة الخام الأقل أفضل',costCriterionHelp:'في معيار التكلفة يستخدم سلطان 100 − الدرجة الخام قبل الوزن. عرّف مرساتي 0 و100 على هذا الأساس.',equalWeightsApplied:'كانت جميع الأوزان صفرًا، لذلك وزّع سلطان 100٪ بالتساوي.',
-  exportNeedsWork:'أضف محتوى للمشروع قبل تصدير الاستراتيجية.'
+  exportNeedsWork:'أضف محتوى للمشروع قبل تصدير الاستراتيجية.',
+  breakEvenNoSwitch:'لا يوجد انقلاب ضمن المدى ذي المعنى 0.5–99.5٪.',unplottedAuthority:'غير مرسوم — بيانات الصلاحية غير كافية',unestimatedYears:'(+ %{0} سنة/سنوات غير مقدّرة)',currencySAR:'ريال',
+  polarityAnchorWarning:'تغيير اتجاه المعيار يعكس معنى المقياس. راجع وأعد صياغة مرساتي 0 و100 قبل الاعتماد على الترتيب. هل تريد المتابعة؟',
+  externalEscalations:'قرارات خارجية / مشتركة تتطلب إجراء',internalPendingDecisions:'قرارات داخلية لم تُحسم بعد',affectedWork:'المبادرة / سنة البدء المتأثرة',
+  gregorianLabel:'ميلادي',hijriLabel:'هجري',preparedBy:'أُعد بواسطة',generatedOn:'تاريخ الإنشاء',exportMenu:'تصدير',projectDataExport:'ملف مشروع قابل للاستكمال',strategyDraftExport:'مسودة الاستراتيجية',leadershipExport:'تقرير القيادة',internalExport:'التقرير الداخلي',escalationExport:'حزمة التصعيد',sectionFileExport:'ملف القسم'
 });
 })(globalThis);

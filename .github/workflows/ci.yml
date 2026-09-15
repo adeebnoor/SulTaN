@@ -20,12 +20,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Verify JavaScript, model rules and both catalogs
+      - name: Verify JavaScript, model rules and all locale catalogs
         run: |
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
           node tests/engine.test.js
           node tests/hardening.test.js
           node tests/i18n.test.js
+          node tests/hardening071.test.js
       - name: Build the standalone application
         run: python build.py
       - name: Install browser test runtime

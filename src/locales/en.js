@@ -1,5 +1,9 @@
 /* English interface messages. User project values are never translated. */
 (function(root){const messages={
+  "authorityIssueUnknownControl": "Authority owner/control is unknown: ",
+  "authorityIssueUnknownStatus": "Authority status is unknown: ",
+  "authorityIssuePending": "Authority decision is pending: ",
+  "authorityIssueBlocked": "Authority decision is blocked: ",
   "s206": "Extended pilot conditional on approvals",
   "s205": "Moonshot experiment using synthetic data",
   "s204": "Prepare and test joint teams",
@@ -274,7 +278,7 @@
   "s522": "Export a reusable project",
   "s520": "Enter actual measurements and their sources, then review the strategy draft linked to your decisions.",
   "s519": "Your strategy and review dashboard",
-  "tpl005": "<article class=\"report\"><header><div class=\"eyebrow\">SULTAN · REVIEWABLE STRATEGY</div><h1>%{0}</h1><p>Draft based on user inputs · revision %{1} · %{2}</p>%{3}<p>Completing the workspace does not verify evidence or approve a strategy or its funding. Scores reflect stated preferences, not success probabilities.</p></header><h2>1. Institutional identity and future</h2>%{4}<h2>2. Mandates and contribution</h2>%{5}<h2>3. Choices and trade-offs</h2>%{6}<p><b>Weighting rationale:</b> %{7}</p><h2>4. References and transfer limits</h2>%{8}<h2>5. From current to target</h2>%{9}<h2>6. Enablers, legislation, and operating model</h2>%{10}<h2>7. Initiatives and funding</h2>%{11}%{12}<h2>8. Issues requiring attention</h2>%{13}<h2>9. Review notes</h2><p>%{14}</p><p>%{15} This is not a signature or institutional approval.</p></article>",
+  "tpl005": "<article class=\"report\"><header><div class=\"eyebrow\">SULTAN · REVIEWABLE STRATEGY</div><h1>%{0}</h1><p>Draft based on user inputs · revision %{1} · %{2}</p>%{3}<p>Completing the workspace does not verify evidence or approve a strategy or its funding. Scores reflect stated preferences, not success probabilities.</p></header><h2 data-report-section=\"identity\">1. Institutional identity and future</h2>%{4}<h2 data-report-section=\"mandates\">2. Mandates and contribution</h2>%{5}<h2 data-report-section=\"choices\">3. Choices and trade-offs</h2>%{6}<p><b>Weighting rationale:</b> %{7}</p><h2 data-report-section=\"references\">4. References and transfer limits</h2>%{8}<h2 data-report-section=\"transitions\">5. From current to target</h2>%{9}<h2 data-report-section=\"enablers\">6. Enablers, legislation, and operating model</h2>%{10}<h2 data-report-section=\"initiatives\">7. Initiatives and funding</h2>%{11}%{12}<h2 data-report-section=\"issues\">8. Issues requiring attention</h2>%{13}<h2 data-report-section=\"review\">9. Review notes</h2><p>%{14}</p><p>%{15} This is not a signature or institutional approval.</p></article>",
   "s446": "<p class=\"hint warn\">All data, amounts, and approvals in this example are fictional.</p>",
   "s453": "Horizon",
   "s452": "What we will not prioritize",

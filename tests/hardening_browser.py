@@ -61,6 +61,7 @@ try:
   # Roadmap has a visual timeline; review has matrix + funding and leadership export.
   page.evaluate('SultanApp.navigate("roadmap")');page.wait_for_timeout(120);assert page.locator('.exec-timeline').is_visible();assert page.locator('.timeline-cell.active').count()>0
   page.evaluate('SultanApp.navigate("review")');page.wait_for_timeout(120);assert page.locator('.portfolio-review').is_visible();assert page.locator('.matrix-dot').count()>=1
+  page.locator('.export-menu > summary').click()
   with page.expect_download() as dl:page.locator('[data-exec="leadership-report"]').click()
   dl.value.save_as(str(BASE/'qa/leadership-report.html'));report=(BASE/'qa/leadership-report.html').read_text();assert 'Authority Space' in report and 'Escalation pack' in report
   assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1')
