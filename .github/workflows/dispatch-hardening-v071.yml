@@ -19,6 +19,18 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Repair replacement escaping in one-shot script
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('.github/scripts/harden_v071.py')
+          s=p.read_text()
+          s=s.replace("out,n=re.subn(pattern,repl,s,count=1,flags=flags)","out,n=re.subn(pattern,lambda _m: repl,s,count=1,flags=flags)")
+          s=s.replace("s,n=re.subn(esc_re,esc_new,s,count=1,flags=re.S)","s,n=re.subn(esc_re,lambda _m: esc_new,s,count=1,flags=re.S)")
+          s=re.sub(r"s,n=re\.subn\((r\".*?\"),('''.*?'''),s,count=1,flags=re\.S\)",lambda m:f"s,n=re.subn({m.group(1)},lambda _m: {m.group(2)},s,count=1,flags=re.S)",s,flags=re.S)
+          p.write_text(s)
+          PY
       - name: Apply hardening transformations
         run: python .github/scripts/harden_v071.py
       - name: Remove branch-only patch machinery
