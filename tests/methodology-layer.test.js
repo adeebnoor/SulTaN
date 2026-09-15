@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const js=read('src/methodology-layer.js'),css=read('src/methodology-layer.css'),locale=read('src/locales/methodology.js'),build=read('build.py');
+for(const token of ['smC1','smC2','smC3','smC4','smC5','smR1','smR2','smR3','smR4','smR5'])assert.ok(locale.includes(token),token);
+for(const phrase of ['Auditable Choice','Authority Space','Decision Break-even','Unknown ≠ Zero','Evidence-Gated Funding','الاختيار القابل للفحص','مساحة الصلاحية','نقطة تعادل القرار','المجهول ≠ صفر','التمويل المشروط بالدليل'])assert.ok(locale.includes(phrase),phrase);
+assert.ok(js.includes('<svg')&&!js.includes('<canvas')&&!js.includes('<foreignObject'));
+assert.ok(!/\b(fetch|XMLHttpRequest|sendBeacon)\s*\(/.test(js),'methodology layer must not transmit data');
+assert.ok(build.includes('src/methodology-layer.css')&&build.includes('src/locales/methodology.js')&&build.includes('src/methodology-layer.js'),'build must ship methodology layer');
+for(const forbidden of ['#1c6658','#0f3038','#15383d','#173c44','#60736e','#7d9d8a','#42646a'])assert.ok(!css.includes(forbidden),'legacy green/teal in methodology CSS: '+forbidden);
+const ctx={globalThis:{SultanLocales:{en:{},ar:{}}}};vm.createContext(ctx);vm.runInContext(locale,ctx);const en=ctx.globalThis.SultanLocales.en,ar=ctx.globalThis.SultanLocales.ar;
+for(const k of Object.keys(en)){assert.equal(typeof ar[k],'string','Arabic counterpart: '+k);assert.ok(en[k].trim()&&ar[k].trim(),k);}assert.ok(Object.keys(en).length>=50);
+console.log(JSON.stringify({suite:'methodology-layer',passed:true,keys:Object.keys(en).length,rules:5,constructs:5,network:false}));
