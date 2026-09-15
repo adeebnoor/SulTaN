@@ -23,14 +23,9 @@ jobs:
       - name: Verify JavaScript, model rules and all locale catalogs
         run: |
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
-          node tests/engine.test.js
-          node tests/hardening.test.js
-          node tests/i18n.test.js
-          node tests/hardening071.test.js
-          node tests/performance.test.js
-          node tests/break-even-analytic.test.js
-          node tests/final-upgrades.test.js
-          node tests/rc080.test.js
+          # Every suite under tests/ runs. Do NOT list suites by name: a new
+          # test file must never be able to exist without being executed.
+          for suite in tests/*.test.js; do echo "== $suite"; node "$suite"; done
       - name: Build the standalone application
         run: |
           python build.py
@@ -58,7 +53,7 @@ jobs:
           import json
           from pathlib import Path
           data=json.loads(Path('qa/review-browser-results.json').read_text(encoding='utf-8'))
-          assert data['tests'] >= 240, f"review browser regression surface dropped to {data['tests']} checks"
+          assert data['tests'] >= 315, f"review browser regression surface dropped to {data['tests']} checks"
           assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
           print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
           PY
