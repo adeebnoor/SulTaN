@@ -1,4 +1,4 @@
-name: Probe SULTAN RC bundle
+name: Discover SULTAN RC bundle endpoint
 on:
   push:
     branches: ["rc/0.8.0-bundle3"]
@@ -10,23 +10,49 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect firestorage share implementation
-        shell: bash
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser
         run: |
-          set -euo pipefail
-          curl -L --fail --silent --show-error 'https://firestorage.ai/ja/f/8o2AhZRiZNoc' -o /tmp/page
-          curl -L --fail --silent --show-error 'https://firestorage.ai/_next/static/chunks/app/(files)/ja/f/page-4d19ae0a4ce39d79.js' -o /tmp/app.js
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Discover download route
+        run: |
           python - <<'PY'
-          from pathlib import Path
-          for name in ['page','app.js']:
-              s=Path('/tmp/'+name).read_text(errors='replace')
-              print('\n###',name,len(s))
-              for needle in ['download','api/','public_id','file_id','share','8o2AhZRiZNoc','2BXyPhpR2WaSEmqT','01a0a52ac31b7211b55cbde20d259e62']:
-                  print('---',needle)
-                  start=0
-                  for _ in range(8):
-                      i=s.lower().find(needle.lower(),start)
-                      if i<0: break
-                      print(s[max(0,i-240):i+500].replace('\n',' '))
-                      start=i+len(needle)
+          from playwright.sync_api import sync_playwright
+          url='https://firestorage.ai/ja/f/8o2AhZRiZNoc'
+          with sync_playwright() as pw:
+            b=pw.chromium.launch(headless=True)
+            c=b.new_context(accept_downloads=True)
+            p=c.new_page()
+            req=[]; resp=[]; downloads=[]
+            p.on('request', lambda r: req.append((r.method,r.url)))
+            p.on('response', lambda r: resp.append((r.status,r.url,r.headers.get('content-type',''))))
+            def got(d):
+              path='/tmp/'+(d.suggested_filename or 'bundle.bin'); d.save_as(path); downloads.append(path); print('DOWNLOAD',path)
+            p.on('download',got)
+            p.goto(url,wait_until='networkidle',timeout=60000)
+            p.wait_for_timeout(6000)
+            print('TITLE',p.title())
+            print('BODY',p.locator('body').inner_text()[:6000])
+            print('BUTTONS',p.locator('button').all_inner_texts())
+            print('LINKS',[(x.inner_text(),x.get_attribute('href')) for x in p.locator('a').all()][:80])
+            for method,u in req:
+              if any(k in u.lower() for k in ['api','download','file','share','storage','blob','s3','cloudfront']): print('REQ',method,u)
+            for st,u,ct in resp:
+              if any(k in u.lower() for k in ['api','download','file','share','storage','blob','s3','cloudfront']): print('RESP',st,ct,u)
+            if not downloads:
+              for text in ['ダウンロード','Download','download']:
+                loc=p.get_by_text(text,exact=False)
+                for i in range(min(loc.count(),8)):
+                  try:
+                    print('CLICK',text,i,loc.nth(i).evaluate('(e)=>e.outerHTML'))
+                    loc.nth(i).click(timeout=3000)
+                    p.wait_for_timeout(4000)
+                  except Exception as e: print('CLICKERR',str(e)[:240])
+                  if downloads: break
+                if downloads: break
+            print('DOWNLOADS',downloads)
+            b.close()
           PY
