@@ -16,7 +16,7 @@ jobs:
       - name: Prepare 0.8.0-rc payload
         id: prep
         env:
-          SHARE_ID: qCVY2e0WkFfC
+          SHARE_ID: DyDRDJ2Zrgq8
         run: |
           set -euxo pipefail
           if [ -f src/brand.css ]; then
@@ -25,7 +25,7 @@ jobs:
           fi
           BASE='https://api.firestorage.ai/prod/file'
           META=$(curl -fsS "$BASE/shares/$SHARE_ID/files?maxResults=1000")
-          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_rc_payload.zip") | .fileId' | head -1)
+          FILE_ID=$(echo "$META" | jq -r '.files[] | select((.fileName // .name // "") == "sultan_rc_payload_v2.zip") | .fileId' | head -1)
           test -n "$FILE_ID" && test "$FILE_ID" != null
           RESP=$(curl -fsS -X POST "$BASE/shares/$SHARE_ID/files/$FILE_ID/download")
           DL=$(echo "$RESP" | jq -r '.downloadUrl')
@@ -64,7 +64,6 @@ jobs:
           node tests/break-even-analytic.test.js
           node tests/final-upgrades.test.js
           node tests/rc080.test.js
-          python tests/review_regressions.py
       - name: Build the standalone application
         run: |
           python build.py
@@ -76,7 +75,9 @@ jobs:
           assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
           assert "SULTAN_VERSION='0.8.0-rc'" in html
           assert '--brand-logo:url(' in html
-          print('Standalone build contains the RC version and embedded brand identity.')
+          assert '--brand-ivory:#f7f3ea' in html
+          assert 'premium identity composition' in html
+          print('Standalone build contains the RC version and premium visual identity.')
           PY
       - name: Install browser test runtime
         run: |
@@ -84,6 +85,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test Arabic and English at a real browser origin
         run: |
+          python tests/review_regressions.py
           python tests/beta_browser.py
           python tests/hardening_browser.py
           python - <<'PY'
