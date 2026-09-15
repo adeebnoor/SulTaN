@@ -16,8 +16,6 @@ function ensureStyle(){
  .track-status-bar span.active{opacity:1;box-shadow:0 0 0 1px rgba(11,45,99,.08)}
  .track-status-bar .ahead.active{background:#3d8a64}.track-status-bar .onTrack.active{background:#315b97}
  .track-status-bar .behind.active{background:#b44848}.track-status-bar .noReading.active{background:#8a93a0}
- .track-status-labels{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:10px;color:#6a7381;margin-top:-8px;margin-bottom:10px}
- .track-status-labels span{text-align:center}
  .maturity-visuals{display:grid;gap:16px}.maturity-row{border:1px solid #e2e7ef;border-radius:10px;padding:12px;background:#fff}
  .maturity-row-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:8px}
  .maturity-row-head small{color:#667085}.maturity-scale{position:relative;height:34px;border-radius:8px;background:linear-gradient(90deg,#eef1f6 0 20%,#e6ebf3 20% 40%,#dde5f0 40% 60%,#d5dfed 60% 80%,#ccd9e9 80% 100%);overflow:visible}
@@ -41,8 +39,8 @@ function addStatusBars(){
   const keys=['ahead','onTrack','behind','noReading'];
   const bar=document.createElement('div');bar.className='track-status-bar';bar.setAttribute('role','img');bar.setAttribute('aria-label',T(state));
   bar.innerHTML=keys.map(k=>`<span class="${k}${k===state?' active':''}" title="${esc(T(k))}"></span>`).join('');
-  const labels=document.createElement('div');labels.className='track-status-labels';labels.innerHTML=keys.map(k=>`<span>${esc(T(k))}</span>`).join('');
-  const svg=card.querySelector('.track-svg');if(svg){svg.insertAdjacentElement('beforebegin',labels);labels.insertAdjacentElement('beforebegin',bar);}else card.append(bar,labels);
+  if(state==='observed')return;
+  const svg=card.querySelector('.track-svg');if(svg)svg.insertAdjacentElement('beforebegin',bar);else card.append(bar);
  });
 }
 
