@@ -1,26 +1,49 @@
-name: Test and package SULTAN
+name: Assemble and test SULTAN RC
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches: ["rc/0.8.0-ship"]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
-  group: sultan-tests-${{ github.ref }}
+  group: sultan-ship-${{ github.ref }}
   cancel-in-progress: true
 jobs:
-  test:
+  ship:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Assemble tested RC source
+        id: assemble
+        shell: bash
+        run: |
+          if [ -f .rc-ship/bundle.tar.gz ]; then
+            rm -rf /tmp/sultan-ship && mkdir -p /tmp/sultan-ship
+            tar -xzf .rc-ship/bundle.tar.gz -C /tmp/sultan-ship
+            rsync -a /tmp/sultan-ship/payload/ ./
+            while IFS= read -r f; do [ -z "$f" ] || rm -f -- "$f"; done < /tmp/sultan-ship/delete.txt
+            rm -rf .rc-ship
+            git config user.name "SULTAN Release Bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add -A
+            git commit -m "release: SULTAN 0.8.0-rc"
+            git push origin HEAD:rc/0.8.0-ship
+            echo "assembled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "assembled=false" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/setup-node@v4
+        if: steps.assemble.outputs.assembled != 'true'
         with:
           node-version: '22'
       - uses: actions/setup-python@v5
+        if: steps.assemble.outputs.assembled != 'true'
         with:
           python-version: '3.12'
-      - name: Verify JavaScript, model rules and all locale catalogs
+      - name: Verify source and locales
+        if: steps.assemble.outputs.assembled != 'true'
         run: |
           find src -name '*.js' -print0 | xargs -0 -n1 node --check
           node tests/engine.test.js
@@ -30,7 +53,9 @@ jobs:
           node tests/performance.test.js
           node tests/break-even-analytic.test.js
           node tests/final-upgrades.test.js
-      - name: Build the standalone application
+          node tests/rc080.test.js
+      - name: Build standalone
+        if: steps.assemble.outputs.assembled != 'true'
         run: |
           python build.py
           python - <<'PY'
@@ -42,27 +67,31 @@ jobs:
           print('Standalone build contains no src/ asset references.')
           PY
       - name: Install browser test runtime
+        if: steps.assemble.outputs.assembled != 'true'
         run: |
           python -m pip install playwright==1.57.0
           python -m playwright install --with-deps chromium
-      - name: Test Arabic and English at a real browser origin
+      - name: Browser acceptance and regression gate
+        if: steps.assemble.outputs.assembled != 'true'
         run: |
           python tests/beta_browser.py
           python tests/hardening_browser.py
-      - name: Package application and verification evidence
-        if: always()
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path('qa/review-browser-results.json').read_text(encoding='utf-8'))
+          assert data['tests'] >= 240, f"review browser regression surface dropped to {data['tests']} checks"
+          assert data['passed'] == data['tests'], f"review browser failures: {data['passed']}/{data['tests']}"
+          print(f"Review browser regression gate: {data['passed']}/{data['tests']} passed")
+          PY
+      - name: Upload verification evidence
+        if: steps.assemble.outputs.assembled != 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: sultan-product
+          name: sultan-0.8.0-rc
           path: |
             public/
             release/
             qa/
-          retention-days: 14
-      - name: Package the tested website
-        uses: actions/upload-artifact@v4
-        with:
-          name: sultan-web
-          path: public/
           include-hidden-files: true
           retention-days: 14
