@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.1 — Hardening
+
+- Fix bilingual report dates, leadership numbering, Authority Space localization, RTL matrix geometry, unknown-authority visibility, meaningful switch-point reporting, unknown budget visibility, escalation-pack identity/scope, criterion-polarity warnings, and destructive-backup timing.
+- Move polarity, switch points, and authority issue semantics into the deterministic engine and expand locale/regression coverage.
+- Consolidate overlapping review exports behind one export menu.
+
 ## 0.7.0 — Execution upgrade
 
 - Redesign Authority Space to separate ownership clarity, status clarity, and decision clearance; show counts for small samples and preserve unknowns explicitly.

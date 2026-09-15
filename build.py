@@ -2,7 +2,7 @@
 from pathlib import Path
 import hashlib, json, zipfile
 base = Path(__file__).resolve().parent
-VERSION='0.7.0'
+VERSION='0.7.1'
 html = (base / 'index.html').read_text(encoding='utf-8')
 html = html.replace("script-src 'self'", "script-src 'unsafe-inline'")
 for css_name in ('style.css','portal.css','authority-space.css','execution-upgrades.css'):
