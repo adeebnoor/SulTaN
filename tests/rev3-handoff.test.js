@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
+const source=read('src/rev3-handoff.js'),css=read('src/rev3-handoff.css'),build=read('build.py');
+for(const token of ['.proof-strip','value-difference','rev3-evidence-tabs','rev3-mobile-metrics','R1','R2','R3','R4','R5'])assert.ok(source.includes(token)||css.includes(token),token);
+assert.ok(!/\b(fetch|XMLHttpRequest|sendBeacon)\s*\(/.test(source),'rev3 layer must not transmit project data');
+assert.ok(build.includes('src/rev3-handoff.css')&&build.includes('src/rev3-handoff.js'),'standalone build ships rev3 closure');
+
+global.document={addEventListener(){},body:{classList:{contains(){return false}},dataset:{}},querySelector(){return null},getElementById(){return null}};
+global.location={hash:''};global.history={replaceState(){}};global.addEventListener=()=>{};global.setTimeout=()=>0;global.matchMedia=()=>({matches:true});
+global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
+require('../src/locales/final.js');global.SultanI18n=require('../src/i18n.js');global.Sultan=require('../src/import.js');require('../src/final-core.js');require('../src/audit-fixes.js');require('../src/rev3-handoff.js');
+const E=global.Sultan,p=E.blank();p.institution.assets='internal analytics capability';p.institution.context='regional university research context';p.institution.notDoing='legacy duplicated services';
+const a=E.option();Object.assign(a,{id:'oa',decision:'select',type:'differentiation',title:'Legacy duplicated services expansion',outcome:'legacy duplicated services expansion outcome',whyUs:'global prestige position',tradeoff:'managed workforce transition'});
+const b=E.option();Object.assign(b,{id:'ob',decision:'select',type:'differentiation',title:'Second path',outcome:'legacy duplicated services expansion outcome',whyUs:'global prestige position',tradeoff:'managed workforce transition'});p.options=[a,b];
+const r=E.reference();Object.assign(r,{id:'r1',status:'unchecked',context:'Peer benchmark states a target of 47.7 percent.',source:'Fictional benchmark',purpose:'Compare target'});p.references=[r];
+const t=E.transition(p);Object.assign(t,{id:'t1',optionId:'oa',referenceId:'r1',direction:'up',target:47.7,domain:'Research performance'});p.transitions=[t];
+let hints=E.semanticIssues(p),rules=new Set(hints.map(x=>x.rule));for(const code of ['R1','R2','R3','R4','R5'])assert.ok(rules.has(code),code);assert.ok(hints.every(x=>x.level==='hint'));
+r.status='use';assert.ok(!E.semanticIssues(p).some(x=>x.rule==='R1'));r.status='unchecked';r.context='Benchmark without the proposed number';assert.ok(!E.semanticIssues(p).some(x=>x.rule==='R1'));
+const demo=E.demo();assert.match(demo.institution.liabilities,/1,800,000/);assert.ok(demo.options.every(o=>(o.assumptions||[]).every(x=>x.owner&&x.owner!=='Choice owner'&&x.owner!=='مالك الاختيار')));
+console.log(JSON.stringify({suite:'rev3-handoff',passed:true,rules:['R1','R2','R3','R4','R5'],network:false}));
