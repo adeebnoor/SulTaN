@@ -1,13 +1,14 @@
-/* Experimental exact break-even solver. Not loaded by the application until equivalence testing passes. */
+/* Exact decision switch-points with the established 0.5% scan retained as a fallback/reference. */
 (function(root){
 'use strict';
-const E=typeof module!=='undefined'&&module.exports?require('./import.js'):root.Sultan;
+const E=typeof module!=='undefined'&&module.exports?require('./engine.js'):root.Sultan;
 const EPS=1e-9, TOP_EPS=1e-7;
 const num=x=>typeof x==='number'&&Number.isFinite(x);
 const utility=(c,x)=>(c.polarity==='cost'?100-x:x)/100;
-const topKey=r=>r.length?r.filter(x=>Math.abs(x.value-r[0].value)<TOP_EPS).map(x=>x.id).sort().join(','):'';
+if(!E.breakEvenScan)E.breakEvenScan=E.breakEven;
+const scan=E.breakEvenScan;
 
-function scanRow(p,criterionId){return E.breakEven(p).find(x=>x.criterionId===criterionId)||null;}
+function scanRow(p,criterionId){return scan(p).find(x=>x.criterionId===criterionId)||null;}
 function lineSet(p,c){
  const others=p.criteria.filter(k=>k.id!==c.id),baseOther=others.reduce((a,k)=>a+k.weight,0);
  if(p.criteria.length<2||c.weight<=EPS||c.weight>=100-EPS||baseOther<=EPS)return null;
@@ -47,7 +48,7 @@ function exactRow(p,c,base){
  for(const cand of candidates){
   const at=cand.root,leaderAt=leader.b+leader.m*at;
   let max=-Infinity;for(const x of lines)max=Math.max(max,x.b+x.m*at);
-  if(max-leaderAt>1e-6)continue; // not an upper-envelope crossing
+  if(max-leaderAt>1e-6)continue;
   const direction=at>w0?1:-1;
   const tied=lines.filter(x=>Math.abs((x.b+x.m*at)-max)<=1e-6);
   const targetSlope=direction>0?Math.max(...tied.map(x=>x.m)):Math.min(...tied.map(x=>x.m));
@@ -63,5 +64,6 @@ function breakEvenAnalytic(p){
  return p.criteria.map(c=>exactRow(p,c,base));
 }
 E.breakEvenAnalytic=breakEvenAnalytic;
+E.breakEven=breakEvenAnalytic;
 if(typeof module!=='undefined'&&module.exports)module.exports=E;
 })(typeof globalThis!=='undefined'?globalThis:this);
