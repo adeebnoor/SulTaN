@@ -10,15 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Discover payload download endpoint
+      - name: Discover payload client routes
         run: |
           set -euxo pipefail
-          URL='https://firestorage.ai/ja/f/qCVY2e0WkFfC'
+          BASE='https://firestorage.ai'
+          URL="$BASE/ja/f/qCVY2e0WkFfC"
           curl -LsS -A 'Mozilla/5.0' "$URL" -o /tmp/page.html
-          echo '--- filename/share markers ---'
-          grep -oE '.{0,240}(sultan_rc_payload|qCVY2e0WkFfC|2UZPTNJ4sz0YJYVY|01a0a5237713731c846f88cb850dde87|download|presign|signed|api).{0,500}' /tmp/page.html | head -80 || true
-          echo '--- next data/scripts ---'
-          grep -oE '<script[^>]*>[^<]{0,4000}' /tmp/page.html | tail -20 || true
-          echo '--- page js markers ---'
-          curl -LsS 'https://firestorage.ai/_next/static/chunks/app/(files)/ja/f/page-4d19ae0a4ce39d79.js' -o /tmp/page.js
-          grep -oE '.{0,200}(download|presign|signed|shareId|publicId|fileId|api).{0,400}' /tmp/page.js | head -120 || true
+          : > /tmp/all.js
+          grep -oE 'src="/[^"]+\.js"' /tmp/page.html | sed 's/^src="//;s/"$//' | sort -u > /tmp/jspaths
+          while read -r p; do echo "FETCH $p"; curl -LsS "$BASE$p" >> /tmp/all.js; echo >> /tmp/all.js; done < /tmp/jspaths
+          echo '--- API-like paths ---'
+          grep -oE '/[A-Za-z0-9_?&=./{}:-]{3,160}' /tmp/all.js | grep -Ei '(api|download|share|file|presign|storage)' | sort -u | head -250 || true
+          echo '--- fetch contexts ---'
+          grep -oE '.{0,160}(fetch\(|download|presign|shareId|publicId|fileId).{0,360}' /tmp/all.js | head -160 || true
+          echo '--- share page RSC markers ---'
+          grep -oE '.{0,160}(qCVY2e0WkFfC|2UZPTNJ4sz0YJYVY|sultan_rc_payload).{0,800}' /tmp/page.html | head -60 || true
