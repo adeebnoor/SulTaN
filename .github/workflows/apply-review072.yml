@@ -1,0 +1,59 @@
+name: Apply reviewed 0.7.2 changes
+on:
+  push:
+    branches: [fix/review-0.7.2]
+    paths: [.github/workflows/apply-review072.yml]
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.ref == 'refs/heads/fix/review-0.7.2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/review-0.7.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Apply checksum-verified reviewed changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,base64,lzma,hashlib,subprocess
+          chunks=[Path('.review072-part1.b64'),Path('.review072-part2.b64')]
+          payload=lzma.decompress(base64.b64decode(''.join(p.read_text().strip() for p in chunks)))
+          digest=lambda b:hashlib.sha256(b).hexdigest()
+          assert digest(payload)=='7260f4c7a782aad44ce0a669542d1646b931388cf2a6cd668ca4eee037c86ce2', 'Transfer checksum mismatch'
+          changes=json.loads(payload)
+          results={}
+          for name,spec in changes.items():
+              path=Path(name)
+              assert not path.is_absolute() and '..' not in path.parts and path.parts[0]!='.github', 'Unsafe transfer path'
+              exists=path.exists()
+              old=path.read_text(encoding='utf-8') if exists else ''
+              assert (digest(old.encode()) if exists else None)==spec['before'], 'Concurrent change: '+name
+              result=old
+              for edit in reversed(spec['edits']):
+                  result=result[:edit['start']]+edit['text']+result[edit['end']:]
+              assert digest(result.encode())==spec['after'], 'Result checksum mismatch: '+name
+              results[name]=result
+          for name,result in results.items():
+              path=Path(name)
+              path.parent.mkdir(parents=True,exist_ok=True)
+              path.write_text(result,encoding='utf-8')
+          subprocess.run(['git','add','--',*results],check=True)
+          subprocess.run(['git','rm','--',*[str(p) for p in chunks]],check=True)
+          print('Applied and verified',len(results),'reviewed files.')
+          PY
+          find src -name '*.js' -print0 | xargs -0 -n1 node --check
+          node tests/engine.test.js
+          node tests/hardening.test.js
+          node tests/i18n.test.js
+          node tests/hardening071.test.js
+          python3 build.py
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git diff --cached --stat
+          git commit -m 'fix: apply reviewed 0.7.2 cost, demo, exports and browser regressions'
+          git push origin HEAD:fix/review-0.7.2
