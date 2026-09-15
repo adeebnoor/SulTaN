@@ -29,6 +29,7 @@ jobs:
           node tests/hardening071.test.js
           node tests/performance.test.js
           node tests/break-even-analytic.test.js
+          node tests/final-upgrades.test.js
       - name: Build the standalone application
         run: |
           python build.py
