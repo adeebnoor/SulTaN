@@ -45,14 +45,16 @@ jobs:
               assert report['mode']=='full-browser' and report['tests']>0 and report['passed']==report['tests'], name
           model=json.loads((root/'qa/model-hardening-results.json').read_text())
           assert model['tests']>0 and model['passed']==model['tests']
+          exact=json.loads((root/'qa/break-even-analytic-results.json').read_text())
+          assert exact['tests']>0 and exact['passed']==exact['tests'] and exact.get('failed',0)==0
           manifest=json.loads((root/'release/manifest.json').read_text())
-          assert manifest['version']=='0.7.3'
+          assert manifest['version']=='0.7.4'
           assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
           (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'public/index.html').read_bytes())
-          print('Verified full browser behavior, model evidence and application SHA-256.')
+          print('Verified browser behavior, model evidence, exact sensitivity evidence and application SHA-256.')
           PY
-          if ! gh release view v0.7.3 >/dev/null 2>&1; then
-            gh release create v0.7.3 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.3 — Performance hardening' --notes 'Performance and distribution hardening for the free Arabic/English SULTAN strategy workspace. Caches decision switch-point analysis until scoring inputs change, preserving exact invalidation for weights, criterion direction, scores and labels. The standalone builder now fails closed if any src/ JavaScript or stylesheet reference remains external, protecting file:// distribution. Existing model, authority, Arabic/English and mobile/desktop regression suites remain required. The break-even solver itself is unchanged in this release; an exact analytical replacement will only be adopted after equivalence testing.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json
+          if ! gh release view v0.7.4 >/dev/null 2>&1; then
+            gh release create v0.7.4 --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.7.4 — Exact Decision Sensitivity' --notes 'SULTAN now computes exact decision switch-points for strategic criteria instead of relying on a 0.5%-step scan in the normal case. The analytical solver preserves the same proportional redistribution model, supports benefit and cost criteria, retains the prior scan as a safe fallback for degenerate boundary weights or tied leaders, and is verified against representative, randomized, incomplete-data, upper-envelope, and dense numerical-search cases. SULTAN 0.7.4 retains the 0.7.3 performance cache and standalone-build guard, plus all Arabic/English, authority, report, mobile and review-regression gates. Strategic value remains separate from capability/readiness and authorization.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json tested/qa/break-even-analytic-results.json
           fi
       - name: Check first-time hosting setup
         id: hosting
