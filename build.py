@@ -32,12 +32,12 @@ html = html.replace(
 # content layers so legacy portal colours cannot leak back into the public surface.
 html = html.replace(
     '</head>',
-    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/methodology-layer.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"></head>',
+    '<link rel="stylesheet" href="src/home-value.css"><link rel="stylesheet" href="src/methodology-layer.css"><link rel="stylesheet" href="src/palette-unify.css"><link rel="stylesheet" href="src/audit-fixes.css"><link rel="stylesheet" href="src/rev3-handoff.css"></head>',
     1,
 )
 html = html.replace(
     '</body>',
-    '<script src="src/locales/home-value.js"></script><script src="src/locales/methodology.js"></script><script src="src/home-value.js"></script><script src="src/methodology-layer.js"></script><script src="src/audit-fixes.js"></script></body>',
+    '<script src="src/locales/home-value.js"></script><script src="src/locales/methodology.js"></script><script src="src/home-value.js"></script><script src="src/methodology-layer.js"></script><script src="src/audit-fixes.js"></script><script src="src/rev3-handoff.js"></script></body>',
     1,
 )
 
