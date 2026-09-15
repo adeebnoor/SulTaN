@@ -6,7 +6,7 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 ## Try the public beta
 
-**Live beta:** https://sultan-strategy.onrender.com
+**Live beta:** https://sultan-strategy-beta.onrender.com
 
 **Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.7.4 — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
