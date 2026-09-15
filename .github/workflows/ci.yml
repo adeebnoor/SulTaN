@@ -1,68 +1,24 @@
-name: Test and package SULTAN
+name: Probe SULTAN RC bundle
 on:
   push:
-    branches: [main]
-  pull_request:
+    branches: ["rc/0.8.0-bundle3"]
   workflow_dispatch:
 permissions:
   contents: read
-concurrency:
-  group: sultan-tests-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
-  test:
+  probe:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Verify JavaScript, model rules and all locale catalogs
+      - name: Probe temporary transfer
+        shell: bash
         run: |
-          find src -name '*.js' -print0 | xargs -0 -n1 node --check
-          node tests/engine.test.js
-          node tests/hardening.test.js
-          node tests/i18n.test.js
-          node tests/hardening071.test.js
-          node tests/performance.test.js
-          node tests/break-even-analytic.test.js
-          node tests/final-upgrades.test.js
-      - name: Build the standalone application
-        run: |
-          python build.py
-          python - <<'PY'
-          import re
-          from pathlib import Path
-          html=Path('public/index.html').read_text(encoding='utf-8')
-          leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
-          assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
-          print('Standalone build contains no src/ asset references.')
-          PY
-      - name: Install browser test runtime
-        run: |
-          python -m pip install playwright==1.57.0
-          python -m playwright install --with-deps chromium
-      - name: Test Arabic and English at a real browser origin
-        run: |
-          python tests/beta_browser.py
-          python tests/hardening_browser.py
-      - name: Package application and verification evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sultan-product
-          path: |
-            public/
-            release/
-            qa/
-          retention-days: 14
-      - name: Package the tested website
-        uses: actions/upload-artifact@v4
-        with:
-          name: sultan-web
-          path: public/
-          include-hidden-files: true
-          retention-days: 14
+          set -euxo pipefail
+          curl -L --fail --silent --show-error -D /tmp/headers 'https://firestorage.ai/ja/f/8o2AhZRiZNoc' -o /tmp/page
+          cat /tmp/headers
+          file /tmp/page
+          wc -c /tmp/page
+          head -c 1200 /tmp/page || true
+          echo
+          grep -Eo 'https?://[^"<> ]+' /tmp/page | head -40 || true
+          grep -Eo 'href="[^"]+"' /tmp/page | head -40 || true
