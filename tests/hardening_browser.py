@@ -14,9 +14,16 @@ try:
  with sync_playwright() as pw:
   browser=pw.chromium.launch(headless=True,**({'executable_path':os.environ['CHROMIUM_PATH']} if os.environ.get('CHROMIUM_PATH') else {}))
   ctx=browser.new_context(viewport={'width':1280,'height':900},accept_downloads=True)
-  page=ctx.new_page();page.on('dialog',lambda d:d.accept());page.goto(url)
+  page=ctx.new_page();page.on('dialog',lambda d:d.accept());page.goto(url);page.wait_for_timeout(140)
   assert page.locator('[data-action="report"]').is_disabled()
-  page.locator('[data-action="demo"]').first.click()
+  # N1: unknown/untouched work is not readiness. A blank project must show zero green completion ticks.
+  badges=page.locator('#navigation .exec-badge')
+  assert badges.count()>=6
+  assert page.locator('#navigation .exec-badge[data-state="complete"]').count()==0
+  assert all(t.strip()!='✓' for t in badges.all_text_contents())
+  assert page.locator('#navigation .exec-badge[data-state="not-started"]').count()>=4
+  page.locator('[data-action="demo"]').first.click();page.wait_for_timeout(140)
+  assert page.locator('#navigation .exec-badge[data-state="complete"]').count()>=1
   field=page.locator('[data-path="institution.name"]')
   start=page.evaluate('SultanApp.getProject().revision')
   field.focus();field.fill('One committed edit');mid=page.evaluate('SultanApp.getProject().revision');assert mid==start

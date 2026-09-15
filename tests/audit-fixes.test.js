@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const source=read('src/audit-fixes.js'),css=read('src/audit-fixes.css'),brand=read('src/brand.css'),build=read('build.py'),review=read('src/review-visuals.js');
+const source=read('src/audit-fixes.js'),css=read('src/audit-fixes.css'),brand=read('src/brand.css'),index=read('index.html'),review=read('src/review-visuals.js');
 
 /* Reproduce the exact metadata-only cache collision found during import review, then
    prove the post-integration shield makes content part of the effective cache key. */
@@ -36,5 +36,5 @@ const ratio=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min
 assert.ok(css.includes('#publicStart')&&css.includes('color:#fff'),'legacy CTA must have an explicit readable fallback');
 assert.ok(ratio(navy,'ffffff')>=4.5,'legacy CTA text/background contrast must meet WCAG AA');
 assert.ok(review.includes("['publicMethod','publicStart']")&&review.includes("classList.add('v-legacy-action')"),'duplicate header CTA remains hidden after enhancement');
-assert.ok(build.includes('src/audit-fixes.css')&&build.includes('src/audit-fixes.js'),'standalone/live build must ship audit fixes');
+assert.ok(index.includes('src/audit-fixes.css')&&index.includes('src/audit-fixes.js'),'canonical source index must ship audit fixes');
 console.log(JSON.stringify({suite:'audit-fixes',passed:true,cacheCollision:'fixed',contrast:Number(ratio(navy,'ffffff').toFixed(2)),semanticRules:'R1-R5'}));

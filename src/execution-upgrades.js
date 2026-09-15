@@ -34,6 +34,20 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-action="go
 window.addEventListener('popstate',()=>{const s=currentSection();if(root.SultanApp&&['home','identity','choices','references','priorities','enablers','roadmap','review','about'].includes(s))root.SultanApp.navigate(s);});
 
 function sectionIssues(p,key){return E.check(p).filter(x=>x.section===key).length;}
+function sectionStarted(p,key){
+ const log=Array.isArray(p?.log)?p.log:[],touched=(...prefixes)=>log.some(e=>prefixes.some(prefix=>String(e?.path||'').startsWith(prefix)));
+ const institution=p?.institution||{};
+ switch(key){
+  case 'identity': return [institution.name,institution.context,institution.beneficiaries,institution.assets,institution.liabilities,institution.notDoing,institution.vision,institution.mission].some(text)||Array.isArray(p?.mandates)&&p.mandates.length>0||touched('institution.','mandates');
+  case 'choices': return Array.isArray(p?.options)&&p.options.length>0||touched('options');
+  case 'references': return (Array.isArray(p?.references)&&p.references.length>0)||(Array.isArray(p?.transitions)&&p.transitions.length>0)||touched('references','transitions');
+  case 'priorities': return text(p?.weightRationale)||(p?.options||[]).some(o=>Object.values(o?.scores||{}).some(v=>typeof v==='number'||(v&&typeof v==='object'&&(typeof v.value==='number'||text(v.note)))))||touched('criteria','weightRationale','options');
+  case 'enablers': return Array.isArray(p?.enablers)&&p.enablers.length>0||touched('enablers');
+  case 'roadmap': return (Array.isArray(p?.initiatives)&&p.initiatives.length>0)||touched('initiatives','funding');
+  case 'review': return text(p?.reviewNote)||(p?.transitions||[]).some(t=>(t.annual||[]).some(a=>(typeof a.actual==='number'&&Number.isFinite(a.actual))||text(a.actualSource)))||touched('review');
+  default: return false;
+ }
+}
 function renderExportMenu(){
  const host=document.querySelector('.topbar .toolbar');if(!host)return;
  let menu=host.querySelector('.export-menu');
@@ -52,9 +66,13 @@ function renderProgress(){
  const p=root.SultanApp.getProject(),nav=document.getElementById('navigation');
  if(nav)for(const btn of nav.querySelectorAll('[data-section]')){
   const key=btn.dataset.section;if(key==='home')continue;
-  const n=sectionIssues(p,key);let badge=btn.querySelector('.exec-badge');
+  const started=sectionStarted(p,key),n=sectionIssues(p,key);let badge=btn.querySelector('.exec-badge');
   if(!badge){badge=document.createElement('span');badge.className='exec-badge';btn.append(badge);}
-  badge.textContent=n?String(n):'✓';badge.dataset.ok=n?'0':'1';
+  const state=!started?'not-started':n?'issues':'complete';
+  badge.textContent=state==='not-started'?'—':state==='issues'?String(n):'✓';
+  badge.dataset.state=state;badge.dataset.ok=state==='complete'?'1':'0';
+  const label=state==='not-started'?T('sectionNotStarted'):state==='issues'?T('sectionOpenIssues').replace('%{0}',String(n)):T('sectionComplete');
+  badge.title=label;badge.setAttribute('aria-label',label);
  }
  renderExportMenu();
  const content=document.getElementById('content');

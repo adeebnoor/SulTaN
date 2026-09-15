@@ -1,10 +1,10 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=f=>fs.readFileSync(path.join(root,f),'utf8');
-const source=read('src/rev3-handoff.js'),css=read('src/rev3-handoff.css'),build=read('build.py');
+const source=read('src/rev3-handoff.js'),css=read('src/rev3-handoff.css'),index=read('index.html');
 for(const token of ['.proof-strip','value-difference','rev3-evidence-tabs','rev3-mobile-metrics','R1','R2','R3','R4','R5'])assert.ok(source.includes(token)||css.includes(token),token);
 assert.ok(!/\b(fetch|XMLHttpRequest|sendBeacon)\s*\(/.test(source),'rev3 layer must not transmit project data');
-assert.ok(build.includes('src/rev3-handoff.css')&&build.includes('src/rev3-handoff.js'),'standalone build ships rev3 closure');
+assert.ok(index.includes('src/rev3-handoff.css')&&index.includes('src/rev3-handoff.js'),'canonical source index ships rev3 closure');
 
 global.document={addEventListener(){},body:{classList:{contains(){return false}},dataset:{}},querySelector(){return null},getElementById(){return null}};
 global.location={hash:''};global.history={replaceState(){}};global.addEventListener=()=>{};global.setTimeout=()=>0;global.matchMedia=()=>({matches:true});
