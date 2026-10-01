@@ -117,7 +117,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
 
                 # 0.8 RC: full-horizon dashboard, localized client exports and success-only document numbering.
                 rc_labels = page.evaluate('Object.fromEntries(["clientDeliverables","decisionExtensions","pdfPopupBlocked","qualitativeRecorded"].map(k=>[k,SultanI18n.t(k)]))')
-                check(prefix + 'visible release version', '0.9.0-beta' in page.locator('.final-version').inner_text())
+                check(prefix + 'visible release version', '0.9.1-beta' in page.locator('.final-version').inner_text())
                 menu(page)
                 check(prefix + 'client deliverables heading localized', page.locator('.final-deliverables > b').inner_text().strip() == rc_labels['clientDeliverables'])
                 check(prefix + 'single status legend for progress panel', page.locator('.dashboard-progress .dashboard-status-legend').count() == 1)
@@ -200,11 +200,11 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
                 expect(internal.locator('.authority-report h2')).to_have_text(labels['authoritySpaceTitle'])
                 expect(internal.locator('[data-report-section="issues"]')).to_have_count(1)
                 leadership = download_report(page, '[data-exec="leadership-report"]', qa/f'leadership-{lang}-{width}.html')
-                expect(leadership.locator('[data-report-section="issues"]')).to_have_count(0)
+                expect(leadership.locator('[data-report-section="issues"]')).to_have_count(1)
                 expect(leadership.locator('.authority-report')).to_have_count(1)
                 expect(leadership.locator('.escalation-report')).to_have_count(1)
                 issue = page.evaluate('Sultan.check(SultanApp.getProject()).find(x=>x.entity==="o4").message')
-                check(prefix + 'leadership removes unresolved issue text', issue in internal.locator('body').inner_text() and issue not in leadership.locator('body').inner_text())
+                check(prefix + 'leadership retains unresolved issue text', issue in internal.locator('body').inner_text() and issue in leadership.locator('body').inner_text())
                 assumption_text = demo['options'][0]['assumptions'][0]['text']
                 risk_source = demo['options'][0]['riskSource']
                 maturity_family = next(t['maturityFamily'] for t in demo['transitions'] if t.get('maturityFamily'))

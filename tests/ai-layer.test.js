@@ -43,7 +43,7 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  assert.ok(c.body.system.includes('(partner-route)')&&c.body.system.includes('(recurring)'),'the expert lenses travel in the system prompt');
  Lens.setIncludeInAI(false);await AI.generateStrategy({project});assert.ok(!calls.at(-1).body.system.includes('(partner-route)'),'the expert can keep lenses out of the prompts');Lens.setIncludeInAI(true);
  assert.deepEqual(r.data.options[0].title,'AI choice');assert.deepEqual(r.usage,{inputTokens:11,outputTokens:22,model:'claude-opus-5-5'});assert.ok(progress.length>1,'streaming progress is reported');
- const merged=D.fromAI(r.data,project,{mode:'replace'});assert.equal(merged.options[0].title,'AI choice');
+ assert.throws(()=>D.fromAI(r.data,project,{mode:'replace'}),/did not preserve/,'incomplete model output cannot erase entered measurements');const merged=D.fromAI(r.data,E.blank(),{mode:'append'});assert.equal(merged.options[0].title,'AI choice');
  /* research step: web search tool + documents + two calls */
  let step=0;next=()=>{step++;return step===1?streamResponse('Memo with sources\n1. Regulation X — MoE — https://moe.gov.sa — 2024'):streamResponse(JSON.stringify({sources:[{title:'Regulation X',kind:'regulation',issuer:'MoE',url:'https://moe.gov.sa',year:2024,summary:'s',relevance:'r'}],documents:[{name:'report.pdf',summary:'baseline 61'}],openQuestions:['Fees?'],summary:'done'}));};
  const g=await AI.gatherContext({project,documents:[{name:'report.pdf',kind:'pdf',base64:'QUJD'},{name:'notes.txt',kind:'text',text:'hello'}]});

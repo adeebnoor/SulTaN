@@ -3,6 +3,12 @@
 'use strict';
 root.SultanLocales=root.SultanLocales||{};
 const en={
+ drMappingLost:'The draft did not preserve every existing choice, measurement or entered budget. It was not applied; your project is unchanged. Retry or use the local library draft.',
+ ctxReviewStale:'This review belongs to an earlier or unverified project version. Run it again; its findings are excluded from current warnings and reports.',ctxReviewArchive:'Previous review — historical only',
+ drUnverified:'[Unverified proposal — confirm with evidence]',drBudgetGuard:'AI-proposed costs and unsupported measurements were not adopted. Enter each initiative cost separately; an annual cap is not a cost estimate. Existing linked measurements retain their original definition and source.',
+ drFeasibilityFix:'A circular capital-funding condition was removed from a proposed feasibility study. Define a separate study budget and a later investment decision gate.',
+ ctxFeasibilityCycle:'Possible circular approval: a feasibility study requires capital funding whose approval depends on the study. Separate the study budget from the investment gate: ',
+
  localSuggest:'Suggest from local library (no key)',
  localReviewTitle:'Local strategy review — no key required',localReviewLead:'Checks completeness and decision rules locally. This is a rules-based review, not an external model or a factual verification.',localFieldDisclaimer:'Local library suggestion or illustrative field example. Review and adapt it; it is not an established fact about your institution.',
  /* context dossier (engine) */
@@ -39,7 +45,7 @@ const en={
  gwStepsLabel:'Guided path steps',gwStep1:'Sector',gwStep2:'Institution & brief',gwStep3:'Context',gwStep4:'Directions',gwStep5:'Generate',
  gwStep1Title:'Which sector are we in?',gwStep1Lead:'The sector decides which regulations, national programmes, indicators and templates SULTAN brings to the table.',
  gwLibraryCounts:'%{0} regulations · %{1} indicators · %{2} goal templates',gwTypeLabel:'Type of institution',
- gwLibraryNote:'Regulator: %{0}. Library verified on %{1}; re-check names and current versions before publishing. SULTAN is not affiliated with any issuer.',
+ gwLibraryNote:'Regulator: %{0}. Library catalogue updated on %{1}; document versions and applicability require sector review. SULTAN is not affiliated with any issuer.',
  gwStep2Title:'Tell us about the institution in your own words',gwStep2Lead:'Three questions and a free-text brief. Write what you know; the library and the AI fill the rest as marked drafts.',
  gwHorizon:'Strategy horizon',gwHorizonHelp:'First and last year. Three to five years is typical.',
  gwVisionHelp:'The future you want by the end of the horizon, in one or two sentences. Do not let today\'s capability cap it.',
@@ -49,7 +55,7 @@ const en={
  gwDocsTitle:'Institution documents (optional, AI step only)',gwDocsLead:'Previous strategy, annual report, evaluation reports, financial summary. The AI reads them to extract baselines, commitments and constraints.',
  gwDocsNone:'No documents attached.',gwDocsAdd:'Attach PDF or text files',gwDocsLimit:'Up to eight documents per run.',gwDocsTooBig:'"%{0}" exceeds 20 MB and was skipped.',
  gwDocsPrivacy:'Documents stay in this browser\'s memory and are sent only to the AI provider you configured, only when you run the context step. They are not saved in the project; a short summary is.',
- gwStep3Title:'Gather the context',gwStep3Lead:'A strategy is defensible only when it knows the rules and the numbers of its sector. The library gives the verified base; the AI extends it with current sources and your documents.',
+ gwStep3Title:'Gather the context',gwStep3Lead:'A strategy is defensible only when it knows the rules and the numbers of its sector. The library offers starting references to verify; AI can propose additional sources and extract your documents.',
  gwLibraryRefs:'Bundled library for this sector: %{0} regulations · %{1} national programmes · %{2} indicators',gwLibraryRefsNote:'Library references are attached automatically to the directions you select in the next step.',
  gwNoSector:'Choose a sector first.',
  gwGatherTitle:'Research with AI',gwGatherLead:'Searches official sources for current regulations, programme targets, indicator values and recent studies, summarises your documents, and lists what only you can answer. Every source is proposed until you accept it.',
@@ -101,6 +107,12 @@ const en={
  aiReviewDisclaimer:'Blocking findings also appear as warnings in the section lists so they are not lost. The deterministic completeness rules are unchanged.'
 };
 const ar={
+ drMappingLost:'لم تحافظ المسودة على جميع الاختيارات والقياسات والميزانيات المدخلة. لم تُطبّق، ومشروعك محفوظ. أعد المحاولة أو استخدم مسودة المكتبة المحلية.',
+ ctxReviewStale:'هذه المراجعة تخص نسخة سابقة أو غير موثقة من المشروع. أعد تشغيلها؛ ملاحظاتها مستبعدة من تحذيرات النسخة الحالية وتقريرها.',ctxReviewArchive:'مراجعة سابقة — للسجل فقط',
+ drUnverified:'[مقترح غير متحقق — أكّده بدليل]',drBudgetGuard:'لم تُعتمد تكاليف النموذج أو القياسات غير المسندة. أدخل تكلفة كل مبادرة مستقلّة؛ السقف السنوي ليس تقديرًا للتكلفة. تحتفظ القياسات المرتبطة بتعريفها ومصدرها الأصليين.',
+ drFeasibilityFix:'أزيل شرط تمويل رأسمالي دائري من دراسة جدوى مقترحة. حدّد ميزانية مستقلة للدراسة وبوابة قرار لاحقة للاستثمار.',
+ ctxFeasibilityCycle:'اعتماد دائري محتمل: دراسة الجدوى تتطلب تمويلًا رأسماليًا يعتمد إقراره على الدراسة. افصل ميزانية الدراسة عن بوابة الاستثمار: ',
+
  localSuggest:'اقتراح من المكتبة المحلية (دون مفتاح)',
  localReviewTitle:'مراجعة الاستراتيجية محليًا — دون مفتاح',localReviewLead:'تفحص الاكتمال وقواعد القرار داخل المتصفح. مراجعة بالقواعد، وليست رأيًا من نموذج خارجي أو تحققًا من صحة الوقائع.',localFieldDisclaimer:'اقتراح من المكتبة المحلية أو مثال توضيحي للحقل. راجعه وكيّفه؛ ليس حقيقة مثبتة عن مؤسستك.',
  ctxInvalid:'ملف السياق في هذا الملف غير صالح.',ctxInvalidKey:'حقل سياق غير متوقع:',
@@ -134,7 +146,7 @@ const ar={
  gwStepsLabel:'خطوات المسار الموجَّه',gwStep1:'القطاع',gwStep2:'الجهة والوصف',gwStep3:'السياق',gwStep4:'الاتجاهات',gwStep5:'الإنشاء',
  gwStep1Title:'في أي قطاع نعمل؟',gwStep1Lead:'القطاع يحدد الأنظمة واللوائح والبرامج الوطنية والمؤشرات والقوالب التي يُحضرها سلطان إلى الطاولة.',
  gwLibraryCounts:'%{0} أنظمة ولوائح · %{1} مؤشرًا · %{2} قوالب أهداف',gwTypeLabel:'نوع الجهة',
- gwLibraryNote:'الجهة المنظِّمة: %{0}. المكتبة متحقَّق منها بتاريخ %{1}؛ تأكد من الأسماء والإصدارات الحالية قبل النشر. سلطان غير مرتبط بأي جهة مُصدِرة.',
+ gwLibraryNote:'الجهة المنظِّمة: %{0}. تحديث فهرس المكتبة: %{1}؛ يلزم تدقيق إصدارات الوثائق وانطباقها مع خبير القطاع. سلطان غير مرتبط بأي جهة مُصدِرة.',
  gwStep2Title:'حدثنا عن الجهة بكلماتك',gwStep2Lead:'ثلاثة أسئلة ووصف حر. اكتب ما تعرفه؛ تملأ المكتبة والذكاء الاصطناعي الباقي كمسودات معلَّمة.',
  gwHorizon:'أفق الاستراتيجية',gwHorizonHelp:'أول سنة وآخر سنة. المعتاد ثلاث إلى خمس سنوات.',
  gwVisionHelp:'المستقبل الذي تريده بنهاية الأفق في جملة أو جملتين. لا تجعل القدرة الحالية سقفًا له.',
@@ -144,7 +156,7 @@ const ar={
  gwDocsTitle:'وثائق الجهة (اختياري، لخطوة الذكاء الاصطناعي فقط)',gwDocsLead:'الاستراتيجية السابقة، التقرير السنوي، تقارير التقويم، ملخص مالي. يقرؤها الذكاء الاصطناعي لاستخراج خطوط الأساس والالتزامات والقيود.',
  gwDocsNone:'لا وثائق مرفقة.',gwDocsAdd:'إرفاق ملفات PDF أو نصية',gwDocsLimit:'الحد ثماني وثائق في المرة.',gwDocsTooBig:'الملف «%{0}» يتجاوز 20 ميجابايت وتم تخطيه.',
  gwDocsPrivacy:'تبقى الوثائق في ذاكرة هذا المتصفح، ولا تُرسل إلا إلى مزود الذكاء الاصطناعي الذي أعددته وعند تشغيل خطوة السياق فقط. لا تُحفظ في المشروع؛ يُحفظ ملخص قصير.',
- gwStep3Title:'اجمع السياق',gwStep3Lead:'لا تُدافَع الاستراتيجية إلا إذا عرفت قواعد قطاعها وأرقامه. تعطي المكتبة الأساس المتحقَّق منه، ويوسّعه الذكاء الاصطناعي بمصادر حديثة ووثائقك.',
+ gwStep3Title:'اجمع السياق',gwStep3Lead:'لا تُدافَع الاستراتيجية إلا إذا عرفت قواعد قطاعها وأرقامه. تقترح المكتبة مراجع أولية للتحقق، ويساعد الذكاء الاصطناعي في اقتراح مصادر إضافية واستخراج وثائقك.',
  gwLibraryRefs:'المكتبة المضمّنة لهذا القطاع: %{0} أنظمة ولوائح · %{1} برامج وطنية · %{2} مؤشرًا',gwLibraryRefsNote:'تُرفق مرجعيات المكتبة تلقائيًا بالاتجاهات التي تختارها في الخطوة التالية.',
  gwNoSector:'اختر القطاع أولًا.',
  gwGatherTitle:'بحث بالذكاء الاصطناعي',gwGatherLead:'يبحث في المصادر الرسمية عن الأنظمة الحالية ومستهدفات البرامج وقيم المؤشرات والدراسات الحديثة، ويلخص وثائقك، ويحدد ما لا يستطيع الإجابة عنه غيرك. كل مصدر يبقى مقترحًا حتى تعتمده.',

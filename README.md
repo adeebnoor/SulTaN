@@ -8,17 +8,21 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 **Live beta:** https://sultan-strategy-beta.onrender.com
 
-**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.7.4 — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
+**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.9.1-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
 If GitHub Pages is enabled for the repository, the same tested artifact can also be published at `https://adeebnoor.github.io/SulTaN/`.
 
 Start with the **fictional example**, change a choice, criterion or authority state, then inspect the review and exports. You can also start with a blank project. Project text is never automatically translated when the interface language changes.
 
+## New in 0.9.1-beta — consulting audit safeguards
+
+AI drafts retain existing KPI meanings and entered measurements, leave unsupported initiative costs unknown, and label factual proposals. Incomplete replacement drafts are rejected before changing the project. Reviews become stale when their input content changes; leadership reports retain unresolved issues. These safeguards do not validate earlier AI drafts or replace sector expert review and field pilots.
+
 ## New in 0.9.0-beta — guided, context-aware, AI-assisted
 
 This release answers an external expert review (40+ years in strategy consulting) that found the workspace exhausting (80+ fields), unexplained (fields say *what*, not *why*), passive (nothing is inferred for the user) and context-free (no sector library). What changed:
 
-- **Guided path** (`#guide`, the first button on the home page): sector → brief and documents → context gathering → identity → goals and the few numbers you know → a complete, validated draft in minutes. The full workspace stays one click away for review.
+- **Guided path** (`#guide`, the first button on the home page): sector → brief and documents → context gathering → identity → goals and the few numbers you know → a linked draft for review. The full workspace stays one click away for review.
 - **Sector library** bundled in the app: education (general and private schools, international schools, kindergartens, training), higher education, health, government, non-profit and technology/digital services, with regulators, national programmes, indicators, goal templates, enablers and initiatives written in the SULTAN vocabulary. Library drafts carry `lib-` ids. See [docs/SECTOR_LIBRARY.md](docs/SECTOR_LIBRARY.md).
 - **Context dossier** on every project (`project.context`): sector, brief, regulations/programmes/indicators/studies/benchmarks with issuer, year and URL, attached-document summaries, expert-review findings and the AI usage log. Proposed sources are open issues until the team accepts them; the report gains a *Context sources and AI assistance* section.
 - **Optional AI assistant** (off by default, explicit consent): gathers sector context with optional web search and your documents, generates a full strategy as validated structured JSON, suggests text for any field, and reviews the draft like a senior consultant. Works with your own API key in the browser or through the small relay in `server/`. AI records carry `ai-` ids and every call is logged and disclosed. See [docs/AI_ASSISTANT.md](docs/AI_ASSISTANT.md).
