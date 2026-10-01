@@ -101,7 +101,7 @@ function step5(){
  ${rows?`<h3>${esc(T('gwWillCreate'))}</h3><div class="gw-summary gw-counts-grid">${rows}</div>`:''}
  <p class="hint">${esc(T('gwDraftNote'))}</p>
  ${aiStatusLine()}
- <div class="gw-build"><div class="gw-build-option ${ai?'':'disabled'}"><h3>✦ ${esc(T('gwBuildAi'))}</h3><p>${esc(T('gwBuildAiLead'))}</p>${btn(T('gwBuildAiBtn'),'build-ai','primary',ai&&ready?'':'disabled')}</div><div class="gw-build-option"><h3>${esc(T('gwBuildLib'))}</h3><p>${esc(T('gwBuildLibLead'))}</p>${btn(T('gwBuildLibBtn'),'build-lib','',ready&&(sel.length||customs.length)?'':'disabled')}</div></div>
+ <div class="gw-build"><div class="gw-build-option ${ai?'':'disabled'}"><h3>✦ ${esc(T('gwBuildAi'))}</h3><p>${esc(T('gwBuildAiLead'))}</p>${btn(T('gwBuildAiBtn'),'build-ai','primary',ai&&ready?'':'disabled')}</div><div class="gw-build-option"><h3>${esc(T('gwBuildLib'))}</h3><p>${esc(T('gwBuildLibLead'))}</p>${btn(T('gwBuildLibBtn'),'build-lib','primary',ready&&(sel.length||customs.length)?'':'disabled')}</div></div>
  ${ready?'':`<p class="hint warn">${esc(T('gwNotReady'))}</p>`}<div class="gw-progress" hidden></div></article>`;
 }
 function view(){
@@ -302,15 +302,15 @@ function reviewCard(){
  const last=p.context.reviews.at(-1);
  const sev={blocking:T('ctxSeverity_blocking'),warning:T('ctxSeverity_warning'),hint:T('ctxSeverity_hint')};
  const items=last?.items?.length?`<ul class="ai-review-items">${last.items.map(i=>`<li class="${i.severity}"><span class="pill status-${i.severity}">${esc(sev[i.severity]||i.severity)}</span><span>${esc(i.message)}</span><button type="button" class="btn small" data-action="goto" data-section="${esc(i.section==='context'?'references':i.section)}">${esc(T('s256'))}</button></li>`).join('')}</ul>`:'';
- return `<article class="card ai-review"><div class="feature-head"><h2>✦ ${esc(T('aiReviewTitle'))}</h2>${AI?`<button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button>`:''}</div><p class="muted">${esc(T('aiReviewLead'))}</p><div class="toolbar"><button type="button" class="btn primary" data-ai-review="run" ${aiReady()?'':'disabled'}>${esc(last?T('aiReviewAgain'):T('aiReviewRun'))}</button>${aiReady()?'':`<span class="muted">${esc(T('gwAiOff'))}</span>`}</div><div class="gw-progress" hidden></div>${last?`<p class="ai-review-meta">${esc(T('aiReviewedOn'))} ${esc(last.at.slice(0,10))} · ${esc(last.model)}</p><p class="ai-review-summary">${esc(last.summary)}</p>${items}`:''}<p class="help">${esc(T('aiReviewDisclaimer'))}</p></article>`;
+ return `<article class="card ai-review"><div class="feature-head"><h2>✦ ${esc(T(aiReady()?'aiReviewTitle':'localReviewTitle'))}</h2>${AI?`<button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button>`:''}</div><p class="muted">${esc(T(aiReady()?'aiReviewLead':'localReviewLead'))}</p><div class="toolbar"><button type="button" class="btn primary" data-ai-review="run">${esc(last?T('aiReviewAgain'):T('aiReviewRun'))}</button>${aiReady()?'':`<span class="muted">${esc(T('gwAiOff'))}</span>`}</div><div class="gw-progress" hidden></div>${last?`<p class="ai-review-meta">${esc(T('aiReviewedOn'))} ${esc(last.at.slice(0,10))} · ${esc(last.model)}</p><p class="ai-review-summary">${esc(last.summary)}</p>${items}`:''}<p class="help">${esc(T('aiReviewDisclaimer'))}</p></article>`;
 }
 function renderReview(){
  if(section()!=='review')return;const content=document.getElementById('content');if(!content||content.querySelector('.ai-review'))return;
  const html=reviewCard();if(!html)return;const anchor=content.querySelector('.semantic-hints')||content.querySelector('.review-executive')||content.querySelector('.heading');if(anchor)anchor.insertAdjacentHTML('afterend',html);else content.insertAdjacentHTML('afterbegin',html);
 }
 document.addEventListener('click',async e=>{
- const b=e.target.closest('[data-ai-review="run"]');if(!b||busy||!aiReady())return;busy=true;const box=b.closest('.ai-review').querySelector('.gw-progress');
- try{progress(box,T('aiReviewWorking'));const p=project();const r=await AI.reviewStrategy({project:p});E.addContextReview(p,{model:r.usage.model,summary:[r.data.summary,...(r.data.strengths||[]).map(s=>'✓ '+s)].filter(text).join('\n'),items:r.data.items||[]});logUsage(p,'review',r.usage);p.revision++;p.updatedAt=new Date().toISOString();root.SultanApp.setProject(p);root.SultanApp.navigate('review');toast(T('aiReviewDone',[(r.data.items||[]).length]));}
+ const b=e.target.closest('[data-ai-review="run"]');if(!b||busy)return;busy=true;const box=b.closest('.ai-review').querySelector('.gw-progress');
+ try{progress(box,T('aiReviewWorking'));const p=project();const r=aiReady()?await AI.reviewStrategy({project:p}):{usage:{model:'local-rules',inputTokens:0,outputTokens:0},data:{summary:T('localReviewLead'),strengths:[],items:E.check(p).map(x=>({section:x.section,severity:x.level==='blocking'?'blocking':'warning',message:x.message,fix:'',lens:''}))}};E.addContextReview(p,{model:r.usage.model,summary:[r.data.summary,...(r.data.strengths||[]).map(s=>'✓ '+s)].filter(text).join('\n'),items:r.data.items||[]});if(aiReady())logUsage(p,'review',r.usage);p.revision++;p.updatedAt=new Date().toISOString();root.SultanApp.setProject(p);root.SultanApp.navigate('review');toast(T('aiReviewDone',[(r.data.items||[]).length]));}
  catch(err){box.hidden=false;box.innerHTML=`<p class="fg-ai-error">${esc(err?.message||String(err))}</p>`;}
  finally{busy=false;}
 });
