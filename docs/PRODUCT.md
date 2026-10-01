@@ -2,6 +2,18 @@
 
 SULTAN helps a team build and review a strategy, rather than generating a plausible document from an institution name. The consultation-authoring deliverable is a linked roadmap, dashboard, and reviewable strategy draft. The institution owns execution; additional advisory support is optional.
 
+## Two ways in: guided path and expert workspace
+
+Version 0.9 answers the expert review that called SULTAN "an expert's tool, not a user's tool". A busy manager now starts from the **guided path**: pick a sector and institution type, write a short brief, optionally attach documents, let the engine gather the regulatory and indicator context, confirm identity, tick goals from the sector library, enter the few numbers they know, and receive a complete, validated draft. The full workspace remains for consultants and for review; it opens in **simple mode** (essential fields visible, advanced fields folded under *More*) and switches to **expert mode** with one click. Every field carries a *why this matters* note with an example, in both languages.
+
+The division of labour is deliberate: the user supplies general information and judgment, the engine and the optional AI assistant produce the draft, and the expert reviews it. Generated records are marked by origin (`lib-` for the sector library, `ai-` for the assistant) so a reviewer always knows what a human wrote.
+
+## Context dossier and sector library
+
+Every project carries a **context dossier**: sector, type, brief, the regulations, programmes, indicators, studies and benchmarks that ground the strategy, attached-document summaries, expert-review findings and the AI usage log. Sources are *proposed* until the team *accepts* them; proposed sources appear as open issues so nothing silently becomes "the evidence".
+
+The **sector library** ships inside the app: education (general and private schools, international schools, kindergartens, training), higher education, health, government and non-profit, with regulators, national programmes, indicators, goal templates, enablers and initiatives written in the SULTAN vocabulary. Library entries record their issuer, year and public URL and the date the library was last verified. They are a starting point for the team's own verification, not legal advice and not an accreditation checklist.
+
 ## Method boundaries
 
 Strategy chooses direction, beneficiary value, differentiation, and trade-offs. The operating model describes roles, authority, resources, incentives, and delivery arrangements that support those choices. Examining present operations must not turn present capability into the ceiling for ambition.
@@ -30,6 +42,12 @@ ClearPoint's public presentation emphasizes a guided tour, connected objectives/
 
 These are experience references, not independent performance rankings or evidence of feature parity. SULTAN does not claim their enterprise integrations, security certifications, adoption numbers, or field results.
 
+## AI assistant boundaries
+
+The AI assistant is optional and off by default. It can gather sector context (with optional web search), draft a full strategy as structured JSON, suggest text for a single field, and review the draft the way a senior consultant would. Everything it returns passes through the same normaliser as a library draft: unknown numbers stay unknown, readiness is never assumed, budgets are never invented, indicator directions are checked against the baseline and target, and years are clamped to the horizon. Its review findings are warnings in the review view and never approval conditions. Mandatory requirements remain outside preference scoring whether a human or the model proposed them.
+
+The assistant does not verify legal authority, guarantee that a cited regulation is current, or predict success. The team must accept proposed sources and review every generated record before the strategy is treated as its own.
+
 ## Public beta boundaries
 
-No AI generation, paid subscription, login, cloud storage, live collaboration, legal verification, official accreditation, or protected audit trail is implemented. Input completeness and passing software tests do not establish factual correctness, field effectiveness, or global novelty.
+No paid subscription, login, cloud storage, live collaboration, legal verification, official accreditation, or protected audit trail is implemented. AI generation exists only as the opt-in assistant described above. Input completeness and passing software tests do not establish factual correctness, field effectiveness, or global novelty.

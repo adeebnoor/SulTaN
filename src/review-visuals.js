@@ -242,7 +242,7 @@ function enhanceSuggestions(p){
 function isPristine(p){return Boolean(p&&!p.isDemo&&!['name','mission','vision','beneficiaries','assets','context','notDoing','liabilities'].some(k=>text(p.institution[k]))&&!['options','references','transitions','enablers','initiatives','mandates'].some(k=>p[k].length));}
 function enhanceWorkspace(section){
  const p=root.SultanApp?.getProject?.(),content=document.getElementById('content');if(!p||!content)return;
- const pristine=isPristine(p)&&section!=='review'&&section!=='home'&&section!=='about';document.body.classList.toggle('is-pristine',pristine);
+ const pristine=isPristine(p)&&!['review','home','about','guide'].includes(section);document.body.classList.toggle('is-pristine',pristine);
  if(pristine&&!content.querySelector('.pristine-note')){const n=document.createElement('div');n.className='pristine-note';n.textContent=T('vPristine');content.querySelector('.heading')?.insertAdjacentElement('afterend',n);}
  if(section==='identity'&&root.SultanVision&&!content.querySelector('.vision-workspace-note')){const V=root.SultanVision,n=document.createElement('div');n.className='vision-workspace-note';n.innerHTML=`<b>${esc(T('visionListLabel'))}</b><span>${esc(T('visionListHint'))}</span><small>${esc(T('visionListDisclaimer',[V.verifiedOn]))}</small><a href="${esc(V.source)}" target="_blank" rel="noopener noreferrer">${esc(T('vVisionSource'))}</a>`;content.querySelector('[data-kind="mandates"]')?.closest('.card')?.prepend(n);}
  if(section==='references')wrapAnnuals(p);enhanceSuggestions(p);

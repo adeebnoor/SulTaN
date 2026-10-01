@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0b2d63">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>SULTAN | Decision Accountability for Strategy</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.anthropic.com https://sultan-strategy-ai.onrender.com; base-uri 'none'; form-action 'none'">
+  <title>SULTAN | Decision Accountability for Strategy — guided, context-aware, AI-assisted</title>
   <meta name="description" content="SULTAN turns strategy into an explainable, executable decision by connecting choices to evidence, authority, initiatives, funding conditions and visible uncertainty.">
   <meta property="og:title" content="SULTAN | Strategy decisions you can explain and execute">
   <meta property="og:description" content="Make strategic choices, authority, evidence, uncertainty and execution conditions explicit before a plan is approved.">
@@ -17,17 +17,20 @@
   <link rel="stylesheet" href="src/palette-unify.css">
   <link rel="stylesheet" href="src/audit-fixes.css">
   <link rel="stylesheet" href="src/rev3-handoff.css">
+  <link rel="stylesheet" href="src/guided.css">
 </head>
 <body>
 <a class="sr" href="#content" data-i18n="skip">Skip to content</a>
 <header class="public-header"><div class="public-header-inner"><button id="publicBrand" class="public-brand" data-action="goto" data-section="home" type="button"><span class="brand-glyph" aria-hidden="true">S</span><span><b data-i18n="brand">SULTAN</b><small data-i18n="tagline">Strategy, with a reason.</small></span></button><nav class="header-links" aria-label="Public navigation"><button id="publicMethod" type="button" data-action="about" data-i18n="aboutLink">How it works</button><button type="button" data-beta="feedback" data-i18n="feedback">Share feedback</button></nav><div class="header-actions"><button class="language-button" type="button" data-beta="language" data-i18n="language" data-i18n-label="languageNote">English</button><button id="publicStart" class="btn primary" type="button" data-action="new" data-i18n="startFree">Start free</button></div></div></header>
 <div class="shell"><aside class="sidebar"><div class="brand"><div class="monogram" aria-hidden="true">S</div><div><b data-i18n="brand">SULTAN</b><span data-i18n="workMode">WORKSPACE</span></div></div><div class="byline" data-i18n="creator"></div><nav id="navigation" data-i18n-label="workspaceLabel"></nav><div class="sidefoot"><span data-i18n="freeBeta"></span><br><button type="button" data-action="about" data-i18n="privacy"></button><br><button type="button" data-beta="feedback" data-i18n="feedback"></button></div></aside><div class="workspace"><header class="topbar"><div><div class="projecttitle" id="projectTitle" data-i18n="s250"></div><span class="save" id="saveStatus" role="status"></span></div><div class="toolbar"><button type="button" class="btn small" data-action="new" data-i18n="s561"></button><button type="button" class="btn small" data-action="import" data-i18n="s556"></button></div></header><div id="localWarning" class="local-warning" data-i18n="privacyShort"></div><main class="page" id="content"></main></div></div>
 <input type="file" id="importProject" accept="application/json,.json" hidden><div class="toast" id="toast" role="status" aria-live="polite"></div><noscript><p>Enable JavaScript to use the workspace. Arabic and English interfaces are available.</p></noscript>
-<script src="src/version.js"></script><script src="src/locales/en.js"></script><script src="src/locales/ar.js"></script><script src="src/locales/authority-space.js"></script><script src="src/locales/execution-upgrades.js"></script><script src="src/locales/demo.js"></script><script src="src/locales/final.js"></script><script src="src/locales/vision.js"></script><script src="src/i18n.js"></script><script src="src/engine.js"></script><script src="src/break-even-analytic.js"></script><script src="src/performance.js"></script><script src="src/import.js"></script><script src="src/final-core.js"></script><script src="src/portal.js"></script><script src="src/app.js"></script><script src="src/criteria-polarity.js"></script><script src="src/authority-space.js"></script><script src="src/execution-upgrades.js"></script><script src="src/review-visuals.js"></script><script src="src/usability.js"></script><script src="src/final-ui.js"></script>
+<script src="src/version.js"></script><script src="src/locales/en.js"></script><script src="src/locales/ar.js"></script><script src="src/locales/authority-space.js"></script><script src="src/locales/execution-upgrades.js"></script><script src="src/locales/demo.js"></script><script src="src/locales/final.js"></script><script src="src/locales/vision.js"></script><script src="src/locales/guided.js"></script><script src="src/locales/field-guide.js"></script><script src="src/i18n.js"></script><script src="src/engine.js"></script><script src="src/break-even-analytic.js"></script><script src="src/performance.js"></script><script src="src/import.js"></script><script src="src/final-core.js"></script><script src="src/context-core.js"></script><script src="src/sector-library.js"></script><script src="src/draft-engine.js"></script><script src="src/ai.js"></script><script src="src/portal.js"></script><script src="src/app.js"></script><script src="src/criteria-polarity.js"></script><script src="src/authority-space.js"></script><script src="src/execution-upgrades.js"></script><script src="src/review-visuals.js"></script><script src="src/usability.js"></script><script src="src/final-ui.js"></script>
 <script src="src/locales/home-value.js"></script>
 <script src="src/locales/methodology.js"></script>
 <script src="src/home-value.js"></script>
 <script src="src/methodology-layer.js"></script>
 <script src="src/audit-fixes.js"></script>
 <script src="src/rev3-handoff.js"></script>
+<script src="src/field-guide.js"></script>
+<script src="src/guided.js"></script>
 </body></html>

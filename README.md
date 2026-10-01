@@ -2,7 +2,7 @@
 
 **A free Arabic/English strategy-building workspace by Prof. Adeeb Noor.**
 
-SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, authority, annual transitions, enablers, initiatives, funding context, and a reviewable strategy. It supports building a new strategy or improving an existing one. It is not an automatic strategy generator, accreditation service, or success-prediction model.
+SULTAN connects institutional identity and ambition to explicit choices, context-appropriate references, authority, annual transitions, enablers, initiatives, funding context, and a reviewable strategy. It supports building a new strategy or improving an existing one. Since 0.9 it can draft that strategy for you from a sector library or with an optional AI assistant; the draft is a starting point the team reviews, not a finished strategy. SULTAN is not an accreditation service or a success-prediction model.
 
 ## Try the public beta
 
@@ -14,7 +14,21 @@ If GitHub Pages is enabled for the repository, the same tested artifact can also
 
 Start with the **fictional example**, change a choice, criterion or authority state, then inspect the review and exports. You can also start with a blank project. Project text is never automatically translated when the interface language changes.
 
-## What works in version 0.7.4
+## New in 0.9.0-beta — guided, context-aware, AI-assisted
+
+This release answers an external expert review (40+ years in strategy consulting) that found the workspace exhausting (80+ fields), unexplained (fields say *what*, not *why*), passive (nothing is inferred for the user) and context-free (no sector library). What changed:
+
+- **Guided path** (`#guide`, the first button on the home page): sector → brief and documents → context gathering → identity → goals and the few numbers you know → a complete, validated draft in minutes. The full workspace stays one click away for review.
+- **Sector library** bundled in the app: education (general and private schools, international schools, kindergartens, training), higher education, health, government and non-profit, with regulators, national programmes, indicators, goal templates, enablers and initiatives written in the SULTAN vocabulary. Library drafts carry `lib-` ids. See [docs/SECTOR_LIBRARY.md](docs/SECTOR_LIBRARY.md).
+- **Context dossier** on every project (`project.context`): sector, brief, regulations/programmes/indicators/studies/benchmarks with issuer, year and URL, attached-document summaries, expert-review findings and the AI usage log. Proposed sources are open issues until the team accepts them; the report gains a *Context sources and AI assistance* section.
+- **Optional AI assistant** (off by default, explicit consent): gathers sector context with optional web search and your documents, generates a full strategy as validated structured JSON, suggests text for any field, and reviews the draft like a senior consultant. Works with your own API key in the browser or through the small relay in `server/`. AI records carry `ai-` ids and every call is logged and disclosed. See [docs/AI_ASSISTANT.md](docs/AI_ASSISTANT.md).
+- **Simple / expert mode**: your own projects open with the essential fields only; advanced fields fold under *More* and keep their values. One click switches to expert mode. The fictional example opens in expert mode.
+- **Why this field** on every workspace field, with an example, in Arabic and English (107 field patterns, parity-tested), plus a one-click *AI suggestion* on text fields.
+- **Honesty rules kept**: unknown is never zero, readiness is never assumed, budgets are never invented, AI review findings are warnings and never approval conditions.
+
+The response to each expert note is documented in [docs/EXPERT_REVIEW_RESPONSE.md](docs/EXPERT_REVIEW_RESPONSE.md).
+
+## What works since version 0.7.4
 
 - Institution identity, beneficiaries, distinctive assets, context, vision, mandates, and chosen contribution.
 - Strategic alternatives, explicit trade-offs, moonshot footholds, assumptions, strategic risks, and documented selection decisions.
@@ -45,7 +59,7 @@ Authority Space is descriptive, not predictive. It does not claim that authority
 
 Project inputs stay in local browser storage. They are **not encrypted, synchronized, or backed up by SULTAN**. Export JSON regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
 
-There are no analytics, tracking libraries, AI calls, or project-upload endpoints. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after explicit user action.
+There are no analytics, tracking libraries or project-upload endpoints. The only outbound calls are the optional AI assistant's requests to the Claude API or to the relay, and they happen only after you switch the assistant on and give consent. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after explicit user action.
 
 A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
 
@@ -58,12 +72,7 @@ See [privacy](docs/PRIVACY.md), [product scope](docs/PRODUCT.md), and [feedback 
 Use Node.js 22+ and Python 3. No third-party runtime dependencies are loaded by the web app.
 
 ```sh
-node tests/engine.test.js
-node tests/hardening.test.js
-node tests/i18n.test.js
-node tests/hardening071.test.js
-node tests/performance.test.js
-node tests/break-even-analytic.test.js
+for suite in tests/*.test.js; do node "$suite"; done   # engine, i18n parity, library, draft engine, context, AI layer, relay, field guide …
 python3 build.py
 python3 -m http.server 8000 --directory public
 ```
@@ -75,21 +84,27 @@ For full browser acceptance tests:
 ```sh
 python3 -m pip install playwright==1.57.0
 python3 -m playwright install chromium
+python3 tests/review_regressions.py
 python3 tests/beta_browser.py
 python3 tests/hardening_browser.py
+python3 tests/surfacing_browser.py
+python3 tests/rev3_browser.py
+python3 tests/guided_browser.py      # guided path, dossier, simple/expert, AI path against an in-page fake API
 ```
+
+To run the AI relay locally: `ANTHROPIC_API_KEY=… ALLOWED_ORIGINS=http://localhost:8000 node server/ai-proxy.js` (see [server/README.md](server/README.md)). The web app also works with your own key entered in the AI settings, without any relay.
 
 `SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it is not a substitute for the full browser release check.
 
 ## Repository organization
 
-`src/engine.js` contains the base deterministic model and validation rules. The 0.7 modules add Authority Space, criterion polarity, exact decision sensitivity, execution upgrades, assumptions/risks, and executive review visuals while retaining compatibility with the 0.5 project schema. Arabic is confined to localization catalogs and interface content; code identifiers and maintainer documentation use English.
+`src/engine.js` contains the base deterministic model and validation rules. The 0.7 modules add Authority Space, criterion polarity, exact decision sensitivity, execution upgrades, assumptions/risks, and executive review visuals while retaining compatibility with the 0.5 project schema. The 0.9 modules add the context dossier (`context-core.js`), the sector library (`sector-library.js`), the draft engine that turns library templates or AI JSON into validated projects (`draft-engine.js`), the Claude API client (`ai.js`), field guidance and simple/expert disclosure (`field-guide.js`) and the guided path (`guided.js`); `server/ai-proxy.js` is the optional dependency-free relay. Arabic is confined to localization catalogs and interface content; code identifiers and maintainer documentation use English.
 
 The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic criteria and Authority Space measures are product design choices, not a claim of field-validated universal equations.
 
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.7.4 — exact decision-sensitivity beta for non-sensitive planning and feedback.**
+**Version 0.9.0-beta — guided, context-aware, AI-assisted beta for non-sensitive planning and feedback.**
 
 ### Review checks
 
