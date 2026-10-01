@@ -178,6 +178,6 @@ body{background:var(--brand-ivory);color:var(--ink)}
  .brand-glyph{width:44px;height:44px}.hero-grid{padding-block:52px 46px}.launch-hero:after{width:76vw;opacity:.045;inset-inline-end:-24%;top:13%}.proof-strip{width:calc(100% - 28px);padding:24px 20px}.preview-window{transform:none}.bottom-cta:after{display:none}.sidebar .monogram{width:46px;height:46px}
 }
 
-.final-version{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.final-version{unicode-bidi:isolate;display:inline-block}.final-version bdi{direction:ltr;unicode-bidi:isolate}
 
 .trust-strip{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}.trust-strip span{border:1px solid #ffffff33;background:#ffffff0d;color:#f7f3ea;padding:6px 10px;border-radius:999px;font-size:.82rem}.authority-preview h3{margin-block:10px 14px}.authority-example{border-inline-start:3px solid var(--brand-gold);padding-inline-start:14px}.authority-example p{margin:7px 0}.semantic-hints{border-inline-start:4px solid var(--brand-gold)}.semantic-hint{padding:8px 10px;background:var(--brand-gold-100);border-radius:8px}.semantic-hint b{color:var(--brand-navy-900)}

@@ -5,7 +5,7 @@ root.SultanLocales=root.SultanLocales||{};
 Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
   hvKicker:'STRATEGY → DECISION → EXECUTION',
   hvTitle:'Turn strategy into a decision you can explain and execute.',
-  hvLead:'SULTAN connects choices to evidence, authority, initiatives and funding conditions — while showing what could change the decision and what remains unknown before the plan is approved.',
+  hvLead:'Start from general information: SULTAN gathers the sector\'s regulations, programmes and indicators, drafts the strategy with AI or from its library, and leaves the expert to review — with every choice tied to evidence, authority, initiatives and funding conditions.',
   hvQ1:'Why this choice?',
   hvQ2:'When could it change?',
   hvQ3:'Can it actually execute?',
@@ -53,7 +53,7 @@ Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
 Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   hvKicker:'الاستراتيجية ← القرار ← التنفيذ',
   hvTitle:'حوّل الاستراتيجية إلى قرار يمكن تفسيره وتنفيذه.',
-  hvLead:'يربط سلطان الاختيارات بالأدلة والصلاحيات والمبادرات وشروط التمويل — ويُظهر ما قد يغيّر القرار وما يزال مجهولًا قبل اعتماد الخطة.',
+  hvLead:'ابدأ بمعلومات عامة: يجمع سلطان أنظمة قطاعك وبرامجه ومؤشراته، ويصوغ المسودة بالذكاء الاصطناعي أو من مكتبته، ويترك للخبير المراجعة — وكل اختيار مربوط بالدليل والصلاحية والمبادرة وشرط التمويل.',
   hvQ1:'لماذا هذا الاختيار؟',
   hvQ2:'متى قد يتغير؟',
   hvQ3:'هل يمكن تنفيذه فعلًا؟',

@@ -40,7 +40,8 @@ function renderRecovery(){
 function renderVersion(){
  const f=document.querySelector('.sidefoot');if(!f)return;let v=f.querySelector('.final-version');
  if(!v){v=document.createElement('span');v.className='final-version';f.prepend(document.createElement('br'));f.prepend(v);}
- v.textContent=`${T('versionLabel')} ${root.SULTAN_VERSION||'0.8.0-rc'}`;
+ /* The label follows the page direction; the hyphenated version number is isolated as LTR so "0.9.0-beta" never splits in RTL. */
+ const ver=document.createElement('bdi');ver.dir='ltr';ver.textContent=root.SULTAN_VERSION||'0.9.0-beta';v.replaceChildren(document.createTextNode(T('versionLabel')+' '),ver);
 }
 
 function renderIdentity(){
@@ -92,7 +93,7 @@ function renderRoadmap(){
  p.initiatives.forEach((i,ix)=>{if(i.kind!=='learn')return;i.budget.forEach((b,bx)=>{if(b.year<i.startYear||b.year>i.endYear)return;const a=content.querySelector(`[data-path="initiatives.${ix}.budget.${bx}.amount"]`),host=a?.closest('.field');if(!host||host.nextElementSibling?.classList?.contains('release-evidence-field'))return;const h=field(T('releaseEvidence'),`initiatives.${ix}.budget.${bx}.releaseEvidence`,b.releaseEvidence,'textarea').replace('final-field','final-field release-evidence-field');host.insertAdjacentHTML('afterend',h);});});
 }
 function renderCollaboration(){
- const s=section();if(['home','about'].includes(s))return;const p=root.SultanApp.getProject(),content=document.getElementById('content');if(!content||content.querySelector('.collaboration-bar'))return;const owner=p.collaboration?.owners?.[s]||'';const bar=document.createElement('section');bar.className='collaboration-bar noPrint';bar.innerHTML=`<div><b>${esc(T('workshopOwner'))}</b><input type="text" data-final-owner="${esc(s)}" value="${esc(owner)}" placeholder="${esc(T('workshopAssign'))}"></div><div class="contribution-entry"><input type="text" data-final-contributor placeholder="${esc(T('workshopContributor'))}"><input type="text" data-final-note placeholder="${esc(T('workshopContribution'))}"><button type="button" class="btn small" data-final-action="contribution-add" data-section="${esc(s)}">+</button></div>`;content.prepend(bar);
+ const s=section();if(['home','about','guide'].includes(s))return;const p=root.SultanApp.getProject(),content=document.getElementById('content');if(!content||content.querySelector('.collaboration-bar'))return;const owner=p.collaboration?.owners?.[s]||'';const bar=document.createElement('section');bar.className='collaboration-bar noPrint';bar.innerHTML=`<div><b>${esc(T('workshopOwner'))}</b><input type="text" data-final-owner="${esc(s)}" value="${esc(owner)}" placeholder="${esc(T('workshopAssign'))}"></div><div class="contribution-entry"><input type="text" data-final-contributor placeholder="${esc(T('workshopContributor'))}"><input type="text" data-final-note placeholder="${esc(T('workshopContribution'))}"><button type="button" class="btn small" data-final-action="contribution-add" data-section="${esc(s)}">+</button></div>`;content.prepend(bar);
 }
 
 function dualDate(){const d=new Date(),greg=new Intl.DateTimeFormat(root.SultanI18n.language==='ar'?'ar-SA-u-ca-gregory-nu-latn':'en-GB',{dateStyle:'medium'}).format(d),hijri=new Intl.DateTimeFormat(root.SultanI18n.language==='ar'?'ar-SA-u-ca-islamic-nu-latn':'en-GB-u-ca-islamic-nu-latn',{dateStyle:'medium'}).format(d);return `${T('gregorianLabel')}: ${greg} · ${T('hijriLabel')}: ${hijri}`;}

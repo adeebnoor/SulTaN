@@ -9,3 +9,23 @@ services:
     autoDeployTrigger: checksPass
     previews:
       generation: off
+  # Optional AI relay: holds the Anthropic API key server-side so visitors can use the AI
+  # drafting features without their own key. Set ANTHROPIC_API_KEY in the Render dashboard.
+  # Without this service the app still works (library drafting) and users may bring their own key.
+  - type: web
+    runtime: node
+    name: sultan-strategy-ai
+    repo: https://github.com/adeebnoor/SulTaN
+    branch: main
+    rootDir: server
+    buildCommand: ""
+    startCommand: node ai-proxy.js
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://sultan-strategy-beta.onrender.com
+      - key: RATE_LIMIT_PER_HOUR
+        value: "60"
