@@ -40,7 +40,8 @@ function renderRecovery(){
 function renderVersion(){
  const f=document.querySelector('.sidefoot');if(!f)return;let v=f.querySelector('.final-version');
  if(!v){v=document.createElement('span');v.className='final-version';f.prepend(document.createElement('br'));f.prepend(v);}
- v.textContent=`${T('versionLabel')} ${root.SULTAN_VERSION||'0.9.0-beta'}`;
+ /* The label follows the page direction; the hyphenated version number is isolated as LTR so "0.9.0-beta" never splits in RTL. */
+ const ver=document.createElement('bdi');ver.dir='ltr';ver.textContent=root.SULTAN_VERSION||'0.9.0-beta';v.replaceChildren(document.createTextNode(T('versionLabel')+' '),ver);
 }
 
 function renderIdentity(){
