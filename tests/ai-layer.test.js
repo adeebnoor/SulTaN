@@ -62,6 +62,14 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  next=()=>streamResponse(JSON.stringify({summary:'ok',strengths:['s'],items:[{section:'choices',severity:'blocking',message:'m',fix:'f'}]}));
  const rv=await AI.reviewStrategy({project});assert.equal(rv.data.items[0].severity,'blocking');assert.ok(calls.at(-1).body.messages[0].content.includes('40 years'));
  assert.ok(calls.at(-1).body.messages[0].content.includes('- partner-route:'),'the review applies the lenses explicitly');assert.ok(calls.at(-1).body.output_config.format.schema.properties.items.items.required.includes('lens'),'findings name their lens');
+ const scoped=E.clone(project),deferred=Object.assign(E.option(),{title:'Deferred expansion',decision:'defer',decisionReason:'Await separate financing'});scoped.options.push(deferred);
+ const capital=Object.assign(E.initiative(scoped),{optionId:deferred.id,title:'UNSELECTED CAPITAL WORK'});capital.budget.forEach(b=>b.amount=987654321);scoped.initiatives.push(capital);
+ E.addContextReview(scoped,{summary:'Previous AI',items:[{section:'roadmap',severity:'blocking',message:'PREVIOUS_AI_FINDING_NOT_EVIDENCE'}]});
+ const unchanged=JSON.stringify(scoped);await AI.reviewStrategy({project:scoped});const reviewPrompt=calls.at(-1).body.messages[0].content;
+ assert.ok(reviewPrompt.includes('Deferred expansion')&&reviewPrompt.includes('"decision":"defer"'),'inactive choice remains visible as decision context');
+ assert.ok(!reviewPrompt.includes('987654321'),'inactive initiative costs do not enter the reviewed funding');
+ assert.ok(!reviewPrompt.includes('PREVIOUS_AI_FINDING_NOT_EVIDENCE'),'prior AI findings are not recycled as deterministic evidence');
+ assert.equal(JSON.stringify(scoped),unchanged,'review scope never removes stored project records');
  /* learning patterns from the adviser's notes */
  next=()=>jsonResponse(200,{model:'claude-opus-5-5',content:[{type:'text',text:JSON.stringify({lenses:[{title:'Recurring business',question:'Is it recurring?',lookFor:'Subscriptions',keywords:['recurring','اشتراك'],group:'growth'}]})}],stop_reason:'end_turn',usage:{input_tokens:5,output_tokens:9}});
  const lx=await AI.extractLenses({text:'Fraud is a good use case because it is recurring business.'});assert.equal(lx.data.lenses[0].group,'growth');assert.deepEqual(calls.at(-1).body.output_config.format.schema.required,['lenses']);assert.ok(calls.at(-1).body.messages[0].content.includes('recurring business'));
