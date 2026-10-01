@@ -1,5 +1,6 @@
 # 0.9.1-beta — Consulting audit fixes
 
+- Keep a focused editor attached across queued renders, preventing rapid consecutive edits from losing the next field's source text; verify on the deployed site as well as CI.
 - Keep AI costs unknown unless a linked initiative/year already has an entered cost; preserve KPI meanings, readings and sources through regeneration. Reject replacement drafts that lose existing choices or entered measurements/budgets.
 - Mark generated factual descriptions as unverified proposals; leave reference applicability unchecked and deduplicate mandates.
 - Stamp reviews to their input content and exclude stale findings from current checks/reports. Preserve unresolved issues in leadership exports.

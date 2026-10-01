@@ -13,7 +13,12 @@ function set(path,value){const keys=path.split('.');if(keys.some(k=>['__proto__'
 function save(){try{localStorage.setItem(KEY,JSON.stringify(p));saveText=T('s247')+new Date().toLocaleTimeString(SultanI18n.locale,{hour:'2-digit',minute:'2-digit'});}catch(e){saveText=T('s248');}$('#saveStatus').textContent=saveText;$('#projectTitle').textContent=(p.isDemo?T('s249'):'')+(p.institution.name||T('s250'));}
 function touch(action,path=''){p.revision++;p.updatedAt=new Date().toISOString();p.reviewedRevision=null;p.log.push({at:p.updatedAt,action,path,revision:p.revision});p.log=p.log.slice(-100);started=true;save();}
 function toast(message){$('#toast').textContent=message;$('#toast').className='toast show';clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').className='toast',6000);}
-function queue(){pending=true;if(!down)setTimeout(()=>{if(pending&&!down)render(true);},0);}
+/* A committed field can queue a render while the user is already typing in the
+   next one. Keep that editor attached until focus leaves it, then refresh once. */
+function editorFocused(){return !!document.activeElement?.matches?.('input[data-path]:not([type="checkbox"]):not([type="radio"]),textarea[data-path]');}
+function flushQueuedRender(){if(pending&&!down&&!editorFocused())render(true);}
+function queue(){pending=true;if(!down)setTimeout(flushQueuedRender,0);}
+document.addEventListener('focusout',()=>{if(pending)setTimeout(flushQueuedRender,0);});
 document.addEventListener('pointerdown',()=>down=true,true);for(const ev of ['pointerup','pointercancel'])document.addEventListener(ev,()=>{down=false;if(pending)queue();},true);
 const button=(name,action,extra='',cls='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${extra}>${esc(name)}</button>`;
 const tag=(name,cls='')=>`<span class="pill ${cls}">${esc(name)}</span>`;

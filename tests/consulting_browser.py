@@ -22,7 +22,11 @@ try:
    page.goto(url+'?lang='+lang,wait_until='load')
    page.evaluate('''()=>{const p=SultanDraft.build({sectorId:'edu',typeId:'private',institution:{name:'Synthetic audit fixture',startYear:2027,endYear:2030},goals:[{goalId:'quality',baseline:58,target:70,owner:'Test owner'}]});SultanApp.setProject(p);SultanApp.navigate('review');}''')
    page.wait_for_selector('.final-dashboard');a=page.locator('[data-path="transitions.0.annual.0.actual"]');source=page.locator('[data-path="transitions.0.annual.0.actualSource"]')
-   a.fill('59');source.fill('Synthetic measurement source');source.press('Tab')
+   a.fill('59');source.fill('Synthetic measurement source')
+   # Allow a render queued by the previous field to run while this field is dirty.
+   page.wait_for_timeout(150)
+   check(lang+' pending rendering preserves the focused source field',source.input_value()=='Synthetic measurement source' and source.evaluate('el=>el===document.activeElement'))
+   source.press('Tab')
    page.wait_for_function('SultanApp.getProject().transitions[0].annual[0].actual===59 && SultanApp.getProject().transitions[0].annual[0].actualSource==="Synthetic measurement source"')
    check(lang+' reading commits when moving directly between fields',True)
    page.reload(wait_until='load');page.wait_for_selector('.final-dashboard')
