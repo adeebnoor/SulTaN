@@ -909,3 +909,6 @@ Object.assign(root.SultanLocales.ar, {
  "gpData_outcome": "أدلة النتائج وسجل المستفيدين المؤهلين"
 });
 })(globalThis);
+
+Object.assign(globalThis.SultanLocales.en,{gpResearchPending:"Online research was unavailable; benchmark evidence is still required."});
+Object.assign(globalThis.SultanLocales.ar,{gpResearchPending:"تعذر البحث الخارجي؛ ما زالت أدلة المقارنة مطلوبة."});

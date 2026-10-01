@@ -36,12 +36,16 @@ function complete(p,optionIds){
 }
 function prepare(base,raw){const p=E.validateImport(clone(base)),titles=parse(raw),ids=[];for(const title of titles){let o=p.options.find(x=>norm(x.title)===norm(title));if(!o){o=D.addCustomGoal(p,{title});}if(E.selected(p).some(x=>x.id===o.id))ids.push(o.id);}if(!titles.length)ids.push(...E.selected(p).map(o=>o.id));if(!ids.length)throw Error(T('gpEmpty'));return {project:p,ids};}
 async function generate(base,raw,{useAI=false,onProgress}={}){
- const prepared=prepare(base,raw);let p=prepared.project,ids=prepared.ids,mode='local',fallback=false;
+ const prepared=prepare(base,raw);let p=prepared.project,ids=prepared.ids,mode='local',fallback=false,researchPending=false;
  // AI drafts only new goals in an isolated seed; existing edited records never enter a replacement merge.
  const fresh=ids.filter(k=>!base.options.some(o=>o.id===k));
  if(useAI&&root.SultanAI?.configured()&&fresh.length){
   try{let seed=E.blank();seed.institution=clone(p.institution);seed.context=clone(p.context);seed.options=p.options.filter(o=>fresh.includes(o.id)).map(clone);E.syncYears(seed);
-   const result=await root.SultanAI.generateStrategy({project:seed,goalHints:seed.options.map(o=>o.title),onProgress});if(result.truncated)throw Error('Incomplete AI output');
+   let benchmarkMemo='';
+   if(root.SultanAI.settings?.().webSearch&&root.SultanAI.gatherContext){
+    try{const research=await root.SultanAI.gatherContext({project:seed,onProgress,focus:'Research benchmark evidence for each stated strategic goal. Use the institution context to choose comparable peers and leading practices. If sector, scale or geography is unspecified, do not assume it: research transferable methods and state the selection questions. For each comparison give primary source URL, issuer, date, metric definition, period, observed value only if seen, comparability limits and transferable lesson. Do not present search suggestions as verified values.'});if(research.truncated)throw Error('Incomplete research');benchmarkMemo=research.memo;for(const source of (research.data?.sources||[]).slice(0,20))E.addContextSource(seed,{...source,status:'proposed',origin:'ai'});}catch{researchPending=true;}
+   }
+   const result=await root.SultanAI.generateStrategy({project:seed,goalHints:seed.options.map(o=>o.title),onProgress,benchmarkMemo});if(result.truncated)throw Error('Incomplete AI output');
    const data=clone(result.data||{});if(!Array.isArray(data.options))data.options=[];
    for(const o of seed.options)if(!data.options.some(x=>x.sourceOptionId===o.id||norm(x.title)===norm(o.title)))data.options.push({key:E.uid('goal'),sourceOptionId:o.id,title:o.title});
    const draft=D.fromAI(data,seed,{mode:'replace',scores:false});
@@ -54,7 +58,7 @@ async function generate(base,raw,{useAI=false,onProgress}={}){
   }catch{fallback=true;p=prepared.project;ids=prepared.ids;}
  }
  p=complete(p,ids);p.log.push({at:new Date().toISOString(),action:'goal-plan-'+mode,path:ids.join(',').slice(0,1000),revision:p.revision});
- return {project:p,mode,fallback,counts:{goals:ids.length,kpis:p.transitions.filter(t=>ids.includes(t.optionId)).length,initiatives:p.initiatives.filter(i=>ids.includes(i.optionId)).length}};
+ return {project:p,mode,fallback,researchPending,counts:{goals:ids.length,kpis:p.transitions.filter(t=>ids.includes(t.optionId)).length,initiatives:p.initiatives.filter(i=>ids.includes(i.optionId)).length}};
 }
 root.SultanGoalPlanner={parse,theme,prepare,complete,generate};
 })(globalThis);
