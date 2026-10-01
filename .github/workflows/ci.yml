@@ -46,6 +46,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test Arabic and English at a real browser origin
         run: |
+          python tests/first_minute_browser.py
           python tests/review_regressions.py
           python tests/beta_browser.py
           python tests/hardening_browser.py
@@ -54,7 +55,6 @@ jobs:
           python tests/guided_browser.py
           python tests/consulting_browser.py
           python tests/strategy_browser.py
-          python tests/first_minute_browser.py
           python - <<'PY'
           import json
           from pathlib import Path
