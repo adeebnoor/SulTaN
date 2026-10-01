@@ -146,8 +146,16 @@ async function researchContext({project,documents=[],onProgress}={}){
  ];
  const body={model:s.model,max_tokens:16000,system:methodSystem(),messages:[{role:'user',content:user}],output_config:{effort:s.effort}};
  if(s.webSearch)body.tools=[{type:'web_search_20260209',name:'web_search',max_uses:10}];
- const m=await call(body,{stream:true,onProgress});
- return {memo:textOf(m),usage:usageOf(m),truncated:m.stop_reason==='max_tokens'};
+ let m,notice='';
+ try{m=await call(body,{stream:true,onProgress});}
+ catch(error){
+  if(!s.webSearch||error.code!=='rate')throw error;
+  delete body.tools;
+  notice=lang()==='ar'?'تعذر البحث في الويب بسبب حصة المزوّد. يستند هذا السياق إلى المكتبة والوثائق فقط؛ يلزم التحقق من المصادر والإصدارات الحالية.':'Web search was unavailable because of provider quota. This context uses only the library and attached documents; sources and current editions require verification.';
+  body.messages[0].content.push({type:'text',text:'Web search is unavailable. Override the earlier search instruction: use only the bundled library, brief and attached documents. Do not claim any online verification. Explicitly flag sources that require verification.'});
+  m=await call(body,{stream:true,onProgress});
+ }
+ return {memo:(notice?notice+'\n\n':'')+textOf(m),usage:usageOf(m),truncated:m.stop_reason==='max_tokens'};
 }
 function contextSchema(){
  const s=()=>({type:'string'}),i=()=>({anyOf:[{type:'integer'},{type:'null'}]});
