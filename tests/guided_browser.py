@@ -135,7 +135,7 @@ try:
                 page.evaluate('SultanApp.navigate("guide")'); page.wait_for_selector('.gw-steps')
                 check(pre + 'guided path is fully translated', not re.search('[؀-ۿ]', page.locator('#content').inner_text()))
             # AI path against an in-page fake of the Messages API
-            page.evaluate('SultanAI.saveSettings({consent:true,transport:"direct",webSearch:true});SultanAI.saveApiKey("sk-ant-fake")')
+            page.evaluate('SultanAI.saveSettings({consent:true,transport:"direct",model:"claude-opus-5-5",extractModel:"claude-sonnet-5-5",webSearch:true});SultanAI.saveApiKey("sk-ant-fake")')
             page.evaluate(FAKE_FETCH, FAKE_DRAFT)
             page.evaluate('SultanApp.navigate("guide")'); page.wait_for_selector('.gw-steps'); page.locator('[data-gw-action="go"][data-step="3"]').click(); page.wait_for_selector('[data-gw-action="gather"]')
             check(pre + 'AI gathering enabled once configured', not page.locator('[data-gw-action="gather"]').is_disabled())
