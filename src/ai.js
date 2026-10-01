@@ -232,13 +232,20 @@ async function extractLenses({text:notes}={}){
 /* Expert review of the whole strategy. */
 async function reviewStrategy({project}={}){
  const s=settings(),D=root.SultanDraft,E=root.Sultan;
- const issues=E.check(project).slice(0,60).map(x=>`${x.section}/${x.level}: ${x.message}`).join('\n');
+ const selected=new Set(E.selected(project).map(o=>o.id)),portfolio=E.clone(project);
+ portfolio.options=portfolio.options.filter(o=>selected.has(o.id));
+ for(const key of ['transitions','enablers','initiatives'])portfolio[key]=portfolio[key].filter(x=>selected.has(x.optionId));
+ const inactive=project.options.filter(o=>!selected.has(o.id)).map(o=>({title:o.title,decision:o.decision,reason:o.decisionReason}));
+ const issues=E.check(project).filter(x=>x.entity!=='ai-review').slice(0,60).map(x=>`${x.section}/${x.level}: ${x.message}`).join('\n');
  const user=[
   'Task: review this strategy as a senior strategy consultant with 40 years of experience preparing boards. Be direct and specific. Judge coherence (mandate → choice → KPI → authority → initiative → funding), realism of targets against the cited sources, missing authority, unmanaged risks, borrowed targets without adaptation, and anything a board member would challenge.',
-  'Strategy digest:\n'+D.digest(project),
+  'Current decisions override earlier ambitions in the brief. Review execution and funding of the SELECTED portfolio below. Deferred, rejected and considered options are not current commitments: do not add their costs to the current gap or describe their missing approvals as blockers of the selected plan. You may flag a condition for reconsidering them as a clearly labelled hint. Only evidence of an existing obligation can justify a current liability from an inactive option.',
+  'Selected portfolio digest:\n'+D.digest(portfolio),
+  'Inactive choices (context only):\n'+JSON.stringify(inactive),
+  'Workspace-calculated funding for the selected portfolio (unknown costs remain unknown; zero known gap is not funding approval):\n'+JSON.stringify(E.budgetSummary(project)),
   groundingBlock(project),
   issues?'Deterministic completeness issues already detected by the workspace (do not repeat them; look beyond them):\n'+issues:'',
-  lensQuestions().length?'Apply each of the method owner\'s expert lenses explicitly and report where the strategy fails one. When a finding comes from a lens, set "lens" to that lens id; otherwise set it to "".\n'+lensQuestions().map(q=>`- ${q.id}: ${q.question}`).join('\n'):'',
+  lensQuestions().length?'Consider the method owner\'s expert lenses only where applicable. Do not force acquisition or partnership onto routine service quality or staff development. When a finding comes from an applicable lens, set "lens" to that lens id; otherwise set it to "".\n'+lensQuestions().map(q=>`- ${q.id}: ${q.question}`).join('\n'):'',
   'For each finding give the section, a severity (blocking = would embarrass the board or block execution; warning = weakens defensibility; hint = polish), the finding, the concrete fix and the lens id (or ""). Also list genuine strengths. Write in '+(lang()==='ar'?'Arabic':'English')+'.'
  ].filter(text).join('\n\n');
  const m=await call({model:s.model,max_tokens:12000,system:methodSystem(),messages:[{role:'user',content:user}],output_config:{effort:s.effort,format:{type:'json_schema',schema:reviewSchema()}}},{stream:true});
