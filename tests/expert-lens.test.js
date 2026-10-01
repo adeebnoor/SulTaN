@@ -39,6 +39,7 @@ for(const s of L.sectors){const p=D.build({sectorId:s.id,typeId:s.types[0].id,br
   assert.ok(Lens.hints(q).some(h=>h.lens==='ai-service'),'a technology company without an AI direction is asked where the recurring AI service is'); }
 { const p=E.demo();const sel=p.options.filter(o=>o.decision==='select');sel.forEach(o=>o.owner='');assert.ok(Lens.hints(p).some(h=>h.lens==='bottom-up'));
   p.institution.liabilities='';assert.ok(Lens.hints(p).some(h=>h.lens==='liabilities'));p.institution.liabilities='Debt';assert.ok(!Lens.hints(p).some(h=>h.lens==='liabilities')); }
+{const p=D.build({sectorId:'edu',institution:inst,goals:[{goalId:'quality'}]});assert.ok(!Lens.hints(p).some(h=>h.lens==='vertical-focus'),'commercial vertical targeting must not be imposed on schools');}
 /* Memory: the expert's own patterns, feedback, muting, prompts, learning from findings and notes, export/import. */
 { const p=E.demo();
   const own=Lens.learn({title:'Reciprocity',question:'What do we bring to the partner?',keywords:['zzqq-token','reciprocity']});assert.ok(own.id.startsWith('my-'));
