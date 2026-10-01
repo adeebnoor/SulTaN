@@ -149,7 +149,7 @@ const cleanNum=(v,min=null,max=null)=>{if(!num(v))return null;let x=v;if(min!==n
 function fromAI(json,base,opts={}){
  const p=E.validateImport(JSON.parse(JSON.stringify(base||E.blank())));
  const original=E.clone(p),usedOptions=new Set(),usedTransitions=new Set(),usedInitiatives=new Set();
- const sourceOptions={};
+ const sourceOptions={},studioOptionIds={},studioInitiativeIds={};
  const data=json&&typeof json==='object'?json:{};
  if(opts.mode==='replace'){p.options=[];p.references=[];p.transitions=[];p.enablers=[];p.initiatives=[];p.mandates=p.mandates.filter(m=>!String(m.id).startsWith('ai-'));}
  const inst=data.institution||{};
@@ -168,7 +168,7 @@ function fromAI(json,base,opts={}){
   if(option.type==='divest'&&o.divest&&typeof o.divest==='object')Object.assign(option,{divestStop:str(o.divest.stop),releasedResources:source?.type==='divest'?source.releasedResources:null,redeployTo:str(o.divest.redeployTo),divestEvidence:str(o.divest.evidence),divestImpact:str(o.divest.impact)});
   option.scores={};if(option.type!=='requirement'&&opts.scores!==false)for(const s of o.scores||[]){if(!CRITERIA.includes(s?.criterion)||!p.criteria.some(c=>c.id===s.criterion))continue;const v=cleanNum(s.value,0,100);option.scores[s.criterion]={value:v===null?null:Math.round(v),note:str(s.note,4000)};}
   option.assumptions=(o.assumptions||[]).filter(a=>text(a?.text)).slice(0,8).map(a=>({id:E.uid('asm'),text:str(a.text,4000),expectedPersistence:str(a.expectedPersistence,200),owner:str(a.owner,200),testDate:'',testEvidence:str(a.testEvidence,4000),failureImpact:str(a.failureImpact,4000)}));
-  p.options.push(option);if(source)sourceOptions[option.id]=source; if(text(o.key))optIds[o.key]=option.id;
+  p.options.push(option);if(source){sourceOptions[option.id]=source;studioOptionIds[source.id]=option.id;} if(text(o.key))optIds[o.key]=option.id;
  }
  const years=E.years(p);
  for(const t of data.transitions||[]){
@@ -202,10 +202,15 @@ function fromAI(json,base,opts={}){
   const init=Object.assign(E.initiative(p),{id:aiId('i',++n),optionId,transitionId,title:str(i.title,300),kind:pick(i.kind,['learn','build','deliver'],'build'),owner:str(i.owner,200),startYear:start,endYear:end,output:str(i.output),acceptance:str(i.acceptance),capacity:str(i.capacity),budgetStatus:'unconfirmed',status:'design',enablerIds:(i.enablerKeys||[]).map(k=>enIds[k]).filter(Boolean)});
   /* The model cannot allocate an annual cap or invent initiative estimates. */
   for(const row of init.budget){const known=source?.budget.find(b=>b.year===row.year);row.amount=known?.amount??null;row.releaseEvidence=known?.releaseEvidence||'';}
-  p.initiatives.push(init);if(text(i.key))inIds[i.key]=init.id;pendingDeps.push([init,i.dependsOnKeys||[]]);
+  p.initiatives.push(init);if(source)studioInitiativeIds[source.id]=init.id;if(text(i.key))inIds[i.key]=init.id;pendingDeps.push([init,i.dependsOnKeys||[]]);
  }
  for(const [init,keys] of pendingDeps)init.dependsOn=keys.map(k=>inIds[k]).filter(id=>id&&id!==init.id);
  if(opts.mode==='replace'&&(original.options.some(o=>!usedOptions.has(o.id))||original.transitions.some(t=>!usedTransitions.has(t.id)&&(num(t.baseline)||num(t.target)||t.annual.some(a=>num(a.actual))))||original.initiatives.some(i=>!usedInitiatives.has(i.id)&&i.budget.some(b=>num(b.amount)))))throw Error(T('drMappingLost'));
+ if(opts.mode==='replace'&&p.strategy){
+  if(p.strategy.charters.some(c=>!studioInitiativeIds[c.initiativeId]))throw Error(T('drMappingLost'));
+  for(const o of p.strategy.opportunities)if(studioOptionIds[o.optionId])o.optionId=studioOptionIds[o.optionId];
+  for(const c of p.strategy.charters)c.initiativeId=studioInitiativeIds[c.initiativeId];
+ }
  const circular=E.feasibilityFundingConflicts?E.feasibilityFundingConflicts(p):[];
  for(const {initiative,enabler} of circular)if(origin(initiative.id)==='ai')initiative.enablerIds=initiative.enablerIds.filter(id=>id!==enabler.id);
  if(E.addContextSource)for(const s of data.contextSources||[]){if(!text(s?.title))continue;E.addContextSource(p,{id:aiId('s',++n),title:str(s.title,400),kind:pick(s.kind,['regulation','program','indicator','study','benchmark','internal','other'],'other'),issuer:str(s.issuer,300),url:str(s.url,2000),year:Number.isInteger(s.year)?s.year:null,summary:str(s.summary,4000),relevance:str(s.relevance,4000),status:'proposed',origin:'ai'});}
@@ -234,6 +239,7 @@ function digest(p){
  for(const e of p.enablers)lines.push(`enabler ${e.id} (option ${e.optionId}): ${e.title} [${e.kind}/${e.control}/${e.status}] owner=${e.owner} due=${e.dueYear??'?'}`);
  for(const i of p.initiatives)lines.push(`initiative ${i.id} (sourceInitiativeId=${i.id}; option ${i.optionId}): ${i.title} [${i.kind}] ${i.startYear}-${i.endYear} owner=${i.owner} budget=${i.budget.map(b=>b.year+':'+(b.amount??'?')).join(',')}`);
  lines.push('funding: '+p.funding.map(f=>f.year+':'+(f.available??'?')).join(','));
+ if(root.SultanStrategy?.aiContext(p))lines.push('strategy design: '+root.SultanStrategy.aiContext(p));
  lines.push('interface language: '+L);
  return lines.join('\n');
 }
