@@ -22,11 +22,11 @@ const env=process.env;
 const PORT=Number(env.PORT||8787);
 const API_KEY=env.ANTHROPIC_API_KEY||'';
 const GEMINI_KEY=env.GEMINI_API_KEY||'';
-const GEMINI_MODEL=env.GEMINI_MODEL||'gemini-flash-latest';
+const GEMINI_MODEL=env.GEMINI_MODEL||'gemini-flash-lite-latest';
 const GEMINI_BASE=(env.GEMINI_BASE_URL||'https://generativelanguage.googleapis.com/v1beta').replace(/\/+$/,'');
 const BASE=(env.ANTHROPIC_BASE_URL||'https://api.anthropic.com').replace(/\/+$/,'');
 const ORIGINS=(env.ALLOWED_ORIGINS||'https://sultan-strategy-beta.onrender.com').split(',').map(s=>s.trim()).filter(Boolean);
-const MODELS=new Set((env.MODEL_ALLOWLIST||'claude-opus-5-5,claude-sonnet-5-5,claude-fable-5-1,gemini-2.5-flash,gemini-flash-latest').split(',').map(s=>s.trim()).filter(Boolean));
+const MODELS=new Set((env.MODEL_ALLOWLIST||'claude-opus-5-5,claude-sonnet-5-5,claude-fable-5-1,gemini-2.5-flash,gemini-flash-latest,gemini-flash-lite-latest').split(',').map(s=>s.trim()).filter(Boolean));
 const MAX_TOKENS_CAP=Number(env.MAX_TOKENS_CAP||64000);
 const MAX_BODY=Number(env.MAX_BODY_BYTES||32*1024*1024);
 const RATE=Number(env.RATE_LIMIT_PER_HOUR||60);
@@ -64,7 +64,7 @@ function geminiPayload(body){
 async function geminiRelay(body,res){
  let payload;try{payload=geminiPayload(body);}catch(e){return json(res,e.status||400,{type:'error',error:{message:e.message}});}
  let up;
- try{up=await fetch(GEMINI_BASE+'/models/'+encodeURIComponent(GEMINI_MODEL)+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':GEMINI_KEY},body:JSON.stringify(payload),signal:AbortSignal.timeout(220000)});}
+ try{for(let attempt=0;attempt<3;attempt++){up=await fetch(GEMINI_BASE+'/models/'+encodeURIComponent(GEMINI_MODEL)+':generateContent',{method:'POST',headers:{'content-type':'application/json','x-goog-api-key':GEMINI_KEY},body:JSON.stringify(payload),signal:AbortSignal.timeout(65000)});if(up.status!==503||attempt===2)break;await up.body?.cancel();await new Promise(r=>setTimeout(r,1000*(attempt+1)));}}
  catch{return json(res,502,{type:'error',error:{message:'Gemini request timed out or is unreachable.'}});}
  let data;try{data=await up.json();}catch{return json(res,502,{type:'error',error:{message:'Invalid Gemini response.'}});}
  if(!up.ok)return json(res,up.status,{type:'error',error:{type:data.error?.status||'api_error',message:'Gemini rejected the request ('+(data.error?.status||up.status)+'). Check the API key, model access and quota in Google AI Studio.'}});
@@ -72,7 +72,7 @@ async function geminiRelay(body,res){
  const sources=c?.groundingMetadata?.groundingChunks?.map(x=>x.web).filter(Boolean)||[];
  if(sources.length)text+='\n\nGrounding sources:\n'+sources.map(x=>x.title+' — '+x.uri).join('\n');
  if(!text)return json(res,422,{type:'error',error:{message:'Gemini returned no usable text; review the prompt and safety feedback.'}});
- const message={type:'message',model:GEMINI_MODEL,content:[{type:'text',text}],stop_reason:c.finishReason==='MAX_TOKENS'?'max_tokens':'end_turn',usage:{input_tokens:data.usageMetadata?.promptTokenCount||0,output_tokens:data.usageMetadata?.candidatesTokenCount||0}};
+ const message={type:'message',model:data.modelVersion||GEMINI_MODEL,content:[{type:'text',text}],stop_reason:c.finishReason==='MAX_TOKENS'?'max_tokens':'end_turn',usage:{input_tokens:data.usageMetadata?.promptTokenCount||0,output_tokens:data.usageMetadata?.candidatesTokenCount||0}};
  res.setHeader('cache-control','no-store');
  if(!body.stream)return json(res,200,message);
  res.writeHead(200,{'content-type':'text/event-stream; charset=utf-8'});
