@@ -1,3 +1,11 @@
+## 0.10.0-beta — Strategy design studio
+
+- Added a bilingual sector-neutral journey from diagnosis to opportunity, delivery route, operating model and initiative handover.
+- Added evidence-led opportunity comparisons, reciprocal partnership value, build/partner/acquire alternatives and distinct public-value cases.
+- Linked initiative cards to existing choices, KPIs and annual budgets; added activities, cost components, risk owners and observable warning thresholds.
+- Preserved unknown values, import compatibility, explicit funding authority and user-entered evidence through AI redrafting.
+- Added model and bilingual browser acceptance coverage. Original advisory documents are not published.
+
 # 0.9.1-beta — Consulting audit fixes
 
 - Keep a focused editor attached across queued renders, preventing rapid consecutive edits from losing the next field's source text; verify on the deployed site as well as CI.
@@ -125,3 +133,8 @@ Response to the external expert review (40+ years in strategy consulting): "an e
 
 - Arabic strategy workspace with linked identity, choices, references, annual transitions, enablers, initiatives, and reports.
 - Reveal and focus newly added records.
+
+### Goal-first drafting
+- Write objectives once to generate linked KPIs, benchmark study plans, phased initiatives, execution cards, dependencies, risk and cost worksheets.
+- Use existing opt-in AI for contextual drafting of new objectives, with local fallback and protection for existing edits.
+- Preserve unverified benchmarks and unknown numeric targets as explicit evidence gaps.

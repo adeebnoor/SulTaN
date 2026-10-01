@@ -109,6 +109,10 @@ function methodSystem(){
   '8. Annual milestones must cover every year of the horizon; targets move from baseline to the final target; the last year equals the final target.',
   '9. Write every user-facing text in '+(lang()==='ar'?'Arabic (formal, concise, institution-ready)':'English (formal, concise, board-ready)')+'. Keep identifiers, keys and URLs in Latin script. Use Latin digits.',
   '10. Be specific to this institution; avoid generic consulting language. Where you must assume, write the assumption into the assumptions register rather than into facts.',
+  '11. Diagnose context and risk appetite before choosing initiatives. Assess the existing operating model first; reuse it if adequate. Separate governance and decision rights from management, staffing and sourcing. End strategy design with a roadmap, initiative cards and dashboard; execution support is a separately scoped responsibility.',
+  '12. For commercial growth, compare several relevant segments using evidenced demand, contract size, margin, recurring need, buyer access and distinctive advantage. A national digitisation agenda is not proof of demand. Do not assume a sector always has small or large tickets. For public-value strategies use public outcomes instead of forcing revenue.',
+  '13. Where sourcing is material, compare build, partner and acquire with time, cost and capability constraints. A partnership must explain our contribution, their contribution and why they would choose us; no implied agreement. Acquisition requires diligence, valuation evidence and an integration owner, never a default recommendation.',
+  '14. Separate estimates from committed revenue and cash. Expose unsupported assumptions, test deadlines and stop conditions. Initiative cards need outcomes, accountable owners, KPI definitions and sources, activities, acceptance, dependencies, bottom-up costs and monitorable risk triggers. Never count a detailed budget twice.',
   lensBlock()
  ].filter(text).join('\n');
 }
@@ -242,6 +246,7 @@ async function reviewStrategy({project}={}){
   'Current decisions override earlier ambitions in the brief. Review execution and funding of the SELECTED portfolio below. Deferred, rejected and considered options are not current commitments: do not add their costs to the current gap or describe their missing approvals as blockers of the selected plan. You may flag a condition for reconsidering them as a clearly labelled hint. Only evidence of an existing obligation can justify a current liability from an inactive option.',
   'Selected portfolio digest:\n'+D.digest(portfolio),
   'Inactive choices (context only):\n'+JSON.stringify(inactive),
+  root.SultanStrategy?.aiContext(project)?'Selected strategy design, opportunity cases and initiative cards (hypotheses are not facts):\n'+root.SultanStrategy.aiContext(project):'',
   'Workspace-calculated funding for the selected portfolio (unknown costs remain unknown; zero known gap is not funding approval):\n'+JSON.stringify(E.budgetSummary(project)),
   groundingBlock(project),
   issues?'Deterministic completeness issues already detected by the workspace (do not repeat them; look beyond them):\n'+issues:'',
