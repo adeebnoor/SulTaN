@@ -19,11 +19,12 @@ const DEFAULT_PROXY='https://sultan-strategy-ai.onrender.com';
 const API_VERSION='2023-06-01';
 const FALLBACK_BETA='server-side-fallback-2026-07-01';
 const MODELS=[
+ {id:'gemini-flash-lite-latest',label:'Gemini Flash Lite (relay)'},
  {id:'claude-opus-5-5',label:'Claude Opus 5.5'},
  {id:'claude-sonnet-5-5',label:'Claude Sonnet 5.5'},
  {id:'claude-fable-5-1',label:'Claude Fable 5.1'}
 ];
-const DEFAULTS={transport:'proxy',endpoint:DEFAULT_PROXY,model:'claude-opus-5-5',extractModel:'claude-sonnet-5-5',webSearch:true,effort:'high',consent:false,consentAt:''};
+const DEFAULTS={transport:'proxy',endpoint:DEFAULT_PROXY,model:'gemini-flash-lite-latest',extractModel:'gemini-flash-lite-latest',webSearch:true,effort:'high',consent:false,consentAt:''};
 let fetchImpl=(...a)=>root.fetch(...a);
 let storage={get(k){try{return root.localStorage?.getItem(k);}catch{return null;}},set(k,v){try{root.localStorage?.setItem(k,v);}catch{}},remove(k){try{root.localStorage?.removeItem(k);}catch{}}};
 
@@ -67,6 +68,7 @@ async function readStream(response,onProgress){
 async function call(body,opts={}){
  const s=settings();
  if(!s.consent)throw new AIError('consent',T('aiErrConsent'));
+ if(s.transport==='direct'&&String(body.model).startsWith('gemini-'))throw new AIError('request',lang()==='ar'?'Gemini متاح عبر وسيط سلطان فقط. اختر اتصال الوسيط.':'Gemini requires the SULTAN relay transport.');
  if(s.transport==='direct'&&!text(apiKey()))throw new AIError('auth',T('aiErrNoKey'));
  const payload=Object.assign({fallbacks:'default'},body);
  if(opts.stream)payload.stream=true;
@@ -233,7 +235,7 @@ async function reviewStrategy({project}={}){
  const m=await call({model:s.model,max_tokens:12000,system:methodSystem(),messages:[{role:'user',content:user}],output_config:{effort:s.effort,format:{type:'json_schema',schema:reviewSchema()}}},{stream:true});
  return {data:parseJson(textOf(m)),usage:usageOf(m)};
 }
-async function ping(){const s=settings();const m=await call({model:s.model,max_tokens:16,messages:[{role:'user',content:'Reply with the single word OK.'}],output_config:{effort:'low'}});return {ok:/ok/i.test(textOf(m)),usage:usageOf(m)};}
+async function ping(){const s=settings();const m=await call({model:s.model,max_tokens:256,messages:[{role:'user',content:'Reply with the single word OK.'}],output_config:{effort:'low'}});return {ok:/ok/i.test(textOf(m)),usage:usageOf(m)};}
 /* File helpers for the browser. */
 function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=()=>reject(r.error);r.readAsDataURL(file);});}
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error);r.readAsText(file);});}

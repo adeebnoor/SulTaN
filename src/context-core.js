@@ -86,7 +86,9 @@ E.check=function(p){
  const proposed=c.sources.filter(s=>s.status==='proposed').length;
  if(proposed)out.push({section:'references',level:'missing',message:T('ctxIssueUnreviewed').replace('%{0}',String(proposed)),entity:'context'});
  const last=c.reviews.at(-1);
- if(last)for(const item of last.items.filter(i=>i.severity==='blocking').slice(0,12))out.push({section:SECTIONS.includes(item.section)&&item.section!=='context'?item.section:'review',level:'warning',message:T('ctxIssueAiReview')+' '+item.message,entity:'ai-review'});
+ /* Only a model review adds findings here. A key-free local review is a snapshot of these same rules, so
+    re-surfacing it would duplicate every blocking issue, label it as AI, and keep it after the issue is fixed. */
+ if(last&&last.model!=='local-rules')for(const item of last.items.filter(i=>i.severity==='blocking').slice(0,12))out.push({section:SECTIONS.includes(item.section)&&item.section!=='context'?item.section:'review',level:'warning',message:T('ctxIssueAiReview')+' '+item.message,entity:'ai-review'});
  return out;
 };
 E.demo=function(){

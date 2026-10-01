@@ -90,7 +90,14 @@ try:
             check(pre + 'library provenance and context recorded', all(o['id'].startswith('lib-') for o in p['options']) and p['context']['sectorId'] == 'edu' and len(p['context']['sources']) >= 3)
             check(pre + 'numbers honoured, unknowns kept', p['transitions'][0]['baseline'] == 62 and p['transitions'][0]['annual'][-1]['target'] == 70 and p['transitions'][1]['baseline'] is None and all(b['amount'] is None for i in p['initiatives'] for b in i['budget']))
             check(pre + 'review banner explains the draft', page.locator('.fx-banner').count() == 1)
-            check(pre + 'AI review card present but disabled', page.locator('.ai-review [data-ai-review="run"]').is_disabled())
+            # key-free mode: the review runs locally with the workspace rules; field suggestions come from the library or the guidance
+            page.locator('.ai-review [data-ai-review="run"]').click(); page.wait_for_function('SultanApp.getProject().context.reviews.length===1')
+            rv = page.evaluate('SultanApp.getProject().context.reviews.at(-1)')
+            check(pre + 'local review runs without a key', rv['model'] == 'local-rules' and len(rv['items']) == page.evaluate('Sultan.check(SultanApp.getProject()).length') and page.locator('.ai-review-items > li').count() == len(rv['items']))
+            page.evaluate('SultanApp.navigate("identity")'); page.wait_for_selector('.fg-ai')
+            vis = page.locator('[data-path="institution.vision"]'); vf = vis.locator('xpath=ancestor::*[contains(@class,"field")][1]'); vf.locator('.fg-ai').click(); page.wait_for_selector('.fg-ai-panel .fg-ai-text')
+            check(pre + 'local field suggestion offers new text, not the current value', vf.locator('.fg-ai-text').inner_text().strip() not in ('', vis.input_value().strip()))
+            vf.locator('[data-fg-apply="dismiss"]').click(); page.evaluate('SultanApp.navigate("review")'); page.wait_for_selector('.lens-card')
             # expert lenses: advisory hints grouped by lens, the expert's own patterns, feedback
             page.wait_for_selector('.lens-card .lens-group'); check(pre + 'expert lenses card renders with hints', page.locator('.lens-card').count() == 1 and page.locator('.lens-card .lens-group').count() >= 1)
             page.locator('.lens-card .lens-add > summary').click(); page.locator('[data-lens-field="title"]').fill('Reciprocity' if lang == 'en' else 'ماذا نقدم للشريك؟'); page.locator('[data-lens-field="question"]').fill('What do we bring to the table?'); page.locator('[data-lens-field="keywords"]').fill('zzqq-absent, reciprocity'); page.locator('[data-lens-save]').click(); page.wait_for_timeout(250)
@@ -128,7 +135,7 @@ try:
                 page.evaluate('SultanApp.navigate("guide")'); page.wait_for_selector('.gw-steps')
                 check(pre + 'guided path is fully translated', not re.search('[؀-ۿ]', page.locator('#content').inner_text()))
             # AI path against an in-page fake of the Messages API
-            page.evaluate('SultanAI.saveSettings({consent:true,transport:"direct",webSearch:true});SultanAI.saveApiKey("sk-ant-fake")')
+            page.evaluate('SultanAI.saveSettings({consent:true,transport:"direct",model:"claude-opus-5-5",extractModel:"claude-sonnet-5-5",webSearch:true});SultanAI.saveApiKey("sk-ant-fake")')
             page.evaluate(FAKE_FETCH, FAKE_DRAFT)
             page.evaluate('SultanApp.navigate("guide")'); page.wait_for_selector('.gw-steps'); page.locator('[data-gw-action="go"][data-step="3"]').click(); page.wait_for_selector('[data-gw-action="gather"]')
             check(pre + 'AI gathering enabled once configured', not page.locator('[data-gw-action="gather"]').is_disabled())

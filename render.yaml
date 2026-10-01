@@ -9,8 +9,8 @@ services:
     autoDeployTrigger: checksPass
     previews:
       generation: off
-  # Optional AI relay: holds the Anthropic API key server-side so visitors can use the AI
-  # drafting features without their own key. Set ANTHROPIC_API_KEY in the Render dashboard.
+  # Optional AI relay: holds the Gemini API key server-side so visitors can use the AI
+  # drafting features without their own key. Set GEMINI_API_KEY in the Render dashboard.
   # Without this service the app still works (library drafting) and users may bring their own key.
   - type: web
     runtime: node
@@ -23,8 +23,10 @@ services:
     healthCheckPath: /healthz
     autoDeployTrigger: checksPass
     envVars:
-      - key: ANTHROPIC_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
+      - key: GEMINI_MODEL
+        value: gemini-flash-lite-latest
       - key: ALLOWED_ORIGINS
         value: https://sultan-strategy-beta.onrender.com
       - key: RATE_LIMIT_PER_HOUR
