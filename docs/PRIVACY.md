@@ -8,7 +8,7 @@ SULTAN runs in your browser. Project data is saved under `sultan.strategy.builde
 
 The AI assistant is **off by default**. Nothing is sent to any model until you open the AI settings, read the consent note and tick the consent box. While it is off, SULTAN behaves exactly as earlier versions: the guided path, the sector library and the field guidance all work locally without any network request.
 
-When you switch it on and press one of the AI actions (gather context, generate a draft, suggest a field, expert review), SULTAN sends to the Claude API, directly or through the relay you configured:
+When you switch it on and press one of the AI actions (gather context, generate a draft, suggest a field, expert review), SULTAN sends to Google Gemini through the relay, or to Anthropic directly or through an Anthropic relay:
 
 - the project digest (institution identity, the choices, indicators, enablers and initiatives you have entered, with their numbers),
 - the sector, institution type and brief you typed in the guided path,
@@ -22,7 +22,7 @@ Every call is logged inside the project (`context.ai.log`) with the model name, 
 
 **Your API key.** If you bring your own key, it is stored only in this browser under `sultan.ai.key`, separately from the project, and it is never written into the project JSON, exports or reports. The import validator rejects any project file that carries a key. Use **Forget** in the AI settings to delete it.
 
-**The relay.** The hosted relay (`server/ai-proxy.js`) holds the operator's key on the server, forwards your request to Anthropic, checks the request origin, enforces a per-client hourly rate limit and a model allow-list, and keeps no copy of request or response bodies. Anthropic's own data policies apply to what the model receives. Do not send confidential institutional information or personal records through the assistant in this public beta.
+**The relay.** The hosted relay (`server/ai-proxy.js`) holds the operator's key on the server, forwards your request to the configured provider (Google Gemini or Anthropic), checks the request origin, enforces a per-client hourly rate limit and a model allow-list, and keeps no copy of request or response bodies. The configured provider's data policies apply to what the model receives. Do not send confidential institutional information or personal records through the assistant in this public beta.
 
 Local storage is not encryption, an access-control system, or a backup. Anyone with access to the browser profile may be able to read it. Other pages on the same hosting origin can potentially access that origin's storage. Private browsing, storage limits, device changes, or browser cleanup may remove or prevent saves. Export the JSON file and handle it according to your organization's rules.
 
