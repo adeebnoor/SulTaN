@@ -4,7 +4,9 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
 for(const f of ['final','guided','field-guide'])require('../src/locales/'+f+'.js');
 global.SultanI18n=require('../src/i18n.js');
+for(const f of ['lens'])require('../src/locales/'+f+'.js');
 global.Sultan=require('../src/import.js');require('../src/final-core.js');require('../src/context-core.js');require('../src/sector-library.js');require('../src/draft-engine.js');
+const Lens=require('../src/expert-lens.js');const lensMem={};Lens._setStorage({get:k=>lensMem[k]??null,set:(k,v)=>{lensMem[k]=v;}});
 const AI=require('../src/ai.js'),E=global.Sultan,D=global.SultanDraft;
 const src=fs.readFileSync(path.join(__dirname,'../src/ai.js'),'utf8');
 assert.ok(src.includes("'anthropic-dangerous-direct-browser-access'")&&src.includes("anthropic-version"),'documented browser headers');
@@ -38,6 +40,8 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  next=()=>streamResponse(JSON.stringify(draft));
  const progress=[];const r=await AI.generateStrategy({project,goalHints:['Quality'],onProgress:x=>progress.push(x.chars)});
  c=calls.at(-1);assert.equal(c.body.stream,true);assert.equal(c.body.output_config.format.type,'json_schema');assert.equal(c.body.output_config.effort,'high');assert.ok(c.body.system.includes('Unknown is never zero'));assert.ok(c.body.messages[0].content.includes('Quality'));assert.ok(c.body.messages[0].content.includes('etec.gov.sa'),'library grounding travels with the prompt');
+ assert.ok(c.body.system.includes('(partner-route)')&&c.body.system.includes('(recurring)'),'the expert lenses travel in the system prompt');
+ Lens.setIncludeInAI(false);await AI.generateStrategy({project});assert.ok(!calls.at(-1).body.system.includes('(partner-route)'),'the expert can keep lenses out of the prompts');Lens.setIncludeInAI(true);
  assert.deepEqual(r.data.options[0].title,'AI choice');assert.deepEqual(r.usage,{inputTokens:11,outputTokens:22,model:'claude-opus-5-5'});assert.ok(progress.length>1,'streaming progress is reported');
  const merged=D.fromAI(r.data,project,{mode:'replace'});assert.equal(merged.options[0].title,'AI choice');
  /* research step: web search tool + documents + two calls */
@@ -54,6 +58,10 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  const f=await AI.suggestField({project,path:'institution.mission',label:'Mission',why:'why',current:'',section:'identity'});assert.equal(f.text,'A concise mission.');assert.equal(calls.at(-1).body.output_config.effort,'medium');
  next=()=>streamResponse(JSON.stringify({summary:'ok',strengths:['s'],items:[{section:'choices',severity:'blocking',message:'m',fix:'f'}]}));
  const rv=await AI.reviewStrategy({project});assert.equal(rv.data.items[0].severity,'blocking');assert.ok(calls.at(-1).body.messages[0].content.includes('40 years'));
+ assert.ok(calls.at(-1).body.messages[0].content.includes('- partner-route:'),'the review applies the lenses explicitly');assert.ok(calls.at(-1).body.output_config.format.schema.properties.items.items.required.includes('lens'),'findings name their lens');
+ /* learning patterns from the adviser's notes */
+ next=()=>jsonResponse(200,{model:'claude-opus-5-5',content:[{type:'text',text:JSON.stringify({lenses:[{title:'Recurring business',question:'Is it recurring?',lookFor:'Subscriptions',keywords:['recurring','اشتراك'],group:'growth'}]})}],stop_reason:'end_turn',usage:{input_tokens:5,output_tokens:9}});
+ const lx=await AI.extractLenses({text:'Fraud is a good use case because it is recurring business.'});assert.equal(lx.data.lenses[0].group,'growth');assert.deepEqual(calls.at(-1).body.output_config.format.schema.required,['lenses']);assert.ok(calls.at(-1).body.messages[0].content.includes('recurring business'));
  /* parse tolerance and truncation flag */
  assert.deepEqual(AI.parseJson('Here you go: {"a":1} thanks'),{a:1});assert.throws(()=>AI.parseJson('nope'),e=>e.code==='parse');
  next=()=>streamResponse(JSON.stringify(draft),{stop:'max_tokens'});const tr=await AI.generateStrategy({project});assert.equal(tr.truncated,true);

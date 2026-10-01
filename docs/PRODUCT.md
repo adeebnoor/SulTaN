@@ -42,6 +42,12 @@ ClearPoint's public presentation emphasizes a guided tour, connected objectives/
 
 These are experience references, not independent performance rankings or evidence of feature parity. SULTAN does not claim their enterprise integrations, security certifications, adoption numbers, or field results.
 
+## Expert lenses
+
+Structure checks cannot see what an experienced adviser sees at a glance. **Expert lenses** encode the method owner's judgement as questions every strategy is read through: what do we have that no one else has; concentrate resources rather than spread them; evaluate internally before you cut; stabilize before you climb; decompose any external index into what we control; critical mass over fragmentation; one moonshot scaled to us; led by our own high performers; partner or acquire, and say what we bring; find the recurring business; few verticals with large tickets and a national agenda; follow the funder; where does the time come from; how long external conditions hold; liabilities as capital; sustainability within the ecosystem; unknown unknowns; AI as a service line and securing it.
+
+Lenses are applied in the Review section as advisory hints, in every AI drafting and review prompt, and in the report. They are the adviser's patterns, not rules of the method: they never enter `check()` or approval, and a lens that does not fit a case can be muted. The lens memory learns from the expert (own patterns, patterns kept from AI findings or extracted from notes, usefulness feedback) and lives in the browser, separate from projects, so it carries across every strategy the expert opens. See `docs/EXPERT_LENSES.md`.
+
 ## AI assistant boundaries
 
 The AI assistant is optional and off by default. It can gather sector context (with optional web search), draft a full strategy as structured JSON, suggest text for a single field, and review the draft the way a senior consultant would. Everything it returns passes through the same normaliser as a library draft: unknown numbers stay unknown, readiness is never assumed, budgets are never invented, indicator directions are checked against the baseline and target, and years are clamped to the horizon. Its review findings are warnings in the review view and never approval conditions. Mandatory requirements remain outside preference scoring whether a human or the model proposed them.

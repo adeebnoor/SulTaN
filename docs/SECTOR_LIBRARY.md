@@ -13,8 +13,11 @@ Every sector has a bilingual name and short description, its regulators, the ins
 | Health (`health`) | hospital and clinic types | 5 | 6 | 6 |
 | Government (`gov`) | agency types | 3 | 4 | 4 |
 | Non-profit (`nonprofit`) | association and foundation types | 3 | 4 | 5 |
+| Technology and digital services (`tech`) | systems integrator, cybersecurity, fintech, software | 7 | 9 | 9 |
 
 Education is the deepest: quality (NAFS-type results), teachers (licensing and professional development), operational efficiency, revenue for private and international schools, parent satisfaction, digital learning, expansion as a moonshot, regulatory compliance as a requirement, cash flow, stopping low-impact activities as a divestment, early childhood and inclusion.
+
+The technology sector encodes the method owner's growth thinking for companies such as systems integrators and cybersecurity providers: recurring services over project tickets, two or three verticals with large tickets and a national digitization agenda, partnerships and selective acquisitions with a written answer to "why would they choose us", AI fraud detection as a recurring service for banks, security for AI as a new market, ECC compliance as a requirement and divesting small-ticket one-off work (see `docs/EXPERT_LENSES.md`).
 
 `SultanLibrary.verifiedOn` records the date the references were last checked. Library content is a starting point for the team's own verification; it is not legal advice and not an accreditation checklist.
 

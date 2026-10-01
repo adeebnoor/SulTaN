@@ -42,6 +42,11 @@ assert.deepEqual(new Set(edu.goals.map(g=>g.type)),new Set(['requirement','diffe
 assert.equal(L.goalsFor('edu','public').some(g=>g.id==='revenue'),false,'fee-based revenue is not offered to public schools');
 assert.ok(L.goalsFor('edu','private').some(g=>g.id==='revenue'));
 assert.equal(L.detect('مدرسة أهلية في الرياض')?.id,'edu');assert.equal(L.detect('Public university')?.id,'highered');assert.equal(L.detect('مستشفى خاص')?.id,'health');assert.equal(L.detect('جمعية خيرية')?.id,'nonprofit');assert.equal(L.detect('هيئة حكومية')?.id,'gov');assert.equal(L.detect(''),null);
+/* The method owner's growth thinking for technology companies is encoded as a sector of its own. */
+const tech=L.sector('tech');assert.ok(tech&&tech.types.length===4&&tech.goals.length>=7,'technology sector present');
+assert.ok(tech.goals.some(g=>g.id==='partner'&&g.type==='moonshot')&&tech.goals.some(g=>g.id==='recurring')&&tech.goals.some(g=>g.id==='fraud-ai')&&tech.goals.some(g=>g.id==='ai-security')&&tech.goals.some(g=>g.id==='verticals')&&tech.goals.some(g=>g.type==='divest'));
+assert.ok(tech.indicators.some(i=>i.id==='recurring-share')&&tech.indicators.some(i=>i.id==='avg-ticket'));
+assert.equal(L.detect('شركة تقنية معلومات')?.id,'tech');assert.equal(L.detect('Systems integrator and cybersecurity provider')?.id,'tech');
 assert.ok(L.grounding('edu','private','ar').includes('etec.gov.sa'));assert.ok(L.grounding('edu','private','en').split('\n').length>30);
 assert.equal(L.pick({ar:'أ',en:'b'},'en'),'b');assert.equal(L.pick({ar:'أ',en:'b'},'ar'),'أ');
 console.log(JSON.stringify({suite:'sector-library',passed:true,sectors:L.sectors.map(s=>({id:s.id,goals:s.goals.length,regulations:s.regulations.length,indicators:s.indicators.length}))}));

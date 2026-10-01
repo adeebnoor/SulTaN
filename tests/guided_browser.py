@@ -39,7 +39,7 @@ FAKE_FETCH = """
   window.__aiCalls=[];
   SultanAI._setFetch(async (u,init)=>{const body=JSON.parse(init.body);window.__aiCalls.push({url:u,headers:init.headers,body});
     const fmt=body.output_config&&body.output_config.format,schema=fmt?JSON.stringify(fmt.schema||{}):'';
-    const review={summary:'Review summary',strengths:['Clear single choice'],items:[{section:'choices',severity:'warning',message:'Target needs a data source',fix:'Name the system that reports the KPI'}]};
+    const review={summary:'Review summary',strengths:['Clear single choice'],items:[{section:'choices',severity:'warning',message:'Target needs a data source',fix:'Name the system that reports the KPI',lens:'partner-route'}]};
     const context={sources:[{title:'Gathered regulation',kind:'regulation',issuer:'Ministry',url:'https://example.gov.sa/reg',year:2024,summary:'s',relevance:'r'}],documents:[],openQuestions:['Fee policy?'],summary:'Context gathered'};
     const text=!fmt?'OK':schema.includes('"severity"')?JSON.stringify(review):schema.includes('"documents"')&&!schema.includes('"transitions"')?JSON.stringify(context):JSON.stringify(draft);
     if(body.stream)return new Response(sse(text),{status:200,headers:{'content-type':'text/event-stream'}});
@@ -58,9 +58,9 @@ try:
             page.on('pageerror', lambda e: errors.append(str(e))); page.on('request', lambda r: requests.append(r.url)); page.on('dialog', lambda d: d.accept())
             page.goto(url + '?lang=' + lang, wait_until='load'); page.wait_for_timeout(300)
             check(pre + 'guided CTA leads the hero', page.locator('.launch-hero .hero-actions .btn').first.evaluate('e=>e.classList.contains("gw-hero-cta")'))
-            page.locator('.gw-hero-cta').click(); page.wait_for_selector('.gw-steps')
+            page.locator('.gw-hero-cta').click(); page.wait_for_selector('.gw-steps'); page.wait_for_selector('#navigation [data-section="guide"]')
             check(pre + 'guided path renders five steps', page.locator('.gw-steps li').count() == 5 and page.locator('#navigation [data-section="guide"]').count() == 1)
-            check(pre + 'all five sectors offered', page.locator('.gw-sector').count() == 5)
+            check(pre + 'all six sectors offered', page.locator('.gw-sector').count() == 6)
             page.locator('.gw-sector input[value="edu"]').check(); page.wait_for_selector('select[data-gw="typeId"]')
             page.locator('select[data-gw="typeId"]').select_option('private'); page.wait_for_timeout(150)
             check(pre + 'library note names the regulator', 'ETEC' in page.locator('.gw-card .hint').inner_text() or 'تقويم التعليم' in page.locator('.gw-card .hint').inner_text())
@@ -80,6 +80,7 @@ try:
             page.locator('[data-gw="goals.quality.baseline"]').fill('62'); page.locator('[data-gw="goals.quality.target"]').fill('70'); page.locator('[data-gw="goals.quality.owner"]').fill('Deputy'); page.locator('[data-gw="goals.efficiency.target"]').fill('30')
             check(pre + 'selected count follows the checkboxes', '2' in page.locator('.gw-selected-count').inner_text())
             page.locator('[data-gw-action="next"]').click(); page.wait_for_selector('.gw-build')
+            check(pre + 'last step announces the expert lenses', page.locator('.lens-step-note').count() == 1)
             counts = page.locator('.gw-counts-grid strong').all_text_contents()
             check(pre + 'step five previews what will be created', len(counts) >= 6 and int(counts[0]) == 2)
             check(pre + 'AI build disabled without configuration', page.locator('[data-gw-action="build-ai"]').is_disabled())
@@ -90,6 +91,16 @@ try:
             check(pre + 'numbers honoured, unknowns kept', p['transitions'][0]['baseline'] == 62 and p['transitions'][0]['annual'][-1]['target'] == 70 and p['transitions'][1]['baseline'] is None and all(b['amount'] is None for i in p['initiatives'] for b in i['budget']))
             check(pre + 'review banner explains the draft', page.locator('.fx-banner').count() == 1)
             check(pre + 'AI review card present but disabled', page.locator('.ai-review [data-ai-review="run"]').is_disabled())
+            # expert lenses: advisory hints grouped by lens, the expert's own patterns, feedback
+            check(pre + 'expert lenses card renders with hints', page.locator('.lens-card').count() == 1 and page.locator('.lens-card .lens-group').count() >= 1)
+            page.locator('.lens-card .lens-add > summary').click(); page.locator('[data-lens-field="title"]').fill('Reciprocity' if lang == 'en' else 'ماذا نقدم للشريك؟'); page.locator('[data-lens-field="question"]').fill('What do we bring to the table?'); page.locator('[data-lens-field="keywords"]').fill('zzqq-absent, reciprocity'); page.locator('[data-lens-save]').click(); page.wait_for_timeout(250)
+            check(pre + 'own pattern learned and applied', page.evaluate('SultanLens.mem().custom.length') == 1 and page.evaluate('SultanLens.hints(SultanApp.getProject()).some(h=>h.lens.startsWith("my-"))') and page.locator('.lens-card .lens-group[data-lens-group^="my-"]').count() == 1)
+            page.locator('.lens-card [data-lens-fb="useful"]').first.click(); page.wait_for_timeout(200)
+            check(pre + 'lens feedback stored', page.evaluate('Object.values(SultanLens.mem().state).some(s=>s.useful>=1)'))
+            page.locator('.lens-card .lens-notes > summary').click(); page.locator('[data-lens-notes]').fill('Why focus on fintech when their tickets are small?\nFraud is a good use case because it is recurring business.'); page.locator('[data-lens-extract]').click(); page.wait_for_timeout(200)
+            check(pre + 'notes become candidate patterns', page.locator('.lens-cands li').count() == 2)
+            page.locator('[data-lens-keep]').first.click(); page.wait_for_timeout(200)
+            check(pre + 'kept candidate joins the memory', page.evaluate('SultanLens.mem().custom.length') == 2 and page.locator('.lens-cands li').count() == 1)
             report = page.evaluate('SultanApp.getReport()')
             check(pre + 'report carries the context section', 'data-report-section="context"' in report and p['context']['sources'][0]['title'] in report)
             page.evaluate('SultanApp.navigate("references")'); page.wait_for_selector('.ctx-dossier')
@@ -132,6 +143,11 @@ try:
             page.locator('.ai-review [data-ai-review="run"]').click(); page.wait_for_timeout(600)
             page.wait_for_selector('.ai-review-summary')
             check(pre + 'AI expert review stored in the dossier', page.evaluate('SultanApp.getProject().context.reviews.length') == 1)
+            check(pre + 'AI prompts carried the expert lenses', any('(partner-route)' in (c['body'].get('system') or '') for c in page.evaluate('window.__aiCalls')) and any('- partner-route:' in json.dumps(c['body'].get('messages')) for c in page.evaluate('window.__aiCalls')))
+            page.wait_for_selector('.ai-review-items .lens-pill', timeout=5000)
+            check(pre + 'review finding shows its lens', page.locator('.ai-review-items .lens-pill').count() >= 1)
+            page.locator('[data-lens-learn]').first.click(); page.wait_for_timeout(250)
+            check(pre + 'review finding turned into a pattern', page.evaluate('SultanLens.mem().custom.length') == 3)
             report = page.evaluate('SultanApp.getReport()')
             check(pre + 'report discloses AI assistance', ('AI' in report or 'الذكاء' in report) and 'data-report-section="context"' in report)
             page.evaluate('SultanApp.navigate("identity")'); page.wait_for_selector('.fg-ai')

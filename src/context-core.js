@@ -35,7 +35,7 @@ function document(x={}){
 }
 function review(x={}){
  return {at:str(x.at,40),model:str(x.model,120),summary:str(x.summary),
-  items:(Array.isArray(x.items)?x.items:[]).slice(0,LIMITS.items).map(i=>({section:SECTIONS.includes(i?.section)?i.section:'review',severity:SEVERITY.includes(i?.severity)?i.severity:'hint',message:str(i?.message,4000)}))};
+  items:(Array.isArray(x.items)?x.items:[]).slice(0,LIMITS.items).map(i=>({section:SECTIONS.includes(i?.section)?i.section:'review',severity:SEVERITY.includes(i?.severity)?i.severity:'hint',message:str(i?.message,4000),fix:str(i?.fix,4000),lens:str(i?.lens,120)}))};
 }
 function logEntry(x={}){return {at:str(x.at,40),model:str(x.model,120),purpose:str(x.purpose,120),inputTokens:num(x.inputTokens)?Math.round(x.inputTokens):0,outputTokens:num(x.outputTokens)?Math.round(x.outputTokens):0};}
 function normalize(p){

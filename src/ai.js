@@ -106,9 +106,13 @@ function methodSystem(){
   '7. Preference scores (0-100 per criterion) are stated judgements, not probabilities. Explain each score in its note against the criterion anchors.',
   '8. Annual milestones must cover every year of the horizon; targets move from baseline to the final target; the last year equals the final target.',
   '9. Write every user-facing text in '+(lang()==='ar'?'Arabic (formal, concise, institution-ready)':'English (formal, concise, board-ready)')+'. Keep identifiers, keys and URLs in Latin script. Use Latin digits.',
-  '10. Be specific to this institution; avoid generic consulting language. Where you must assume, write the assumption into the assumptions register rather than into facts.'
- ].join('\n');
+  '10. Be specific to this institution; avoid generic consulting language. Where you must assume, write the assumption into the assumptions register rather than into facts.',
+  lensBlock()
+ ].filter(text).join('\n');
 }
+/* The method owner's thinking patterns (expert lenses) travel with every prompt when the expert allows it. */
+function lensBlock(){try{return root.SultanLens?.promptBlock?.()||'';}catch{return '';}}
+function lensQuestions(){try{return root.SultanLens?.reviewQuestions?.()||[];}catch{return [];}}
 function groundingBlock(project){
  const Lib=root.SultanLibrary,ctx=project?.context||{};
  const sectorId=ctx.sectorId||Lib?.detect?.(project?.institution?.sector)?.id||'';
@@ -197,7 +201,22 @@ async function suggestField({project,path,label,why,current,section}={}){
 }
 function reviewSchema(){
  const s=()=>({type:'string'});
- return {type:'object',additionalProperties:false,required:['summary','strengths','items'],properties:{summary:s(),strengths:{type:'array',items:s()},items:{type:'array',items:{type:'object',additionalProperties:false,required:['section','severity','message','fix'],properties:{section:{type:'string',enum:['identity','choices','references','priorities','enablers','roadmap','review','context']},severity:{type:'string',enum:['blocking','warning','hint']},message:s(),fix:s()}}}}};
+ return {type:'object',additionalProperties:false,required:['summary','strengths','items'],properties:{summary:s(),strengths:{type:'array',items:s()},items:{type:'array',items:{type:'object',additionalProperties:false,required:['section','severity','message','fix','lens'],properties:{section:{type:'string',enum:['identity','choices','references','priorities','enablers','roadmap','review','context']},severity:{type:'string',enum:['blocking','warning','hint']},message:s(),fix:s(),lens:s()}}}}};
+}
+/* Candidate thinking patterns extracted from an adviser's notes. */
+function lensSchema(){
+ const s=()=>({type:'string'});
+ return {type:'object',additionalProperties:false,required:['lenses'],properties:{lenses:{type:'array',items:{type:'object',additionalProperties:false,required:['title','question','lookFor','keywords','group'],properties:{title:s(),question:s(),lookFor:s(),keywords:{type:'array',items:s()},group:{type:'string',enum:['focus','growth','evidence','people','method','custom']}}}}}};
+}
+async function extractLenses({text:notes}={}){
+ const s=settings();
+ const user=[
+  'Task: read these notes written by a senior strategy adviser and extract the reusable thinking patterns ("lenses") they reveal: the questions this adviser habitually asks of any strategy. Merge duplicates, drop one-off facts about the specific case, keep 3 to 12 lenses. For each lens give a short title, the question as the adviser would ask it of any institution, what a good answer looks like, 2 to 6 keywords (in the language of the notes and in English) whose presence in a strategy signals that it addresses the lens, and a group (focus, growth, evidence, people, method).',
+  'Notes:\n'+String(notes||'').slice(0,60000),
+  'Write in '+(lang()==='ar'?'Arabic':'English')+'.'
+ ].join('\n\n');
+ const m=await call({model:s.model,max_tokens:6000,system:methodSystem(),messages:[{role:'user',content:user}],output_config:{effort:'medium',format:{type:'json_schema',schema:lensSchema()}}});
+ return {data:parseJson(textOf(m)),usage:usageOf(m)};
 }
 /* Expert review of the whole strategy. */
 async function reviewStrategy({project}={}){
@@ -208,7 +227,8 @@ async function reviewStrategy({project}={}){
   'Strategy digest:\n'+D.digest(project),
   groundingBlock(project),
   issues?'Deterministic completeness issues already detected by the workspace (do not repeat them; look beyond them):\n'+issues:'',
-  'For each finding give the section, a severity (blocking = would embarrass the board or block execution; warning = weakens defensibility; hint = polish), the finding, and the concrete fix. Also list genuine strengths. Write in '+(lang()==='ar'?'Arabic':'English')+'.'
+  lensQuestions().length?'Apply each of the method owner\'s expert lenses explicitly and report where the strategy fails one. When a finding comes from a lens, set "lens" to that lens id; otherwise set it to "".\n'+lensQuestions().map(q=>`- ${q.id}: ${q.question}`).join('\n'):'',
+  'For each finding give the section, a severity (blocking = would embarrass the board or block execution; warning = weakens defensibility; hint = polish), the finding, the concrete fix and the lens id (or ""). Also list genuine strengths. Write in '+(lang()==='ar'?'Arabic':'English')+'.'
  ].filter(text).join('\n\n');
  const m=await call({model:s.model,max_tokens:12000,system:methodSystem(),messages:[{role:'user',content:user}],output_config:{effort:s.effort,format:{type:'json_schema',schema:reviewSchema()}}},{stream:true});
  return {data:parseJson(textOf(m)),usage:usageOf(m)};
@@ -217,7 +237,7 @@ async function ping(){const s=settings();const m=await call({model:s.model,max_t
 /* File helpers for the browser. */
 function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=()=>reject(r.error);r.readAsDataURL(file);});}
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error);r.readAsText(file);});}
-root.SultanAI={MODELS,DEFAULT_PROXY,settings,saveSettings,apiKey,saveApiKey,configured,status,call,textOf,parseJson,usageOf,methodSystem,groundingBlock,contextSchema,reviewSchema,researchContext,extractContext,gatherContext,generateStrategy,suggestField,reviewStrategy,ping,fileToBase64,fileToText,AIError,
+root.SultanAI={MODELS,DEFAULT_PROXY,settings,saveSettings,apiKey,saveApiKey,configured,status,call,textOf,parseJson,usageOf,methodSystem,groundingBlock,contextSchema,reviewSchema,lensSchema,researchContext,extractContext,gatherContext,generateStrategy,suggestField,reviewStrategy,extractLenses,ping,fileToBase64,fileToText,AIError,
  _setFetch(f){fetchImpl=f;},_setStorage(s){storage=s;}};
 if(isNode)module.exports=root.SultanAI;
 })(typeof globalThis!=='undefined'?globalThis:this);

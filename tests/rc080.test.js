@@ -13,8 +13,8 @@ assert.ok(ui.includes("window.open('','_blank')")&&ui.includes('w.print()'),'PDF
 assert.ok(ui.includes("T('clientDeliverables')")&&ui.includes("T('decisionExtensions')"),'client headings must be localized');
 assert.ok(ui.includes('circle.baseline-dot')||ui.includes('baseline-dot'),'trajectory markers must be present');
 assert.ok(ui.includes("T('gatedFundingTitle')")&&ui.includes("T('riskSource')")&&ui.includes("T('maturityFamily')"),'client report must surface gated funding, risk source and maturity family');
-/* 36 is intentional: the 0.9 context dossier, sector library, draft engine, AI layer, field guidance and guided path
-   are declared in index.html so source and built app share one visible load graph. */
-const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=36,'source load graph should remain explicit and consolidated');
+/* 39 is intentional: the 0.9 context dossier, sector library, draft engine, AI layer, field guidance, guided path
+   and expert lenses are declared in index.html so source and built app share one visible load graph. */
+const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=39,'source load graph should remain explicit and consolidated');
 for(const removed of ['final-core-patch.js','final-export-hook.js','final-report-patch.js','final-polish.js','final-dashboard-polish.js','version-patch.js'])assert.ok(!index.includes(removed),'obsolete patch loaded: '+removed);
 console.log(JSON.stringify({suite:'rc080',passed:true,scripts}));
