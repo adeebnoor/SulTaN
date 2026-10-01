@@ -19,12 +19,12 @@ const DEFAULT_PROXY='https://sultan-strategy-ai.onrender.com';
 const API_VERSION='2023-06-01';
 const FALLBACK_BETA='server-side-fallback-2026-07-01';
 const MODELS=[
- {id:'gemini-flash-latest',label:'Gemini Flash (relay)'},
+ {id:'gemini-flash-lite-latest',label:'Gemini Flash Lite (relay)'},
  {id:'claude-opus-5-5',label:'Claude Opus 5.5'},
  {id:'claude-sonnet-5-5',label:'Claude Sonnet 5.5'},
  {id:'claude-fable-5-1',label:'Claude Fable 5.1'}
 ];
-const DEFAULTS={transport:'proxy',endpoint:DEFAULT_PROXY,model:'gemini-flash-latest',extractModel:'gemini-flash-latest',webSearch:true,effort:'high',consent:false,consentAt:''};
+const DEFAULTS={transport:'proxy',endpoint:DEFAULT_PROXY,model:'gemini-flash-lite-latest',extractModel:'gemini-flash-lite-latest',webSearch:true,effort:'high',consent:false,consentAt:''};
 let fetchImpl=(...a)=>root.fetch(...a);
 let storage={get(k){try{return root.localStorage?.getItem(k);}catch{return null;}},set(k,v){try{root.localStorage?.setItem(k,v);}catch{}},remove(k){try{root.localStorage?.removeItem(k);}catch{}}};
 
