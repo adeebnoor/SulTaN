@@ -1,6 +1,6 @@
 # The AI assistant
 
-SULTAN 0.9 can ask a Claude model to gather sector context, draft a whole strategy, suggest the text of a single field and review the result like a senior consultant. This page explains what it does, what it never does, how to switch it on, and how it is built.
+SULTAN 0.9 can ask a connected Gemini or Claude model to gather sector context, draft a whole strategy, suggest the text of a single field and review the result like a senior consultant. This page explains what it does, what it never does, how to switch it on, and how it is built.
 
 ## Principles
 
@@ -17,7 +17,7 @@ Open **AI settings** from step 3 or step 5 of the guided path, from the context 
 | Setting | Options | Default |
 |---|---|---|
 | Transport | **Relay** (operator key stays on the server) or **Direct** (your own key in this browser) | Relay, `https://sultan-strategy-ai.onrender.com` |
-| Model | `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-fable-5-1` | `claude-opus-5-5` |
+| Model | `gemini-flash-lite-latest` (relay), or the supported Claude models (direct Anthropic) | `gemini-flash-lite-latest` (relay) |
 | Effort | low · medium · high · xhigh · max | high |
 | Web search | on / off | on |
 | Consent | must be ticked before any call | off |
@@ -26,7 +26,7 @@ Open **AI settings** from step 3 or step 5 of the guided path, from the context 
 
 ## The four actions
 
-**Gather context** (guided path, step 3; also from the dossier card). Two calls. The first asks the model for a research memo on the regulations, national programmes, indicators and studies that matter for this sector, type and brief; it may use the web-search server tool (up to ten searches) and reads the documents you attached (PDF or plain text, sent as document blocks, held in page memory only). The second call turns the memo into structured records with a strict JSON schema, using the extraction model (`claude-sonnet-5-5` by default). The result is a list of **proposed sources**, document summaries and open questions that you accept or reject before building.
+**Gather context** (guided path, step 3; also from the dossier card). Two calls. The first asks the model for a research memo on the regulations, national programmes, indicators and studies that matter for this sector, type and brief; it may use the web-search server tool (up to ten searches) and reads the documents you attached (PDF or plain text, sent as document blocks, held in page memory only). The second call turns the memo into structured records with a strict JSON schema, using the extraction model (`gemini-flash-lite-latest` by default). The result is a list of **proposed sources**, document summaries and open questions that you accept or reject before building.
 
 **Generate strategy** (guided path, step 5, *Build with AI*). One streamed call with the method rules as system prompt, the project digest, the library grounding for the sector, the accepted sources and your goal hints as the user message, and the full SULTAN draft schema as a structured-output constraint. The JSON passes through `SultanDraft.fromAI` and replaces the strategic records (choices, references, indicators, enablers, initiatives) while keeping the identity you confirmed. If the project already had work, a JSON backup is downloaded first. A response cut by `max_tokens` is flagged as truncated and still normalised.
 
@@ -52,7 +52,7 @@ The project digest (identity, choices, indicators with numbers, enablers, initia
 
 ## For maintainers
 
-`src/ai.js` is a dependency-free client of the Claude Messages API.
+`src/ai.js` is a dependency-free client using the Messages request shape. The relay adapts this shape to Gemini when its server key is configured; direct transport supports Anthropic only.
 
 - Headers: `anthropic-version: 2023-06-01`; direct transport adds `x-api-key` and `anthropic-dangerous-direct-browser-access: true`; relay transport adds `x-sultan-client: web` and never sends a browser key.
 - Every request sets `fallbacks: "default"` with the `anthropic-beta: server-side-fallback-2026-07-01` header, uses adaptive thinking (no `budget_tokens`), and sets `output_config.effort` explicitly.
