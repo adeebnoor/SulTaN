@@ -61,7 +61,7 @@ Authority Space is descriptive, not predictive. It does not claim that authority
 
 Project inputs stay in local browser storage. They are **not encrypted, synchronized, or backed up by SULTAN**. Export JSON regularly; clearing browser data can remove the local draft. Do not use confidential institutional information or personal records in this public beta.
 
-There are no analytics, tracking libraries or project-upload endpoints. The only outbound calls are the optional AI assistant's requests to the Claude API or to the relay, and they happen only after you switch the assistant on and give consent. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after explicit user action.
+There are no analytics, tracking libraries or project-upload endpoints. The only outbound calls are the optional AI assistant's requests to the Anthropic API or to the Gemini/Anthropic relay, and they happen only after you switch the assistant on and give consent. Hosting providers can receive normal website requests. Email and GitHub feedback use external services only after explicit user action.
 
 A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
 
@@ -94,13 +94,13 @@ python3 tests/rev3_browser.py
 python3 tests/guided_browser.py      # guided path, dossier, simple/expert, AI path against an in-page fake API
 ```
 
-To run the AI relay locally: `ANTHROPIC_API_KEY=… ALLOWED_ORIGINS=http://localhost:8000 node server/ai-proxy.js` (see [server/README.md](server/README.md)). The web app also works with your own key entered in the AI settings, without any relay.
+To run the AI relay locally: `GEMINI_API_KEY=… ALLOWED_ORIGINS=http://localhost:8000 node server/ai-proxy.js` (see [server/README.md](server/README.md)). The web app also works with your own key entered in the AI settings, without any relay.
 
 `SULTAN_RENDER_ONLY=1` is for isolated inline-rendering environments; it is not a substitute for the full browser release check.
 
 ## Repository organization
 
-`src/engine.js` contains the base deterministic model and validation rules. The 0.7 modules add Authority Space, criterion polarity, exact decision sensitivity, execution upgrades, assumptions/risks, and executive review visuals while retaining compatibility with the 0.5 project schema. The 0.9 modules add the context dossier (`context-core.js`), the sector library (`sector-library.js`), the draft engine that turns library templates or AI JSON into validated projects (`draft-engine.js`), the Claude API client (`ai.js`), field guidance and simple/expert disclosure (`field-guide.js`), the guided path (`guided.js`) and the expert lenses (`expert-lens.js`, `lens-ui.js`); `server/ai-proxy.js` is the optional dependency-free relay. Arabic is confined to localization catalogs and interface content; code identifiers and maintainer documentation use English.
+`src/engine.js` contains the base deterministic model and validation rules. The 0.7 modules add Authority Space, criterion polarity, exact decision sensitivity, execution upgrades, assumptions/risks, and executive review visuals while retaining compatibility with the 0.5 project schema. The 0.9 modules add the context dossier (`context-core.js`), the sector library (`sector-library.js`), the draft engine that turns library templates or AI JSON into validated projects (`draft-engine.js`), the AI client (`ai.js`), field guidance and simple/expert disclosure (`field-guide.js`), the guided path (`guided.js`) and the expert lenses (`expert-lens.js`, `lens-ui.js`); `server/ai-proxy.js` is the optional dependency-free relay. Arabic is confined to localization catalogs and interface content; code identifiers and maintainer documentation use English.
 
 The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, and REDA's emphasis on explicit data, comparison, and temporal performance underpin the design. The strategic criteria and Authority Space measures are product design choices, not a claim of field-validated universal equations.
 
