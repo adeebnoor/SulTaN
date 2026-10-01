@@ -53,6 +53,9 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  assert.equal(extract.body.model,'claude-sonnet-5-5','extraction uses the configured extractor model');assert.equal(extract.body.output_config.format.type,'json_schema');
  assert.equal(g.data.sources[0].title,'Regulation X');assert.equal(g.usage.length,2);
  AI.saveSettings({webSearch:false});step=0;await AI.gatherContext({project});assert.equal(calls.at(-2).body.tools,undefined,'web search can be switched off');
+ AI.saveSettings({webSearch:true});step=0;next=()=>++step===1?jsonResponse(429,{error:{message:'search quota'}}):streamResponse('Library context requiring verification');
+ const fallback=await AI.researchContext({project});assert.equal(step,2);assert.equal(calls.at(-1).body.tools,undefined);assert.ok(fallback.memo.includes('Web search was unavailable'));assert.ok(calls.at(-1).body.messages[0].content.at(-1).text.includes('Do not claim any online verification'));
+ AI.saveSettings({webSearch:false});
  /* field suggestion and review */
  next=()=>jsonResponse(200,{model:'claude-opus-5-5',content:[{type:'text',text:'  A concise mission.  '}],stop_reason:'end_turn',usage:{input_tokens:1,output_tokens:2}});
  const f=await AI.suggestField({project,path:'institution.mission',label:'Mission',why:'why',current:'',section:'identity'});assert.equal(f.text,'A concise mission.');assert.equal(calls.at(-1).body.output_config.effort,'medium');
