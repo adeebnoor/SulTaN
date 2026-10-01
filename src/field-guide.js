@@ -95,7 +95,7 @@ function decorate(){
   let tools=field.querySelector('.fg-tools');if(!tools){tools=document.createElement('span');tools.className='fg-tools';label.append(tools);}
   if(g){const b=document.createElement('button');b.type='button';b.className='fg-toggle';b.setAttribute('aria-expanded',String(openAll));b.setAttribute('aria-label',T('uxWhyThisField'));b.title=T('uxWhyThisField');b.textContent='؟';if(I.language==='en')b.textContent='?';tools.append(b);
    const panel=document.createElement('div');panel.className='fg-panel';panel.hidden=!openAll;panel.innerHTML=`<p class="fg-why">${esc(g.why)}</p>${g.example?`<p class="fg-example"><b>${esc(T('uxExample'))}</b> ${esc(g.example)}</p>`:''}`;ctrl.insertAdjacentElement('afterend',panel);}
-  if(textual(ctrl)&&root.SultanAI){const a=document.createElement('button');a.type='button';a.className='fg-ai';a.dataset.fgAi=ctrl.dataset.path;a.title=T('uxAiSuggest');a.setAttribute('aria-label',T('uxAiSuggest'));a.textContent='✦';tools.append(a);}
+  if(textual(ctrl)&&root.SultanAI){const a=document.createElement('button');a.type='button';a.className='fg-ai';a.dataset.fgAi=ctrl.dataset.path;a.title=T(root.SultanAI.configured()?'uxAiSuggest':'localSuggest');a.setAttribute('aria-label',a.title);a.textContent='✦';tools.append(a);}
  }
 }
 function renderModeSwitch(){
@@ -124,16 +124,16 @@ function renderProvenance(){
 /* ---------------------------------------------------------------- AI field suggestion */
 async function suggest(button){
  const path=button.dataset.fgAi,p=project(),AI=root.SultanAI;if(!p||!AI)return;
- if(!AI.configured()){root.SultanGuided?.openAISettings?.(T('uxAiNeedsSetup'));return;}
+ const local=!AI.configured();
  /* The usage log triggers a re-render, so the field and its panel are located again by path after the call. */
  const locate=()=>{const c=document.querySelector(`#content [data-path="${path}"]`),f=c?.closest('.field');if(!f)return null;let b=f.querySelector('.fg-ai-panel');if(!b){b=document.createElement('div');b.className='fg-ai-panel';f.append(b);}return {field:f,ctrl:c,box:b};};
  let at=locate();if(!at)return;let {field,ctrl,box}=at;
  box.hidden=false;box.innerHTML=`<p class="muted">${esc(T('uxAiWorking'))}</p>`;button.disabled=true;
  try{
   const g=guide(path);const label=field.querySelector(':scope > span:first-child')?.childNodes[0]?.textContent?.trim()||path;
-  const r=await AI.suggestField({project:p,path,label,why:g?.why||'',current:ctrl.value,section:section()});
-  if(E.recordAiUse){const q=project();E.recordAiUse(q,{model:r.usage.model,purpose:'field',inputTokens:r.usage.inputTokens,outputTokens:r.usage.outputTokens});root.SultanApp.setProject(q);at=locate();if(!at)return;({ctrl,box}=at);}
-  box.hidden=false;box.innerHTML=`<div class="fg-ai-text">${esc(r.text)}</div><div class="toolbar"><button type="button" class="btn small primary" data-fg-apply="replace">${esc(T('uxAiUse'))}</button>${text(ctrl.value)?`<button type="button" class="btn small" data-fg-apply="append">${esc(T('uxAiAppend'))}</button>`:''}<button type="button" class="btn small" data-fg-apply="dismiss">${esc(T('uxAiDismiss'))}</button></div><small class="muted">${esc(T('uxAiDisclaimer'))}</small>`;
+  const sector=root.SultanLibrary?.sector(p.context?.sectorId);const tpl=sector?.templates?.[path.split('.').at(-1)];const localText=tpl?root.SultanLibrary.pick(tpl,I.language):(ctrl.value?.trim()||g?.example||g?.why||label);const r=local?{text:localText,usage:{model:'local-library'}}:await AI.suggestField({project:p,path,label,why:g?.why||'',current:ctrl.value,section:section()});
+  if(!local&&E.recordAiUse){const q=project();E.recordAiUse(q,{model:r.usage.model,purpose:'field',inputTokens:r.usage.inputTokens,outputTokens:r.usage.outputTokens});root.SultanApp.setProject(q);at=locate();if(!at)return;({ctrl,box}=at);}
+  box.hidden=false;box.innerHTML=`<div class="fg-ai-text">${esc(r.text)}</div><div class="toolbar"><button type="button" class="btn small primary" data-fg-apply="replace">${esc(T('uxAiUse'))}</button>${text(ctrl.value)?`<button type="button" class="btn small" data-fg-apply="append">${esc(T('uxAiAppend'))}</button>`:''}<button type="button" class="btn small" data-fg-apply="dismiss">${esc(T('uxAiDismiss'))}</button></div><small class="muted">${esc(T(local?'localFieldDisclaimer':'uxAiDisclaimer'))}</small>`;
   box.dataset.text=r.text;
  }catch(err){box.innerHTML=`<p class="fg-ai-error">${esc(err?.message||String(err))}</p><div class="toolbar"><button type="button" class="btn small" data-fg-apply="dismiss">${esc(T('uxAiDismiss'))}</button></div>`;}
  finally{button.disabled=false;}
