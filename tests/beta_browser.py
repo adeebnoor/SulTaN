@@ -31,6 +31,7 @@ try:
    check(prefix+'language and direction',page.locator('html').get_attribute('lang')==lang and page.locator('html').get_attribute('dir')==('rtl' if lang=='ar' else 'ltr'))
    check(prefix+'public entrance distinct from workspace',page.locator('body').evaluate('(e)=>e.classList.contains("is-home")') and not page.locator('.sidebar').is_visible())
    page.screenshot(path=str(QA/f'launch-{lang}.png'),full_page=True)
+   page.locator('.fm-full-example > summary').click()
    for tab in ['choices','enablers','authority']:
     page.locator('[data-preview="'+tab+'"]').click()
     check(prefix+'preview '+tab,page.locator('#preview-panel').get_attribute('aria-labelledby')=='preview-tab-'+tab)

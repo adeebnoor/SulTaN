@@ -4,11 +4,11 @@
 root.SultanLocales=root.SultanLocales||{};
 Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
   smEyebrow:'SULTAN DECISION ACCOUNTABILITY METHOD',
-  smTitle:'A strategy is not decision-ready until its logic, authority, uncertainty and release conditions are visible.',
-  smLead:'SULTAN treats strategy as an auditable decision system rather than a document. Five constructs make the decision inspectable; five advisory rules challenge internal coherence without silently changing approval status.',
+  smTitle:'Five questions for a clearer decision.',
+  smLead:'Start with the simple explanation. Open each SULTAN term for its meaning and a practical example.',
   smChain:'The decision chain',
   smMandate:'Mandate',smChoice:'Choice',smEvidence:'Evidence',smAuthority:'Authority',smInitiative:'Initiative',smFunding:'Funding gate',smOutcome:'Outcome',
-  smConstructs:'Five SULTAN constructs',
+  smConstructs:'A visual guide to the ideas',
   smC1:'Auditable Choice',smC1D:'A preferred option must expose the reason, trade-off and supporting evidence — not only a score.',
   smC2:'Authority Space',smC2D:'Ownership clarity, status clarity and decision clearance are separate dimensions. A named owner does not prove executable authority.',
   smC3:'Decision Break-even',smC3D:'Show the criterion weight at which the preferred option changes, so decision robustness is visible rather than implied.',
@@ -26,11 +26,11 @@ Object.assign(root.SultanLocales.en=root.SultanLocales.en||{}, {
 });
 Object.assign(root.SultanLocales.ar=root.SultanLocales.ar||{}, {
   smEyebrow:'منهج سلطان لمساءلة القرار الاستراتيجي',
-  smTitle:'لا تصبح الاستراتيجية جاهزة للقرار حتى يظهر منطقها وصلاحيتها ومجهولاتها وشروط إطلاق الموارد.',
-  smLead:'يتعامل سلطان مع الاستراتيجية كنظام قرار قابل للفحص، لا كوثيقة. خمسة مفاهيم تجعل القرار قابلًا للتدقيق، وخمس قواعد استشارية تختبر الاتساق الداخلي دون أن تغيّر حالة الاعتماد خفيةً.',
+  smTitle:'خمس أسئلة تجعل قرارك أوضح.',
+  smLead:'ابدأ بالشرح المبسط، وافتح مصطلح سلطان لتعرف معناه ومثالًا عمليًا عليه.',
   smChain:'سلسلة القرار',
   smMandate:'التكليف',smChoice:'الاختيار',smEvidence:'الدليل',smAuthority:'الصلاحية',smInitiative:'المبادرة',smFunding:'شرط التمويل',smOutcome:'النتيجة',
-  smConstructs:'المفاهيم الخمسة في سلطان',
+  smConstructs:'قاموس بصري للأفكار',
   smC1:'الاختيار القابل للفحص',smC1D:'الخيار المفضل يكشف السبب والمفاضلة والدليل الداعم — لا الدرجة النهائية فقط.',
   smC2:'مساحة الصلاحية',smC2D:'وضوح الملكية ووضوح الحالة وخلوص القرار أبعاد منفصلة. وجود مالك مسمّى لا يثبت وحده أن التنفيذ ممكن.',
   smC3:'نقطة تعادل القرار',smC3D:'يُظهر وزن المعيار الذي عنده يتغير الخيار المفضل، فتظهر متانة القرار بدل أن تبقى مفترضة.',

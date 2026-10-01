@@ -28,7 +28,7 @@ try:
    page.evaluate('scrollTo(0,0)');dcontrast=page.evaluate(contrast_js);dratio=page.evaluate('document.documentElement.scrollHeight/innerHeight')
    check(pre+'desktop <= 5.5 screens',dratio<=5.5);check(pre+'desktop above-fold contrast >= 4.5',dcontrast and min(x['ratio'] for x in dcontrast)>=4.5)
    page.set_viewport_size({'width':390,'height':844});page.evaluate('scrollTo(0,0)');page.wait_for_timeout(80);mcontrast=page.evaluate(contrast_js);mratio=page.evaluate('document.documentElement.scrollHeight/innerHeight')
-   check(pre+'mobile <= 9 screens',mratio<=9.0);check(pre+'mobile above-fold contrast >= 4.5',mcontrast and min(x['ratio'] for x in mcontrast)>=4.5);check(pre+'mobile two-number summary before CTA',page.locator('.rev3-mobile-metrics:visible').count()==1)
+   check(pre+'mobile <= 9 screens',mratio<=9.0);check(pre+'mobile above-fold contrast >= 4.5',mcontrast and min(x['ratio'] for x in mcontrast)>=4.5);check(pre+'mobile first-use form replaces unexplained metrics',page.locator('#fm-brief:visible').count()==1 and page.locator('.rev3-mobile-metrics').count()==0)
    measurements[lang]={'desktopScreens':dratio,'mobileScreens':mratio,'desktopMinContrast':min(x['ratio'] for x in dcontrast),'mobileMinContrast':min(x['ratio'] for x in mcontrast)}
    page.screenshot(path=str(QA/f'rev3-home-{lang}.png'),full_page=True);page.close()
   browser.close()

@@ -54,11 +54,13 @@ function enhanceHome(){
  if(!document.body.classList.contains('is-home'))return;
  const home=document.querySelector('.public-entrance');if(!home||home.dataset.valueEnhanced==='1')return;home.dataset.valueEnhanced='1';
  const s=snapshot(),hero=document.querySelector('.launch-hero');
+ if(!hero?.hasAttribute('data-first-minute')){
  const over=hero?.querySelector('.hero-overline');if(over)over.innerHTML=`<span class="status-light"></span>${esc(T('hvKicker'))}`;
  const h1=hero?.querySelector('.hero-copy h1');if(h1)h1.textContent=T('hvTitle');
  const lead=hero?.querySelector('.hero-copy>p');if(lead)lead.textContent=T('hvLead');
  const actions=hero?.querySelector('.hero-actions');if(actions&&!hero.querySelector('.hv-questions'))actions.insertAdjacentHTML('beforebegin',`<div class="hv-questions">${['hvQ1','hvQ2','hvQ3','hvQ4'].map((k,i)=>`<span><b>${i+1}</b>${esc(T(k))}</span>`).join('')}</div>`);
  const preview=hero?.querySelector('.product-preview');if(preview&&!preview.querySelector('.hv-snapshot'))preview.insertAdjacentHTML('afterbegin',heroSnapshot(s));
+ }
  const proof=document.querySelector('.proof-strip');if(proof){proof.classList.add('hv-proof-strip');proof.innerHTML=[['hvP1','hvP1Help'],['hvP2','hvP2Help'],['hvP3','hvP3Help'],['hvP4','hvP4Help']].map(([a,b],i)=>`<div><span class="proof-num">0${i+1}</span><div><h2>${esc(T(a))}</h2><p>${esc(T(b))}</p></div></div>`).join('');}
  if(proof&&!document.getElementById('value-difference'))proof.insertAdjacentHTML('afterend',pillars(s)+contrast());
 }

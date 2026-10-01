@@ -79,6 +79,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
                 check(prefix + 'computed hero carries the single brand mark', brand['heroMark'] != 'none' and 'data:image' in brand['heroMark'])
                 expect(page.locator('.export-menu')).to_be_attached()
                 expect(page.locator('[data-action="report"]')).to_be_disabled()
+                page.locator('.fm-full-example > summary').click()
                 page.locator('[data-action="demo"]').first.click()
                 demo = page.evaluate('SultanApp.getProject()')
                 check(prefix + 'demo is fictional and includes all strategic choice types', demo['isDemo'] and len(demo['options']) >= 5 and set(o['type'] for o in demo['options']) == {'requirement','differentiation','moonshot','divest'})

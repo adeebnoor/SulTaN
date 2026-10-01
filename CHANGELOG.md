@@ -1,3 +1,11 @@
+## 0.10.1-beta — First-minute decision preview
+
+- Three lines on the homepage produce a local decision preview with a proposed first step, measure and unresolved conditions. The preview does not write project data or call an AI provider.
+- One primary hero action and one quick-example action. Full examples and guided entry move into an expandable workspace section.
+- Plain-language headline and visual glossary; formal terms remain available on demand.
+- Explicit continuation opens linked execution cards. Existing projects keep their institution and records when a goal is added.
+- Live verification includes the strategy studio and first-minute journey in Arabic and English. Conversion uplift and a 90-second user-completion target are not claimed as measured outcomes.
+
 ## 0.10.0-beta — Strategy design studio
 
 - Added a bilingual sector-neutral journey from diagnosis to opportunity, delivery route, operating model and initiative handover.

@@ -103,7 +103,8 @@ try:
                 measurements['deepLink-' + lang] = page.evaluate('({hash:location.hash, initial:SultanVision.initialAnchor, focus:document.activeElement?.outerHTML})')
                 check(prefix + 'direct public deep link survives reload', page.evaluate('location.hash==="#outputs" && document.querySelector("#outputs").contains(document.activeElement)'))
             # Project creation increments revision; it must still get blank-state guidance.
-            page.locator('.hero-copy [data-action="new"]').click()
+            page.locator('.fm-full-example > summary').click()
+            page.locator('.fm-full-example [data-action="new"]').click()
             page.wait_for_selector('.pristine-note')
             check(prefix + 'blank-project revision does not suppress guidance', page.evaluate('SultanApp.getProject().revision>0 && SultanEvidence.isPristine(SultanApp.getProject())'))
             baseline = page.evaluate('JSON.stringify(Sultan.check(SultanApp.getProject()))')
