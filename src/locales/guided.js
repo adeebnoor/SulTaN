@@ -3,6 +3,8 @@
 'use strict';
 root.SultanLocales=root.SultanLocales||{};
 const en={
+ localSuggest:'Suggest from local library (no key)',
+ localReviewTitle:'Local strategy review — no key required',localReviewLead:'Checks completeness and decision rules locally. This is a rules-based review, not an external model or a factual verification.',localFieldDisclaimer:'Local library suggestion or illustrative field example. Review and adapt it; it is not an established fact about your institution.',
  /* context dossier (engine) */
  ctxInvalid:'The context dossier in this file is not valid.',ctxInvalidKey:'Unexpected context field:',
  ctxIssueUnreviewed:'%{0} context source(s) are proposed and not yet reviewed; accept or reject them.',
@@ -53,7 +55,7 @@ const en={
  gwGatherTitle:'Research with AI',gwGatherLead:'Searches official sources for current regulations, programme targets, indicator values and recent studies, summarises your documents, and lists what only you can answer. Every source is proposed until you accept it.',
  gwGather:'Gather the context with AI',gwGatherAgain:'Gather again',gwAcceptAll:'Accept all proposed',gwGatherWorking:'Researching… this can take one to three minutes.',gwGatherStreaming:'Writing the research memo… %{0} characters',
  gwGatherDone:'%{0} source(s) proposed. Review and accept the ones that apply.',gwOpenSource:'Open source',gwMemo:'Full research memo',gwOpenQuestions:'Questions only the institution can answer',
- gwAiOn:'AI enabled · %{0}',gwAiOff:'AI is not enabled. Open AI settings to enable it, or continue with the library only.',
+ gwAiOn:'AI enabled · %{0}',gwAiOff:'Key-free mode is ready: build from the sector library, use local field suggestions and run local review. External AI is optional.',
  gwStep4Title:'What do we want to achieve?',gwStep4Lead:'Pick one to four directions. For each, SULTAN drafts the choice, its KPI with national references, enablers, initiatives, assumptions and risk. Enter the numbers you know; leave the rest empty.',
  gwGoalsAiHint:'With AI enabled you may leave this empty: the AI proposes the directions from your brief, documents and context. Selections here become instructions it must cover.',
  gwSelectedCount:'%{0} direction(s) selected',gwGoalKpi:'Indicator',gwGoalDrafts:'%{0} references · %{1} enablers · %{2} initiatives drafted',
@@ -64,7 +66,7 @@ const en={
  gwStep5Title:'Generate the first draft',gwStep5Lead:'Review what will be created. Everything generated is marked by its origin so the expert knows what to check first.',
  gwWillCreate:'What will be created',gwDraftNote:'Unknown numbers stay empty: SULTAN never invents a baseline, budget or approval. Preference scores are left for the team in the library draft; the AI draft proposes them with reasons for you to review.',
  gwBuildAi:'AI draft (recommended)',gwBuildAiLead:'Claude reads the brief, your documents and the accepted context, then drafts the full strategy as structured records: choices with reasons and trade-offs, references, KPIs with annual milestones, enablers with authority, initiatives, assumptions and risks.',gwBuildAiBtn:'Generate with AI',
- gwBuildLib:'Library draft (offline)',gwBuildLibLead:'Builds the same structure from the sector templates for the directions you selected. Works without any network connection.',gwBuildLibBtn:'Generate from the library',
+ gwBuildLib:'Library draft (offline)',gwBuildLibLead:'Creates linked choices, indicators, initiatives, enablers and references for your selected directions. No key or network required; unknown numbers remain unknown.',gwBuildLibBtn:'Generate from the library',
  gwNotReady:'Enter the institution name and select at least one direction (or enable AI to let it propose them).',
  gwBuilding:'Building the draft…',gwAiStreaming:'Claude is drafting the strategy… %{0} characters',
  gwBuiltAi:'AI draft created. Records marked ✦ need your review; start with the context sources and the choices.',gwBuiltLib:'Library draft created. Records marked "from the library" need your review and your institution\'s own wording.',
@@ -99,6 +101,8 @@ const en={
  aiReviewDisclaimer:'Blocking findings also appear as warnings in the section lists so they are not lost. The deterministic completeness rules are unchanged.'
 };
 const ar={
+ localSuggest:'اقتراح من المكتبة المحلية (دون مفتاح)',
+ localReviewTitle:'مراجعة الاستراتيجية محليًا — دون مفتاح',localReviewLead:'تفحص الاكتمال وقواعد القرار داخل المتصفح. مراجعة بالقواعد، وليست رأيًا من نموذج خارجي أو تحققًا من صحة الوقائع.',localFieldDisclaimer:'اقتراح من المكتبة المحلية أو مثال توضيحي للحقل. راجعه وكيّفه؛ ليس حقيقة مثبتة عن مؤسستك.',
  ctxInvalid:'ملف السياق في هذا الملف غير صالح.',ctxInvalidKey:'حقل سياق غير متوقع:',
  ctxIssueUnreviewed:'%{0} مصدر/مصادر سياق مقترحة لم تُراجع بعد؛ اعتمدها أو ارفضها.',
  ctxIssueAiReview:'رصدت مراجعة الخبير بالذكاء الاصطناعي:',
@@ -146,7 +150,7 @@ const ar={
  gwGatherTitle:'بحث بالذكاء الاصطناعي',gwGatherLead:'يبحث في المصادر الرسمية عن الأنظمة الحالية ومستهدفات البرامج وقيم المؤشرات والدراسات الحديثة، ويلخص وثائقك، ويحدد ما لا يستطيع الإجابة عنه غيرك. كل مصدر يبقى مقترحًا حتى تعتمده.',
  gwGather:'اجمع السياق بالذكاء الاصطناعي',gwGatherAgain:'اجمع مرة أخرى',gwAcceptAll:'اعتماد كل المقترح',gwGatherWorking:'جارٍ البحث… قد يستغرق من دقيقة إلى ثلاث دقائق.',gwGatherStreaming:'تُكتب مذكرة البحث… %{0} حرفًا',
  gwGatherDone:'اقتُرح %{0} مصدر/مصادر. راجعها واعتمد ما ينطبق.',gwOpenSource:'افتح المصدر',gwMemo:'مذكرة البحث الكاملة',gwOpenQuestions:'أسئلة لا يجيب عنها إلا الجهة نفسها',
- gwAiOn:'الذكاء الاصطناعي مفعّل · %{0}',gwAiOff:'الذكاء الاصطناعي غير مفعّل. افتح إعداداته لتفعيله، أو تابع بالمكتبة فقط.',
+ gwAiOn:'الذكاء الاصطناعي مفعّل · %{0}',gwAiOff:'الوضع دون مفتاح جاهز: أنشئ من مكتبة القطاع، واستخدم اقتراحات الحقول والمراجعة المحلية. التوليد الخارجي اختياري.',
  gwStep4Title:'ماذا نريد أن نحقق؟',gwStep4Lead:'اختر من اتجاه إلى أربعة. لكل اتجاه يصوغ سلطان الاختيار ومؤشره بمرجعياته الوطنية والممكنات والمبادرات والافتراضات والخطر. أدخل الأرقام التي تعرفها واترك الباقي فارغًا.',
  gwGoalsAiHint:'مع تفعيل الذكاء الاصطناعي يمكنك ترك هذه الخطوة فارغة: يقترح الاتجاهات من وصفك ووثائقك وسياقك. ما تختاره هنا يصبح تعليمات يجب أن يغطيها.',
  gwSelectedCount:'%{0} اتجاه/اتجاهات مختارة',gwGoalKpi:'المؤشر',gwGoalDrafts:'%{0} مرجعيات · %{1} ممكنات · %{2} مبادرات تُصاغ',
@@ -157,7 +161,7 @@ const ar={
  gwStep5Title:'أنشئ المسودة الأولى',gwStep5Lead:'راجع ما سيُنشأ. كل ما يُولَّد معلَّم بمصدره ليعرف الخبير ما يراجعه أولًا.',
  gwWillCreate:'ما الذي سيُنشأ',gwDraftNote:'الأرقام المجهولة تبقى فارغة: لا يخترع سلطان خط أساس أو ميزانية أو موافقة. تُترك درجات المفاضلة للفريق في مسودة المكتبة؛ وتقترحها مسودة الذكاء الاصطناعي مع أسبابها لتراجعها.',
  gwBuildAi:'مسودة الذكاء الاصطناعي (موصى بها)',gwBuildAiLead:'يقرأ Claude الوصف ووثائقك والسياق المعتمد، ثم يصوغ الاستراتيجية كاملة كسجلات منظمة: اختيارات بأسبابها ومفاضلاتها، مرجعيات، مؤشرات بمحطات سنوية، ممكنات بصلاحياتها، مبادرات، افتراضات ومخاطر.',gwBuildAiBtn:'أنشئ بالذكاء الاصطناعي',
- gwBuildLib:'مسودة المكتبة (بلا اتصال)',gwBuildLibLead:'يبني البنية نفسها من قوالب القطاع للاتجاهات التي اخترتها. يعمل دون أي اتصال بالشبكة.',gwBuildLibBtn:'أنشئ من المكتبة',
+ gwBuildLib:'مسودة المكتبة (بلا اتصال)',gwBuildLibLead:'ينشئ خيارات ومؤشرات ومبادرات وممكنات ومراجع مترابطة للاتجاهات التي اخترتها. دون مفتاح أو اتصال؛ الأرقام المجهولة تبقى مجهولة.',gwBuildLibBtn:'أنشئ من المكتبة',
  gwNotReady:'أدخل اسم الجهة واختر اتجاهًا واحدًا على الأقل (أو فعّل الذكاء الاصطناعي ليقترحها).',
  gwBuilding:'جارٍ بناء المسودة…',gwAiStreaming:'يصوغ Claude الاستراتيجية… %{0} حرفًا',
  gwBuiltAi:'أُنشئت مسودة الذكاء الاصطناعي. السجلات المعلّمة ✦ تحتاج مراجعتك؛ ابدأ بمصادر السياق ثم الاختيارات.',gwBuiltLib:'أُنشئت مسودة المكتبة. السجلات المعلّمة «من المكتبة» تحتاج مراجعتك وصياغة جهتك الخاصة.',
