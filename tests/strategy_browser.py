@@ -3,9 +3,12 @@ from pathlib import Path
 import functools, http.server, json, os, threading
 from playwright.sync_api import sync_playwright, expect
 BASE=Path(__file__).resolve().parents[1]; QA=BASE/'qa'; QA.mkdir(exist_ok=True)
-server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(BASE/'public')))
-threading.Thread(target=server.serve_forever,daemon=True).start()
-url=f'http://127.0.0.1:{server.server_port}/'; results=[]
+LIVE=os.environ.get('SULTAN_LIVE_URL','');server=None
+if LIVE:url=LIVE
+else:
+ server=http.server.ThreadingHTTPServer(('127.0.0.1',0),functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(BASE/'public')))
+ threading.Thread(target=server.serve_forever,daemon=True).start();url=f'http://127.0.0.1:{server.server_port}/'
+results=[]
 def check(name,ok):
  results.append({'name':name,'pass':bool(ok)})
  if not ok:raise AssertionError(name)
@@ -93,7 +96,8 @@ try:
    check(lang+' no script errors',not errors)
    ctx.close()
   browser.close()
-finally:server.shutdown()
-report={'tests':len(results),'passed':sum(r['pass'] for r in results),'results':results}
+finally:
+ if server:server.shutdown()
+report={'tests':len(results),'passed':sum(r['pass'] for r in results),'results':results,'live':bool(LIVE),'url':url}
 (QA/'strategy-browser-results.json').write_text(json.dumps(report,indent=2,ensure_ascii=False))
 print(f'Strategy studio browser checks: {report["passed"]}/{report["tests"]}')
