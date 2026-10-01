@@ -42,6 +42,9 @@ assert.deepEqual(new Set(edu.goals.map(g=>g.type)),new Set(['requirement','diffe
 assert.equal(L.goalsFor('edu','public').some(g=>g.id==='revenue'),false,'fee-based revenue is not offered to public schools');
 assert.ok(L.goalsFor('edu','private').some(g=>g.id==='revenue'));
 assert.equal(L.detect('مدرسة أهلية في الرياض')?.id,'edu');assert.equal(L.detect('Public university')?.id,'highered');assert.equal(L.detect('مستشفى خاص')?.id,'health');assert.equal(L.detect('جمعية خيرية')?.id,'nonprofit');assert.equal(L.detect('هيئة حكومية')?.id,'gov');assert.equal(L.detect(''),null);
+/* Every goal group the guided path renders must have a label in both languages (a missing key breaks step 4). */
+global.SultanLocales={en:{},ar:{}};require('../src/locales/guided.js');
+for(const s of L.sectors)for(const g of s.goals)for(const lang of ['en','ar'])assert.ok(typeof global.SultanLocales[lang]['gwGroup_'+g.group]==='string',`${s.id}.${g.id}: no ${lang} label for group "${g.group}"`);
 /* The method owner's growth thinking for technology companies is encoded as a sector of its own. */
 const tech=L.sector('tech');assert.ok(tech&&tech.types.length===4&&tech.goals.length>=7,'technology sector present');
 assert.ok(tech.goals.some(g=>g.id==='partner'&&g.type==='moonshot')&&tech.goals.some(g=>g.id==='recurring')&&tech.goals.some(g=>g.id==='fraud-ai')&&tech.goals.some(g=>g.id==='ai-security')&&tech.goals.some(g=>g.id==='verticals')&&tech.goals.some(g=>g.type==='divest'));

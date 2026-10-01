@@ -80,7 +80,7 @@ try:
             page.locator('[data-gw="goals.quality.baseline"]').fill('62'); page.locator('[data-gw="goals.quality.target"]').fill('70'); page.locator('[data-gw="goals.quality.owner"]').fill('Deputy'); page.locator('[data-gw="goals.efficiency.target"]').fill('30')
             check(pre + 'selected count follows the checkboxes', '2' in page.locator('.gw-selected-count').inner_text())
             page.locator('[data-gw-action="next"]').click(); page.wait_for_selector('.gw-build')
-            check(pre + 'last step announces the expert lenses', page.locator('.lens-step-note').count() == 1)
+            page.wait_for_selector('.lens-step-note'); check(pre + 'last step announces the expert lenses', page.locator('.lens-step-note').count() == 1)
             counts = page.locator('.gw-counts-grid strong').all_text_contents()
             check(pre + 'step five previews what will be created', len(counts) >= 6 and int(counts[0]) == 2)
             check(pre + 'AI build disabled without configuration', page.locator('[data-gw-action="build-ai"]').is_disabled())
@@ -92,7 +92,7 @@ try:
             check(pre + 'review banner explains the draft', page.locator('.fx-banner').count() == 1)
             check(pre + 'AI review card present but disabled', page.locator('.ai-review [data-ai-review="run"]').is_disabled())
             # expert lenses: advisory hints grouped by lens, the expert's own patterns, feedback
-            check(pre + 'expert lenses card renders with hints', page.locator('.lens-card').count() == 1 and page.locator('.lens-card .lens-group').count() >= 1)
+            page.wait_for_selector('.lens-card .lens-group'); check(pre + 'expert lenses card renders with hints', page.locator('.lens-card').count() == 1 and page.locator('.lens-card .lens-group').count() >= 1)
             page.locator('.lens-card .lens-add > summary').click(); page.locator('[data-lens-field="title"]').fill('Reciprocity' if lang == 'en' else 'ماذا نقدم للشريك؟'); page.locator('[data-lens-field="question"]').fill('What do we bring to the table?'); page.locator('[data-lens-field="keywords"]').fill('zzqq-absent, reciprocity'); page.locator('[data-lens-save]').click(); page.wait_for_timeout(250)
             check(pre + 'own pattern learned and applied', page.evaluate('SultanLens.mem().custom.length') == 1 and page.evaluate('SultanLens.hints(SultanApp.getProject()).some(h=>h.lens.startsWith("my-"))') and page.locator('.lens-card .lens-group[data-lens-group^="my-"]').count() == 1)
             page.locator('.lens-card [data-lens-fb="useful"]').first.click(); page.wait_for_timeout(200)
