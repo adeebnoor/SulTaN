@@ -19,7 +19,7 @@ function jsonResponse(status,obj){return {ok:status<400,status,json:async()=>obj
 let next=()=>jsonResponse(200,{id:'m',model:'claude-opus-5-5',content:[{type:'text',text:'OK'}],stop_reason:'end_turn',usage:{input_tokens:3,output_tokens:1}});
 AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)});return next();});
 (async()=>{
- assert.equal(AI.configured(),false);
+ assert.equal(AI.configured(),false);AI.saveSettings({model:'claude-opus-5-5',extractModel:'claude-sonnet-5-5'});
  await assert.rejects(()=>AI.call({model:'claude-opus-5-5',max_tokens:10,messages:[]}),e=>e.code==='consent','nothing is sent before consent');
  assert.equal(calls.length,0);
  AI.saveSettings({consent:true,transport:'direct'});assert.equal(AI.configured(),false,'direct needs a key');
