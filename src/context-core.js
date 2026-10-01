@@ -9,7 +9,7 @@
 const isNode=typeof module!=='undefined'&&module.exports;
 const E=root.Sultan;
 if(!E)return;
-const T=k=>{try{return root.SultanI18n.t(k);}catch{return k;}};
+const T=(k,v)=>{try{return root.SultanI18n.t(k,v);}catch{return k;}};
 const num=x=>typeof x==='number'&&Number.isFinite(x);
 const text=x=>typeof x==='string'&&x.trim().length>0;
 const clone=x=>JSON.parse(JSON.stringify(x));
@@ -34,9 +34,31 @@ function document(x={}){
   pages:Number.isInteger(x.pages)&&x.pages>0?x.pages:null,summary:str(x.summary),addedAt:str(x.addedAt,40)};
 }
 function review(x={}){
- return {at:str(x.at,40),model:str(x.model,120),summary:str(x.summary),
+ return {at:str(x.at,40),model:str(x.model,120),summary:str(x.summary),basis:str(x.basis,100),
   items:(Array.isArray(x.items)?x.items:[]).slice(0,LIMITS.items).map(i=>({section:SECTIONS.includes(i?.section)?i.section:'review',severity:SEVERITY.includes(i?.severity)?i.severity:'hint',message:str(i?.message,4000),fix:str(i?.fix,4000),lens:str(i?.lens,120)}))};
 }
+/* Content stamp for review freshness, not an authentication or approval signature. */
+function reviewBasis(p){
+ const q=clone(p);for(const k of ['revision','reviewedRevision','documentNumber','updatedAt','createdAt','log'])delete q[k];
+ if(q.context){delete q.context.reviews;delete q.context.ai;}
+ const stable=x=>Array.isArray(x)?x.map(stable):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,stable(x[k])])):x;
+ const s=JSON.stringify(stable(q));let a=2166136261,b=5381;
+ for(let i=0;i<s.length;i++){a=Math.imul(a^s.charCodeAt(i),16777619);b=Math.imul(b,33)^s.charCodeAt(i);}
+ return `v1:${s.length}:${(a>>>0).toString(16)}:${(b>>>0).toString(16)}`;
+}
+E.contextReviewBasis=reviewBasis;
+E.contextReviewIsCurrent=(p,r=p?.context?.reviews?.at(-1))=>!!r?.basis&&r.basis===reviewBasis(p);
+/* A narrow, explainable check for study -> capital -> study loops. */
+E.feasibilityFundingConflicts=function(p){
+ const study=/دراسة جدوى|دراسة الجدوى|دراسة.*طلب|feasibility|demand study/i;
+ const capital=/رأسمال|استثمار|capital|investment/i;
+ const out=[];
+ for(const i of E.selectedInitiatives(p))if(study.test(i.title))for(const id of i.enablerIds||[]){
+  const e=p.enablers.find(x=>x.id===id);
+  if(e&&capital.test(e.title)&&study.test(e.route))out.push({initiative:i,enabler:e});
+ }
+ return out;
+};
 function logEntry(x={}){return {at:str(x.at,40),model:str(x.model,120),purpose:str(x.purpose,120),inputTokens:num(x.inputTokens)?Math.round(x.inputTokens):0,outputTokens:num(x.outputTokens)?Math.round(x.outputTokens):0};}
 function normalize(p){
  const c=p.context&&typeof p.context==='object'&&!Array.isArray(p.context)?p.context:{};
@@ -59,7 +81,7 @@ function validateShape(c){
  for(const [k,limit] of [['sources',LIMITS.sources],['documents',LIMITS.documents],['reviews',LIMITS.reviews]])if(c[k]!==undefined&&(!Array.isArray(c[k])||c[k].length>limit))throw Error(T('ctxInvalidKey')+' '+k);
  for(const s of c.sources||[]){if(!s||typeof s!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(s))if(!['id','title','kind','issuer','url','year','summary','relevance','status','origin'].includes(k))throw Error(T('ctxInvalidKey')+' sources.'+k);if(s.kind!==undefined&&!KINDS.includes(s.kind))throw Error(T('ctxInvalidKey')+' kind');if(s.status!==undefined&&!STATUS.includes(s.status))throw Error(T('ctxInvalidKey')+' status');if(s.origin!==undefined&&!ORIGIN.includes(s.origin))throw Error(T('ctxInvalidKey')+' origin');if(s.year!==undefined&&s.year!==null&&!Number.isInteger(s.year))throw Error(T('ctxInvalidKey')+' year');}
  for(const d of c.documents||[]){if(!d||typeof d!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(d))if(!['id','name','kind','size','pages','summary','addedAt'].includes(k))throw Error(T('ctxInvalidKey')+' documents.'+k);}
- for(const r of c.reviews||[]){if(!r||typeof r!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(r))if(!['at','model','summary','items'].includes(k))throw Error(T('ctxInvalidKey')+' reviews.'+k);if(r.items!==undefined&&!Array.isArray(r.items))throw Error(T('ctxInvalidKey')+' items');}
+ for(const r of c.reviews||[]){if(!r||typeof r!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(r))if(!['at','model','summary','items','basis'].includes(k))throw Error(T('ctxInvalidKey')+' reviews.'+k);if(r.basis!==undefined&&(typeof r.basis!=='string'||r.basis.length>100))throw Error(T('ctxInvalidKey')+' basis');if(r.items!==undefined&&!Array.isArray(r.items))throw Error(T('ctxInvalidKey')+' items');}
  if(c.ai!==undefined){if(!c.ai||typeof c.ai!=='object'||Array.isArray(c.ai))throw Error(T('ctxInvalidKey')+' ai');for(const k of Object.keys(c.ai))if(!['enabled','consentAt','log'].includes(k))throw Error(T('ctxInvalidKey')+' ai.'+k);if(c.ai.log!==undefined&&!Array.isArray(c.ai.log))throw Error(T('ctxInvalidKey')+' ai.log');}
 }
 const baseBlank=E.blank,baseValidate=E.validateImport,baseCheck=E.check,baseDemo=E.demo,baseSync=E.syncYears;
@@ -81,14 +103,17 @@ E.syncYears=function(p){const r=baseSync(p);return normalize(r||p);};
  try{E.validateImport(JSON.parse(r.raw));r.pending=false;r.error='';}catch{}
 })();
 E.check=function(p){
- const out=baseCheck(p);
+ const deferred=new Set(p.options.filter(o=>['defer','reject'].includes(o.decision)).map(o=>o.id));
+ const inactive=new Set([...p.initiatives,...p.enablers].filter(x=>deferred.has(x.optionId)).map(x=>x.id));
+ const out=baseCheck(p).filter(x=>!(x.level==='warning'&&inactive.has(x.entity)));
+ for(const x of E.feasibilityFundingConflicts(p))out.push({section:'roadmap',level:'blocking',message:T('ctxFeasibilityCycle')+x.initiative.title,entity:x.initiative.id});
  const c=p?.context;if(!c)return out;
  const proposed=c.sources.filter(s=>s.status==='proposed').length;
- if(proposed)out.push({section:'references',level:'missing',message:T('ctxIssueUnreviewed').replace('%{0}',String(proposed)),entity:'context'});
+ if(proposed)out.push({section:'references',level:'missing',message:T('ctxIssueUnreviewed',[proposed]),entity:'context'});
  const last=c.reviews.at(-1);
  /* Only a model review adds findings here. A key-free local review is a snapshot of these same rules, so
     re-surfacing it would duplicate every blocking issue, label it as AI, and keep it after the issue is fixed. */
- if(last&&last.model!=='local-rules')for(const item of last.items.filter(i=>i.severity==='blocking').slice(0,12))out.push({section:SECTIONS.includes(item.section)&&item.section!=='context'?item.section:'review',level:'warning',message:T('ctxIssueAiReview')+' '+item.message,entity:'ai-review'});
+ if(last&&last.model!=='local-rules'&&E.contextReviewIsCurrent(p,last))for(const item of last.items.filter(i=>i.severity==='blocking').slice(0,12))out.push({section:SECTIONS.includes(item.section)&&item.section!=='context'?item.section:'review',level:'warning',message:T('ctxIssueAiReview')+' '+item.message,entity:'ai-review'});
  return out;
 };
 E.demo=function(){
@@ -107,7 +132,7 @@ E.contextSummary=function(p){const c=p?.context||defaults();return {sources:c.so
 function ensure(p){const c=p.context;if(!c||typeof c!=='object'||!Array.isArray(c.sources)||!Array.isArray(c.documents)||!Array.isArray(c.reviews)||!c.ai||!Array.isArray(c.ai.log))normalize(p);return p;}
 E.addContextSource=function(p,x){ensure(p);const s=source(x);const dup=p.context.sources.find(o=>o.title.trim().toLowerCase()===s.title.trim().toLowerCase());if(dup)return dup;p.context.sources.push(s);return s;};
 E.recordAiUse=function(p,entry){ensure(p);p.context.ai.log.push(logEntry({at:new Date().toISOString(),...entry}));p.context.ai.log=p.context.ai.log.slice(-LIMITS.log);return p;};
-E.addContextReview=function(p,r){ensure(p);p.context.reviews.push(review({at:new Date().toISOString(),...r}));p.context.reviews=p.context.reviews.slice(-LIMITS.reviews);return p;};
+E.addContextReview=function(p,r){ensure(p);p.context.reviews.push(review({at:new Date().toISOString(),...r,basis:reviewBasis(p)}));p.context.reviews=p.context.reviews.slice(-LIMITS.reviews);return p;};
 /* Report fragment: accepted sources, documents, AI disclosure. Plain strings; the caller escapes nothing else. */
 E.contextReportHtml=function(p){
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -117,11 +142,11 @@ E.contextReportHtml=function(p){
  let h='';
  if(text(c.brief))h+=`<p><b>${esc(T('ctxBriefLabel'))}:</b> ${esc(c.brief)}</p>`;
  h+=accepted.length?`<div class="tablewrap"><table><thead><tr><th>${esc(T('ctxColSource'))}</th><th>${esc(T('ctxColKind'))}</th><th>${esc(T('ctxColIssuer'))}</th><th>${esc(T('ctxColYear'))}</th><th>${esc(T('ctxColRelevance'))}</th></tr></thead><tbody>${accepted.map(s=>`<tr><td>${esc(s.title)}${text(s.url)?`<br><small>${esc(s.url)}</small>`:''}</td><td>${esc(kinds[s.kind]||s.kind)}</td><td>${esc(s.issuer||'—')}</td><td>${s.year??'—'}</td><td>${esc(s.relevance||s.summary||'—')}</td></tr>`).join('')}</tbody></table></div>`:`<p>${esc(T('ctxNoneAccepted'))}</p>`;
- if(proposed.length)h+=`<p class="hint">${esc(T('ctxIssueUnreviewed').replace('%{0}',String(proposed.length)))}</p>`;
+ if(proposed.length)h+=`<p class="hint">${esc(T('ctxIssueUnreviewed',[proposed.length]))}</p>`;
  if(c.documents.length)h+=`<p><b>${esc(T('ctxDocumentsLabel'))}:</b> ${c.documents.map(d=>esc(d.name)+(d.pages?` (${d.pages} ${esc(T('ctxPages'))})`:'')).join(T('s507'))}</p>`;
  const last=c.reviews.at(-1);
- if(last)h+=`<h3>${esc(T('ctxReviewHeading'))}</h3><p>${esc(last.summary)}</p>${last.items.length?`<ul>${last.items.map(i=>`<li><b>${esc(T('ctxSeverity_'+i.severity))}</b> · ${esc(i.message)}</li>`).join('')}</ul>`:''}`;
- h+=`<p class="hint">${esc(c.ai.log.length?T('ctxAiDisclosure').replace('%{0}',String(c.ai.log.length)):T('ctxNoAiDisclosure'))}</p>`;
+ if(last)h+=E.contextReviewIsCurrent(p,last)?`<h3>${esc(T('ctxReviewHeading'))}</h3><p>${esc(last.summary)}</p>${last.items.length?`<ul>${last.items.map(i=>`<li><b>${esc(T('ctxSeverity_'+i.severity))}</b> · ${esc(i.message)}</li>`).join('')}</ul>`:''}`:`<h3>${esc(T('ctxReviewHeading'))}</h3><p class="hint">${esc(T('ctxReviewStale'))}</p>`;
+ h+=`<p class="hint">${esc(c.ai.log.length?T('ctxAiDisclosure',[c.ai.log.length]):T('ctxNoAiDisclosure'))}</p>`;
  return h;
 };
 E.contextKinds=KINDS;E.contextStatus=STATUS;E.contextOrigins=ORIGIN;E.normalizeContext=normalize;

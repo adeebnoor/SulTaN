@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..');
 const ui=fs.readFileSync(path.join(root,'src/final-ui.js'),'utf8');
 const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const build=fs.readFileSync(path.join(root,'build.py'),'utf8');
-assert.ok(build.includes("VERSION = '0.9.0-beta'"),'release version must come from build.py');
+assert.ok(build.includes("VERSION = '0.9.1-beta'"),'release version must come from build.py');
 assert.ok(fs.existsSync(path.join(root,'src/locales/final.js')),'final locale must live under src/locales');
 assert.ok(!fs.existsSync(path.join(root,'src/final-locales.js')),'legacy out-of-tree locale must be removed');
 assert.ok(index.includes('src/locales/final.js'),'browser must load tested final locale');

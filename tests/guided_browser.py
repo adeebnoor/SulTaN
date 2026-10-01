@@ -41,7 +41,16 @@ FAKE_FETCH = """
     const fmt=body.output_config&&body.output_config.format,schema=fmt?JSON.stringify(fmt.schema||{}):'';
     const review={summary:'Review summary',strengths:['Clear single choice'],items:[{section:'choices',severity:'warning',message:'Target needs a data source',fix:'Name the system that reports the KPI',lens:'partner-route'}]};
     const context={sources:[{title:'Gathered regulation',kind:'regulation',issuer:'Ministry',url:'https://example.gov.sa/reg',year:2024,summary:'s',relevance:'r'}],documents:[],openQuestions:['Fee policy?'],summary:'Context gathered'};
-    const text=!fmt?'OK':schema.includes('"severity"')?JSON.stringify(review):schema.includes('"documents"')&&!schema.includes('"transitions"')?JSON.stringify(context):JSON.stringify(draft);
+    // Bind fake output to the exact source records passed in this request.
+    let generated=structuredClone(draft);
+    if(schema.includes('"transitions"')){const prompt=body.messages[0].content;
+      const opts=[...prompt.matchAll(/^option (\S+) \(sourceOptionId=[^)]+\).*?: (.*?) — outcome:/gm)];
+      const trs=[...prompt.matchAll(/^transition (\S+) \(sourceTransitionId=[^;]+; option ([^)]+)\)/gm)];
+      generated.options=opts.map((m,n)=>({...draft.options[0],key:'a'+n,sourceOptionId:m[1],title:m[2]}));
+      generated.transitions=opts.map((m,n)=>({...draft.transitions[0],key:'t'+n,optionKey:'a'+n,sourceTransitionId:trs.find(t=>t[2]===m[1])?.[1]||''}));
+      generated.enablers[0].optionKey='a0';generated.initiatives[0].optionKey='a0';generated.initiatives[0].transitionKey='t0';
+    }
+    const text=!fmt?'OK':schema.includes('"severity"')?JSON.stringify(review):schema.includes('"documents"')&&!schema.includes('"transitions"')?JSON.stringify(context):JSON.stringify(generated);
     if(body.stream)return new Response(sse(text),{status:200,headers:{'content-type':'text/event-stream'}});
     return new Response(JSON.stringify({id:'m',model:body.model,content:[{type:'text',text}],stop_reason:'end_turn',usage:{input_tokens:1,output_tokens:1}}),{status:200,headers:{'content-type':'application/json'}});});
 }
@@ -142,8 +151,8 @@ try:
             page.locator('[data-gw-action="go"][data-step="5"]').click(); page.wait_for_selector('[data-gw-action="build-ai"]')
             page.locator('[data-gw-action="build-ai"]').click(); page.wait_for_selector('.final-dashboard'); page.wait_for_timeout(400)
             p = page.evaluate('SultanApp.getProject()'); calls = page.evaluate('window.__aiCalls')
-            check(pre + 'AI draft replaces strategic records and keeps identity', len(p['options']) == 1 and p['options'][0]['title'] == 'AI drafted choice' and p['options'][0]['id'].startswith('ai-') and p['institution']['name'] == name)
-            check(pre + 'AI output normalised: pending authority kept, scores present', p['enablers'][0]['status'] == 'pending' and p['options'][0]['scores']['benefit']['value'] == 80 and p['transitions'][0]['annual'][-1]['target'] == 30)
+            check(pre + 'AI draft replaces strategic records and keeps identity', len(p['options']) == 2 and p['transitions'][0]['baseline'] == 62 and p['options'][0]['id'].startswith('ai-') and p['institution']['name'] == name)
+            check(pre + 'AI output normalised: pending authority kept, scores present', p['enablers'][0]['status'] == 'pending' and p['options'][0]['scores']['benefit']['value'] == 80 and p['transitions'][0]['annual'][-1]['target'] == 70)
             check(pre + 'AI sources proposed for review and usage logged', any(s['title'] == 'AI found study' and s['status'] == 'proposed' for s in p['context']['sources']) and len(p['context']['ai']['log']) >= 1)
             check(pre + 'direct transport used the documented headers', calls and calls[-1]['url'] == 'https://api.anthropic.com/v1/messages' and calls[-1]['headers']['anthropic-dangerous-direct-browser-access'] == 'true' and calls[-1]['body']['output_config']['format']['type'] == 'json_schema')
             check(pre + 'review banner reports AI records', page.locator('.fx-banner').count() == 1 and page.locator('.fx-origin.ai').count() == 0 or True)

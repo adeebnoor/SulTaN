@@ -1,3 +1,15 @@
+# 0.9.1-beta — Consulting audit fixes
+
+- Keep AI costs unknown unless a linked initiative/year already has an entered cost; preserve KPI meanings, readings and sources through regeneration. Reject replacement drafts that lose existing choices or entered measurements/budgets.
+- Mark generated factual descriptions as unverified proposals; leave reference applicability unchecked and deduplicate mandates.
+- Stamp reviews to their input content and exclude stale findings from current checks/reports. Preserve unresolved issues in leadership exports.
+- Scope partnership lenses to expansion/partnership choices and recognize people initiatives independently of the enabler category.
+- Detect feasibility/capital approval loops and remove that circular edge from generated drafts, with an explicit note to specify a separate study budget.
+- Disclose unestimated costs beside the known funding gap; clarify completion and blocking labels.
+- Commit dirty numeric fields on focusout and add AR/EN browser regression coverage for readings, stale reviews and exports.
+
+Existing project data is preserved. Earlier AI drafts still need factual and cost review. Sector expert validation, school-template matching and field pilots remain open.
+
 ## 0.9.0-beta — Guided, context-aware, AI-assisted
 
 Response to the external expert review (40+ years in strategy consulting): "an expert's tool, not a user's tool" — too many fields, no *why*, nothing inferred for the user, no sector library.

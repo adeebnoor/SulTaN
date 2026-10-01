@@ -24,6 +24,13 @@ function restoreRecovery(){let item;try{item=JSON.parse(localStorage.getItem(REC
 /* Stop the legacy per-keystroke mutation. The normal change event still commits exactly once. */
 document.addEventListener('input',function(e){const el=e.target;if(!el.dataset.path||el.dataset.path==='__period')return;clearFieldError(el);scheduleRecovery(el);const status=document.getElementById('saveStatus');if(status)status.textContent=T('s243');e.stopImmediatePropagation();},true);
 document.addEventListener('change',function(e){if(e.target.dataset.path){clearRecovery();setTimeout(afterRender,0);}});
+/* Some number-input interactions commit only on focusout. Flush that field before
+   another input can replace the recovery buffer; avoid a second commit after change. */
+document.addEventListener('focusout',function(e){
+ const el=e.target;if(!el?.dataset?.path||el.dataset.path==='__period'||!window.SultanApp)return;
+ const parsed=inputValue(el);
+ if(parsed.ok&&get(SultanApp.getProject(),el.dataset.path)!==parsed.value)el.dispatchEvent(new Event('change',{bubbles:true}));
+});
 document.addEventListener('toggle',function(e){const d=e.target;if(d?.matches?.('#content details')&&d.dataset.sultanDetailsKey)detailState.set(d.dataset.sultanDetailsKey,d.open);},true);
 window.addEventListener('beforeunload',()=>{if(recoveryTimer)saveRecovery();});
 window.addEventListener('storage',function(e){if(e.key!==KEY||!e.newValue||!window.SultanApp)return;if(hasDirtyActive()){document.activeElement.blur();return;}try{const remote=Sultan.validateImport(JSON.parse(e.newValue)),local=SultanApp.getProject();if(remote.updatedAt===local.updatedAt&&remote.revision===local.revision)return;SultanApp.setProject(remote);notice(T('s244'));}catch{}});

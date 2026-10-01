@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const en={
+ unknownCostSummary:'%{0} selected initiative(s) still have unestimated costs. A zero known gap does not establish affordability.',
  versionLabel:'Version',
  recoveryTitle:'Draft recovery required',
  recoveryMessage:'The saved draft could not be restored. It has not been deleted or overwritten.',
@@ -12,7 +13,7 @@ const en={
  summaryDecisions:'Decisions requiring action',
  summaryExternal:'Outside institutional control',
  summaryNextDue:'Nearest decision year',
- summaryBlocked:'Blocked strategic paths',
+ summaryBlocked:'Paths with an explicit block',
  summaryFundingGap:'Known funding gap',
  documentNumber:'Document no.',
  editRevision:'Internal edit counter',
@@ -120,6 +121,7 @@ const en={
 
 };
 const ar={
+ unknownCostSummary:'%{0} مبادرة مختارة ما زالت تكلفتها غير مقدّرة. غياب فجوة معروفة لا يثبت كفاية التمويل.',
  versionLabel:'الإصدار',
  recoveryTitle:'يلزم قرار بشأن استرجاع المسودة',
  recoveryMessage:'تعذّر استرجاع المسودة المحفوظة. لم تُحذف ولم يُكتب فوقها.',
@@ -130,7 +132,7 @@ const ar={
  summaryDecisions:'قرارات تتطلب حسمًا',
  summaryExternal:'خارج صلاحية الجهة',
  summaryNextDue:'أقرب سنة قرار',
- summaryBlocked:'مسارات استراتيجية محجوبة',
+ summaryBlocked:'مسارات بحالة منع صريح',
  summaryFundingGap:'فجوة التمويل المعروفة',
  documentNumber:'رقم الوثيقة',
  editRevision:'عداد التحرير الداخلي',

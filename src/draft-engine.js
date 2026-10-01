@@ -21,6 +21,8 @@ const safe=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'').slice(0,24)|
 const libId=(sector,goal,kind)=>`lib-${safe(sector)}-${safe(goal)}-${kind}-${rand()}`;
 const aiId=(kind,n)=>`ai-${kind}-${n}-${rand()}`;
 const str=(v,max=24000)=>typeof v==='string'?v.slice(0,max):(v===null||v===undefined?'':String(v).slice(0,max));
+const proposal=v=>text(v)?T('drUnverified')+' '+str(v):'';
+const normalizedTitle=s=>str(s).trim().toLowerCase().replace(/\s+/g,' ');
 const fmt=v=>num(v)?(Math.abs(v)>=1000?Math.round(v).toLocaleString('en-US'):String(Math.round(v*100)/100)):'';
 function fill(tpl,vars){return String(tpl||'').replace(/\{(\w+)\}/g,(_,k)=>vars[k]??'');}
 
@@ -48,7 +50,7 @@ function addProgram(p,sectorId,programId){
 function addReference(p,sectorId,refId){
  const r=Lib.reference(sectorId,refId);if(!r)return null;
  const name=P(r.name);const existing=p.references.find(x=>x.name===name);if(existing)return existing;
- const ref=Object.assign(E.reference(),{id:libId(sectorId,refId,'r'),name,kind:['framework','benchmark','accreditation','internal'].includes(r.kind)?r.kind:'framework',source:`${P(r.issuer)}${r.url?' — '+r.url:''}${r.year?' · '+r.year:''}`,purpose:P(r.summary),context:P(r.relevance),adaptation:r.status==='adapt'?T('drAdaptation'):'',status:r.status==='adapt'?'adapt':'use'});
+ const ref=Object.assign(E.reference(),{id:libId(sectorId,refId,'r'),name,kind:['framework','benchmark','accreditation','internal'].includes(r.kind)?r.kind:'framework',source:`${P(r.issuer)}${r.url?' — '+r.url:''}${r.year?' · '+r.year:''}`,purpose:P(r.summary),context:P(r.relevance),adaptation:r.status==='adapt'?T('drAdaptation'):'',status:'unchecked'});
  p.references.push(ref);
  if(E.addContextSource)E.addContextSource(p,{id:libId(sectorId,refId,'s'),title:name,kind:r.kind==='benchmark'?'benchmark':'regulation',issuer:P(r.issuer),url:r.url||'',year:r.year,summary:P(r.summary),relevance:P(r.relevance),status:'accepted',origin:'library'});
  return ref;
@@ -62,7 +64,7 @@ function addGoal(p,sectorId,goalId,params={}){
  const baseline=num(params.baseline)?params.baseline:null,target=num(params.target)?params.target:null,owner=str(params.owner,200);
  const unit=ind?P(ind.unit):'',kpiName=ind?P(ind.name):'';
  const vars={kpi:kpiName,unit,endYear,baseline:baseline===null?T('drUnknownBaseline'):fmt(baseline),target:target===null?T('drUnknownTarget'):fmt(target)};
- const option=Object.assign(E.option(),{id:libId(sectorId,goalId,'o'),title:P(g.title),type:['requirement','differentiation','moonshot','divest'].includes(g.type)?g.type:'differentiation',outcome:fill(P(g.outcome),vars),whyUs:P(g.whyUs),foothold:g.foothold?P(g.foothold):'',tradeoff:P(g.tradeoff),owner,decision:'select',decisionReason:T('drDecisionReason',[P(sector.name)]),riskSource:P(g.risk),stopEvidence:g.stopEvidence?P(g.stopEvidence):''});
+ const option=Object.assign(E.option(),{id:libId(sectorId,goalId,'o'),title:P(g.title),type:['requirement','differentiation','moonshot','divest'].includes(g.type)?g.type:'differentiation',outcome:fill(P(g.outcome),vars),whyUs:proposal(P(g.whyUs)),foothold:g.foothold?proposal(P(g.foothold)):'',tradeoff:P(g.tradeoff),owner,decision:'select',decisionReason:T('drDecisionReason',[P(sector.name)]),riskSource:P(g.risk),stopEvidence:g.stopEvidence?P(g.stopEvidence):''});
  if(g.type==='divest'&&g.divest)Object.assign(option,{divestStop:P(g.divest.stop),redeployTo:P(g.divest.redeploy),divestEvidence:P(g.divest.evidence),divestImpact:P(g.divest.impact),releasedResources:null});
  option.assumptions=(g.assumptions||[]).map(a=>({id:E.uid('asm'),text:P(a.text),expectedPersistence:'',owner,testDate:'',testEvidence:'',failureImpact:P(a.failureImpact)}));
  p.options.push(option);
@@ -125,15 +127,15 @@ function aiSchema(){
   institution:S({mission:s(),beneficiaries:s(),assets:s(),liabilities:s(),context:s(),culture:s(),vision:s(),notDoing:s()}),
   mandates:arr(S({title:s(),relationship:en(['mandatory','contribution','outside']),source:s(),contribution:s()})),
   weightRationale:s(),
-  options:arr(S({key:s(),title:s(),type:en(['requirement','differentiation','moonshot','divest']),outcome:s(),whyUs:s(),foothold:s(),tradeoff:s(),owner:s(),decision:en(['select','defer','reject','consider']),decisionReason:s(),riskSource:s(),stopEvidence:s(),
+  options:arr(S({key:s(),sourceOptionId:s(),title:s(),type:en(['requirement','differentiation','moonshot','divest']),outcome:s(),whyUs:s(),foothold:s(),tradeoff:s(),owner:s(),decision:en(['select','defer','reject','consider']),decisionReason:s(),riskSource:s(),stopEvidence:s(),
    scores:arr(S({criterion:en(CRITERIA),value:i(),note:s()})),
    assumptions:arr(S({text:s(),expectedPersistence:s(),owner:s(),testEvidence:s(),failureImpact:s()})),
    divest:S({stop:s(),releasedResources:n(),redeployTo:s(),evidence:s(),impact:s()})})),
   references:arr(S({key:s(),name:s(),kind:en(['framework','benchmark','accreditation','internal']),source:s(),purpose:s(),context:s(),adaptation:s(),status:en(['use','adapt','unchecked'])})),
-  transitions:arr(S({key:s(),optionKey:s(),referenceKey:s(),domain:s(),current:s(),currentSource:s(),targetState:s(),kpi:s(),unit:s(),direction:en(['up','down','qualitative']),baseline:n(),target:n(),owner:s(),dataSource:s(),frequency:s(),
+  transitions:arr(S({key:s(),sourceTransitionId:s(),optionKey:s(),referenceKey:s(),domain:s(),current:s(),currentSource:s(),targetState:s(),kpi:s(),unit:s(),direction:en(['up','down','qualitative']),baseline:n(),target:n(),owner:s(),dataSource:s(),frequency:s(),
    annual:arr(S({year:{type:'integer'},milestone:s(),target:n(),evidence:s()}))})),
   enablers:arr(S({key:s(),optionKey:s(),title:s(),kind:en(['legislation','authority','capability','culture','operating']),action:en(['keep','activate','amend','add','remove']),control:en(['internal','external','shared','unknown']),owner:s(),status:en(['ready','pending','blocked','unknown']),dueYear:i(),source:s(),route:s(),fallback:s()})),
-  initiatives:arr(S({key:s(),optionKey:s(),transitionKey:s(),title:s(),kind:en(['learn','build','deliver']),owner:s(),startYear:{type:'integer'},endYear:{type:'integer'},output:s(),acceptance:s(),capacity:s(),enablerKeys:arr(s()),dependsOnKeys:arr(s()),
+  initiatives:arr(S({key:s(),sourceInitiativeId:s(),optionKey:s(),transitionKey:s(),title:s(),kind:en(['learn','build','deliver']),owner:s(),startYear:{type:'integer'},endYear:{type:'integer'},output:s(),acceptance:s(),capacity:s(),enablerKeys:arr(s()),dependsOnKeys:arr(s()),
    budget:arr(S({year:{type:'integer'},amount:n(),releaseEvidence:s()}))})),
   contextSources:arr(S({title:s(),kind:en(['regulation','program','indicator','study','benchmark','internal','other']),issuer:s(),url:s(),year:i(),summary:s(),relevance:s()})),
   openQuestions:arr(s()),
@@ -146,37 +148,45 @@ const cleanNum=(v,min=null,max=null)=>{if(!num(v))return null;let x=v;if(min!==n
 /* Merge an AI strategy JSON into a project. mode 'replace' clears strategic records first (identity and context stay). */
 function fromAI(json,base,opts={}){
  const p=E.validateImport(JSON.parse(JSON.stringify(base||E.blank())));
+ const original=E.clone(p),usedOptions=new Set(),usedTransitions=new Set(),usedInitiatives=new Set();
+ const sourceOptions={};
  const data=json&&typeof json==='object'?json:{};
  if(opts.mode==='replace'){p.options=[];p.references=[];p.transitions=[];p.enablers=[];p.initiatives=[];p.mandates=p.mandates.filter(m=>!String(m.id).startsWith('ai-'));}
  const inst=data.institution||{};
- for(const k of ['mission','beneficiaries','assets','liabilities','context','culture','vision','notDoing'])if(text(inst[k])&&(opts.overwriteIdentity||!text(p.institution[k])))p.institution[k]=str(inst[k]);
+ for(const k of ['mission','beneficiaries','assets','liabilities','context','culture','vision','notDoing'])if(text(inst[k])&&(opts.overwriteIdentity||!text(p.institution[k])))p.institution[k]=proposal(inst[k]);
  if(text(data.weightRationale)&&!text(p.weightRationale))p.weightRationale=str(data.weightRationale);
  let n=0;
- for(const m of data.mandates||[]){if(!text(m?.title))continue;p.mandates.push({id:aiId('m',++n),title:str(m.title,300),relationship:pick(m.relationship,['mandatory','contribution','outside','unknown'],'unknown'),source:str(m.source,2000),contribution:str(m.contribution)});}
+ for(const m of data.mandates||[]){if(!text(m?.title)||p.mandates.some(x=>normalizedTitle(x.title)===normalizedTitle(m.title)))continue;p.mandates.push({id:aiId('m',++n),title:str(m.title,300),relationship:m.relationship==='mandatory'?'unknown':pick(m.relationship,['contribution','outside'],'unknown'),source:proposal(m.source),contribution:str(m.contribution)});}
  const optIds={},refIds={},trIds={},enIds={},inIds={};
- for(const r of data.references||[]){if(!text(r?.name))continue;const ref=Object.assign(E.reference(),{id:aiId('r',++n),name:str(r.name,300),kind:pick(r.kind,['framework','benchmark','accreditation','internal'],'framework'),source:str(r.source,2000),purpose:str(r.purpose),context:str(r.context),adaptation:str(r.adaptation),status:pick(r.status,['use','adapt','unchecked','notApplicable'],'unchecked')});p.references.push(ref);if(text(r.key))refIds[r.key]=ref.id;}
+ for(const r of data.references||[]){if(!text(r?.name))continue;const ref=Object.assign(E.reference(),{id:aiId('r',++n),name:str(r.name,300),kind:pick(r.kind,['framework','benchmark','accreditation','internal'],'framework'),source:str(r.source,2000),purpose:str(r.purpose),context:str(r.context),adaptation:str(r.adaptation),status:'unchecked'});p.references.push(ref);if(text(r.key))refIds[r.key]=ref.id;}
  for(const o of data.options||[]){
   if(!text(o?.title))continue;
-  const option=Object.assign(E.option(),{id:aiId('o',++n),title:str(o.title,300),type:pick(o.type,['requirement','differentiation','moonshot','divest'],'differentiation'),outcome:str(o.outcome),whyUs:str(o.whyUs),foothold:str(o.foothold),tradeoff:str(o.tradeoff),owner:str(o.owner,200),decision:pick(o.decision,['select','defer','reject','consider'],'consider'),decisionReason:str(o.decisionReason),riskSource:str(o.riskSource),riskDate:'',stopEvidence:str(o.stopEvidence)});
-  if(option.type==='requirement')option.decision='select';
-  if(option.type==='divest'&&o.divest&&typeof o.divest==='object')Object.assign(option,{divestStop:str(o.divest.stop),releasedResources:cleanNum(o.divest.releasedResources,0),redeployTo:str(o.divest.redeployTo),divestEvidence:str(o.divest.evidence),divestImpact:str(o.divest.impact)});
+  const source=opts.mode==='replace'&&original.options.find(x=>!usedOptions.has(x.id)&&(o.sourceOptionId?x.id===o.sourceOptionId:normalizedTitle(x.title)===normalizedTitle(o.title)));
+  if(source)usedOptions.add(source.id);
+  const option=Object.assign(E.option(),{id:aiId('o',++n),title:source?source.title:str(o.title,300),type:source?source.type:pick(o.type,['requirement','differentiation','moonshot','divest'],'differentiation'),outcome:proposal(o.outcome),whyUs:proposal(o.whyUs),foothold:proposal(o.foothold),tradeoff:str(o.tradeoff),owner:str(o.owner,200),decision:source?source.decision:'consider',decisionReason:str(o.decisionReason),riskSource:str(o.riskSource),riskDate:'',stopEvidence:str(o.stopEvidence)});
+  if(option.type==='requirement'&&source)option.decision=source.decision;
+  if(option.type==='divest'&&o.divest&&typeof o.divest==='object')Object.assign(option,{divestStop:str(o.divest.stop),releasedResources:source?.type==='divest'?source.releasedResources:null,redeployTo:str(o.divest.redeployTo),divestEvidence:str(o.divest.evidence),divestImpact:str(o.divest.impact)});
   option.scores={};if(option.type!=='requirement'&&opts.scores!==false)for(const s of o.scores||[]){if(!CRITERIA.includes(s?.criterion)||!p.criteria.some(c=>c.id===s.criterion))continue;const v=cleanNum(s.value,0,100);option.scores[s.criterion]={value:v===null?null:Math.round(v),note:str(s.note,4000)};}
   option.assumptions=(o.assumptions||[]).filter(a=>text(a?.text)).slice(0,8).map(a=>({id:E.uid('asm'),text:str(a.text,4000),expectedPersistence:str(a.expectedPersistence,200),owner:str(a.owner,200),testDate:'',testEvidence:str(a.testEvidence,4000),failureImpact:str(a.failureImpact,4000)}));
-  p.options.push(option);if(text(o.key))optIds[o.key]=option.id;
+  p.options.push(option);if(source)sourceOptions[option.id]=source; if(text(o.key))optIds[o.key]=option.id;
  }
  const years=E.years(p);
  for(const t of data.transitions||[]){
   const optionId=optIds[t?.optionKey];if(!optionId)continue;
+  const sourceOption=sourceOptions[optionId];
+  const source=sourceOption&&original.transitions.find(x=>x.optionId===sourceOption.id&&!usedTransitions.has(x.id)&&(t.sourceTransitionId?x.id===t.sourceTransitionId:normalizedTitle(x.kpi)===normalizedTitle(t.kpi)));
+  if(source)usedTransitions.add(source.id);
   const tr=E.transition(p);
-  Object.assign(tr,{id:aiId('t',++n),optionId,referenceId:refIds[t.referenceKey]||'',domain:str(t.domain,300),current:str(t.current),currentSource:str(t.currentSource),targetState:str(t.targetState),kpi:str(t.kpi,300),unit:str(t.unit,60),direction:pick(t.direction,['up','down','qualitative'],'up'),baseline:cleanNum(t.baseline),target:cleanNum(t.target),owner:str(t.owner,200),dataSource:str(t.dataSource),frequency:text(t.frequency)?str(t.frequency,60):T('s012')});
+  Object.assign(tr,{id:aiId('t',++n),optionId,referenceId:refIds[t.referenceKey]||'',domain:str(t.domain,300),current:source?source.current:proposal(t.current),currentSource:source?source.currentSource:'',targetState:source?source.targetState:proposal(t.targetState),kpi:source?source.kpi:str(t.kpi,300),unit:source?source.unit:str(t.unit,60),direction:source?source.direction:pick(t.direction,['up','down','qualitative'],'up'),baseline:source?source.baseline:null,target:source?source.target:null,owner:str(t.owner,200),dataSource:source?source.dataSource:proposal(t.dataSource),frequency:text(t.frequency)?str(t.frequency,60):T('s012')});
   if(tr.direction!=='qualitative'&&num(tr.baseline)&&num(tr.target)&&((tr.direction==='up'&&tr.target<tr.baseline)||(tr.direction==='down'&&tr.target>tr.baseline)))tr.direction=tr.target<tr.baseline?'down':'up';
-  for(const a of t.annual||[]){const row=tr.annual.find(x=>x.year===a?.year);if(!row)continue;row.milestone=str(a.milestone,4000);row.evidence=str(a.evidence,4000);row.target=tr.direction==='qualitative'?null:cleanNum(a.target);}
+  for(const a of t.annual||[]){const row=tr.annual.find(x=>x.year===a?.year);if(!row)continue;row.milestone=str(a.milestone,4000);row.evidence=proposal(a.evidence);row.target=tr.direction==='qualitative'?null:(source?.annual.find(x=>x.year===a.year)?.target??null);}
+  if(source){for(const row of tr.annual){const old=source.annual.find(a=>a.year===row.year);if(old){row.target=old.target;row.actual=old.actual;row.actualSource=old.actualSource;row.observation=old.observation;}}}
   if(tr.direction!=='qualitative'){const last=tr.annual.at(-1);if(last&&num(tr.target)&&!num(last.target))last.target=tr.target;if(tr.annual.some(a=>!num(a.target)))interpolateAnnual(tr,p);}
   p.transitions.push(tr);if(text(t.key))trIds[t.key]=tr.id;
  }
  for(const e of data.enablers||[]){
   const optionId=optIds[e?.optionKey];if(!optionId||!text(e.title))continue;
-  const en=Object.assign(E.enabler(),{id:aiId('e',++n),optionId,title:str(e.title,300),kind:pick(e.kind,['legislation','authority','capability','culture','operating'],'capability'),action:pick(e.action,['keep','activate','amend','add','remove'],'add'),control:pick(e.control,['internal','external','shared','unknown'],'unknown'),owner:str(e.owner,200),status:pick(e.status,['ready','pending','blocked','unknown'],'unknown'),dueYear:Number.isInteger(e.dueYear)?clampYear(e.dueYear,p):null,source:str(e.source),route:str(e.route),fallback:str(e.fallback)});
+  const en=Object.assign(E.enabler(),{id:aiId('e',++n),optionId,title:str(e.title,300),kind:pick(e.kind,['legislation','authority','capability','culture','operating'],'capability'),action:pick(e.action,['keep','activate','amend','add','remove'],'add'),control:pick(e.control,['internal','external','shared','unknown'],'unknown'),owner:str(e.owner,200),status:pick(e.status,['ready','pending','blocked','unknown'],'unknown'),dueYear:Number.isInteger(e.dueYear)?clampYear(e.dueYear,p):null,source:proposal(e.source),route:proposal(e.route),fallback:proposal(e.fallback)});
   if(en.status==='ready'&&opts.trustReadiness!==true)en.status='unknown';
   p.enablers.push(en);if(text(e.key))enIds[e.key]=en.id;
  }
@@ -185,14 +195,21 @@ function fromAI(json,base,opts={}){
   const optionId=optIds[i?.optionKey];if(!optionId||!text(i.title))continue;
   let transitionId=trIds[i.transitionKey]||'';if(transitionId&&p.transitions.find(t=>t.id===transitionId)?.optionId!==optionId)transitionId='';
   if(!transitionId)transitionId=p.transitions.find(t=>t.optionId===optionId)?.id||'';
+  const sourceOption=sourceOptions[optionId];
+  const source=sourceOption&&original.initiatives.find(x=>x.optionId===sourceOption.id&&!usedInitiatives.has(x.id)&&(i.sourceInitiativeId?x.id===i.sourceInitiativeId:normalizedTitle(x.title)===normalizedTitle(i.title)));
+  if(source)usedInitiatives.add(source.id);
   const start=clampYear(i.startYear,p),end=Math.max(start,clampYear(i.endYear,p));
   const init=Object.assign(E.initiative(p),{id:aiId('i',++n),optionId,transitionId,title:str(i.title,300),kind:pick(i.kind,['learn','build','deliver'],'build'),owner:str(i.owner,200),startYear:start,endYear:end,output:str(i.output),acceptance:str(i.acceptance),capacity:str(i.capacity),budgetStatus:'unconfirmed',status:'design',enablerIds:(i.enablerKeys||[]).map(k=>enIds[k]).filter(Boolean)});
-  for(const b of i.budget||[]){const row=init.budget.find(x=>x.year===b?.year);if(!row)continue;row.amount=cleanNum(b.amount,0);row.releaseEvidence=str(b.releaseEvidence,4000);}
+  /* The model cannot allocate an annual cap or invent initiative estimates. */
+  for(const row of init.budget){const known=source?.budget.find(b=>b.year===row.year);row.amount=known?.amount??null;row.releaseEvidence=known?.releaseEvidence||'';}
   p.initiatives.push(init);if(text(i.key))inIds[i.key]=init.id;pendingDeps.push([init,i.dependsOnKeys||[]]);
  }
  for(const [init,keys] of pendingDeps)init.dependsOn=keys.map(k=>inIds[k]).filter(id=>id&&id!==init.id);
+ if(opts.mode==='replace'&&(original.options.some(o=>!usedOptions.has(o.id))||original.transitions.some(t=>!usedTransitions.has(t.id)&&(num(t.baseline)||num(t.target)||t.annual.some(a=>num(a.actual))))||original.initiatives.some(i=>!usedInitiatives.has(i.id)&&i.budget.some(b=>num(b.amount)))))throw Error(T('drMappingLost'));
+ const circular=E.feasibilityFundingConflicts?E.feasibilityFundingConflicts(p):[];
+ for(const {initiative,enabler} of circular)if(origin(initiative.id)==='ai')initiative.enablerIds=initiative.enablerIds.filter(id=>id!==enabler.id);
  if(E.addContextSource)for(const s of data.contextSources||[]){if(!text(s?.title))continue;E.addContextSource(p,{id:aiId('s',++n),title:str(s.title,400),kind:pick(s.kind,['regulation','program','indicator','study','benchmark','internal','other'],'other'),issuer:str(s.issuer,300),url:str(s.url,2000),year:Number.isInteger(s.year)?s.year:null,summary:str(s.summary,4000),relevance:str(s.relevance,4000),status:'proposed',origin:'ai'});}
- const notes=[str(data.notes,8000),...(Array.isArray(data.openQuestions)?data.openQuestions.filter(text).slice(0,20).map(q=>'• '+str(q,1000)):[])].filter(text).join('\n');
+ const notes=[T('drBudgetGuard'),circular.length?T('drFeasibilityFix'):'',str(data.notes,8000),...(Array.isArray(data.openQuestions)?data.openQuestions.filter(text).slice(0,20).map(q=>'• '+str(q,1000)):[])].filter(text).join('\n');
  if(text(notes))p.reviewNote=(text(p.reviewNote)?p.reviewNote+'\n\n':'')+T('drAiNotesHeading')+'\n'+notes;
  p.log.push({at:new Date().toISOString(),action:'ai-draft',path:opts.mode||'append',revision:p.revision});
  p.revision++;p.updatedAt=new Date().toISOString();p.reviewedRevision=null;
@@ -211,11 +228,11 @@ function digest(p){
  if(c.documents?.length)lines.push('documents: '+c.documents.map(d=>`${d.name}: ${d.summary||''}`).join(' | '));
  for(const m of p.mandates)lines.push(`mandate: ${m.title} (${m.relationship}) — ${m.source}`);
  lines.push('criteria: '+p.criteria.map(c=>`${c.id}=${c.name} ${c.weight}% [0:${c.low} | 100:${c.high}]${c.polarity==='cost'?' (cost)':''}`).join('; '));
- for(const o of p.options)lines.push(`option ${o.id} [${o.type}/${o.decision}]: ${o.title} — outcome: ${o.outcome} — whyUs: ${o.whyUs} — tradeoff: ${o.tradeoff}`);
+ for(const o of p.options)lines.push(`option ${o.id} (sourceOptionId=${o.id}) [${o.type}/${o.decision}]: ${o.title} — outcome: ${o.outcome} — whyUs: ${o.whyUs} — tradeoff: ${o.tradeoff}`);
  for(const r of p.references)lines.push(`reference ${r.id} [${r.kind}/${r.status}]: ${r.name} — ${r.source}`);
- for(const t of p.transitions)lines.push(`transition ${t.id} (option ${t.optionId}): ${t.domain} — KPI ${t.kpi} ${t.unit} ${t.direction} baseline=${t.baseline??'?'} target=${t.target??'?'} annual=${t.annual.map(a=>a.year+':'+(a.target??'?')).join(',')}`);
+ for(const t of p.transitions)lines.push(`transition ${t.id} (sourceTransitionId=${t.id}; option ${t.optionId}): ${t.domain} — KPI ${t.kpi} ${t.unit} ${t.direction} baseline=${t.baseline??'?'} target=${t.target??'?'} annual=${t.annual.map(a=>a.year+':'+(a.target??'?')).join(',')}`);
  for(const e of p.enablers)lines.push(`enabler ${e.id} (option ${e.optionId}): ${e.title} [${e.kind}/${e.control}/${e.status}] owner=${e.owner} due=${e.dueYear??'?'}`);
- for(const i of p.initiatives)lines.push(`initiative ${i.id} (option ${i.optionId}): ${i.title} [${i.kind}] ${i.startYear}-${i.endYear} owner=${i.owner} budget=${i.budget.map(b=>b.year+':'+(b.amount??'?')).join(',')}`);
+ for(const i of p.initiatives)lines.push(`initiative ${i.id} (sourceInitiativeId=${i.id}; option ${i.optionId}): ${i.title} [${i.kind}] ${i.startYear}-${i.endYear} owner=${i.owner} budget=${i.budget.map(b=>b.year+':'+(b.amount??'?')).join(',')}`);
  lines.push('funding: '+p.funding.map(f=>f.year+':'+(f.available??'?')).join(','));
  lines.push('interface language: '+L);
  return lines.join('\n');
