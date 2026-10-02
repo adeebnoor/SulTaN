@@ -220,7 +220,7 @@ document.addEventListener('click',async e=>{
  if(b.dataset.ai==='forget'){AI.saveApiKey('');AI.saveSettings({consent:false});if(status)status.textContent=T('aiForgotten');el?.querySelector('#aiKey')&&(el.querySelector('#aiKey').value='');el?.querySelector('#aiConsent')&&(el.querySelector('#aiConsent').checked=false);refreshAfterSettings();return;}
  const form=readAIForm(el);
  if(b.dataset.ai==='save'||b.dataset.ai==='test'){AI.saveSettings(form);AI.saveApiKey(el.querySelector('#aiKey').value);if(!form.consent){status.textContent=T('aiNeedConsent');return;}}
- if(b.dataset.ai==='save'){status.textContent=AI.configured()?T('aiSaved'):T('aiSavedIncomplete');refreshAfterSettings();return;}
+ if(b.dataset.ai==='save'){status.textContent=AI.configured()?T('aiSaved'):T('aiSavedIncomplete');if(AI.configured()&&form.transport==='proxy')void AI.warmProxy?.();refreshAfterSettings();return;}
  if(b.dataset.ai==='test'){status.textContent=T('aiTesting');b.disabled=true;try{const r=await AI.ping();status.textContent=r.ok?T('aiTestOk'):T('aiTestOdd');}catch(err){status.textContent=T('aiTestFailed')+' '+(err?.message||err);}finally{b.disabled=false;refreshAfterSettings();}}
 });
 function refreshAfterSettings(){if(section()==='guide'||section()==='review'||section()==='references'||section()==='council')root.SultanApp.navigate(section());}
