@@ -47,10 +47,10 @@ logo=re.search(r'<link rel="apple-touch-icon" href="([^"]+)"',source)[1]
 (public/'icon.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#f7f3ea"/><image x="48" y="48" width="416" height="416" href="'+logo+'"/></svg>')
 (public/'manifest.webmanifest').write_text(json.dumps({'id':'/','name':'SULTAN — Strategy','short_name':'SULTAN','start_url':'/','scope':'/','display':'standalone','background_color':'#f7f3ea','theme_color':'#0b2d63','icons':[{'src':'icon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'}]},ensure_ascii=False))
 (public/'.nojekyll').write_text('')
-files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file())
+files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.'))
 cache='sultan-app-'+sha(''.join(sha((public/p).read_bytes()) for p in files).encode())[:16]
 (public/'sw.js').write_text((base/'src/sw-template.js').read_text().replace('__CACHE__',json.dumps(cache)).replace('__FILES__',json.dumps(files)))
-files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file())
+files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.'))
 source_files=[base/p for p in ['README.md','index.html','share.html','build.py','.gitignore','.nojekyll','CHANGELOG.md','CONTRIBUTING.md','render.yaml']]
 for folder in ['src','tests','.github','docs']:source_files.extend(p for p in (base/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc')
 with zipfile.ZipFile(release/'SULTAN_Strategy_Builder_Source.zip','w',zipfile.ZIP_DEFLATED) as z:
