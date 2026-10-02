@@ -26,6 +26,7 @@ const MODELS=[
 ];
 const DEFAULTS={transport:'proxy',endpoint:DEFAULT_PROXY,model:'gemini-flash-lite-latest',extractModel:'gemini-flash-lite-latest',webSearch:true,effort:'high',consent:false,consentAt:''};
 let fetchImpl=(...a)=>root.fetch(...a);
+let warmPromise=null,warmAt=0;
 let storage={get(k){try{return root.localStorage?.getItem(k);}catch{return null;}},set(k,v){try{root.localStorage?.setItem(k,v);}catch{}},remove(k){try{root.localStorage?.removeItem(k);}catch{}}};
 
 function settings(){let s={};try{s=JSON.parse(storage.get(SETTINGS_KEY)||'{}')||{};}catch{s={};}const out=Object.assign({},DEFAULTS,s);if(!MODELS.some(m=>m.id===out.model))out.model=DEFAULTS.model;if(!['proxy','direct'].includes(out.transport))out.transport='proxy';if(!['low','medium','high','xhigh','max'].includes(out.effort))out.effort='high';out.endpoint=String(out.endpoint||DEFAULT_PROXY).replace(/\/+$/,'');return out;}
@@ -34,6 +35,14 @@ function apiKey(){return storage.get(KEY_KEY)||'';}
 function saveApiKey(k){if(text(k))storage.set(KEY_KEY,k.trim());else storage.remove(KEY_KEY);}
 function configured(){const s=settings();return !!s.consent&&(s.transport==='proxy'?text(s.endpoint):text(apiKey()));}
 function status(){const s=settings();return {consent:s.consent,transport:s.transport,hasKey:text(apiKey()),endpoint:s.endpoint,model:s.model,configured:configured()};}
+async function warmProxy({force=false}={}){
+ const s=settings();
+ if(!s.consent||s.transport!=='proxy'||!text(s.endpoint))return {ok:false,skipped:true};
+ const now=Date.now();if(!force&&warmAt&&now-warmAt<60000)return {ok:true,cached:true};if(!force&&warmPromise)return warmPromise;
+ const controller=typeof AbortController!=='undefined'?new AbortController():null,timer=controller?setTimeout(()=>controller.abort(),20000):null;
+ let task;task=(async()=>{try{const response=await fetchImpl(s.endpoint+'/healthz',{method:'GET',cache:'no-store',signal:controller?.signal});if(response.ok){warmAt=Date.now();return {ok:true,status:response.status};}return {ok:false,status:response.status};}catch{return {ok:false,status:0};}finally{clearTimeout(timer);if(warmPromise===task)warmPromise=null;}})();
+ warmPromise=task;return task;
+}
 
 class AIError extends Error{constructor(code,message,detail){super(message);this.code=code;this.detail=detail;}}
 function endpointFor(s){return s.transport==='direct'?'https://api.anthropic.com/v1/messages':s.endpoint+'/v1/messages';}
@@ -273,7 +282,8 @@ async function ping(){const s=settings();const m=await call({model:s.model,max_t
 /* File helpers for the browser. */
 function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]||'');r.onerror=()=>reject(r.error);r.readAsDataURL(file);});}
 function fileToText(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error);r.readAsText(file);});}
-root.SultanAI={adversarialReview,MODELS,DEFAULT_PROXY,settings,saveSettings,apiKey,saveApiKey,configured,status,call,textOf,parseJson,usageOf,methodSystem,groundingBlock,contextSchema,reviewSchema,lensSchema,researchContext,extractContext,gatherContext,generateStrategy,suggestField,reviewStrategy,extractLenses,ping,fileToBase64,fileToText,AIError,
+root.SultanAI={adversarialReview,MODELS,DEFAULT_PROXY,settings,saveSettings,apiKey,saveApiKey,configured,status,warmProxy,call,textOf,parseJson,usageOf,methodSystem,groundingBlock,contextSchema,reviewSchema,lensSchema,researchContext,extractContext,gatherContext,generateStrategy,suggestField,reviewStrategy,extractLenses,ping,fileToBase64,fileToText,AIError,
  _setFetch(f){fetchImpl=f;},_setStorage(s){storage=s;}};
+if(!isNode){const warm=()=>{const s=status();if(s.configured&&s.transport==='proxy')void warmProxy();};if(typeof root.requestIdleCallback==='function')root.requestIdleCallback(warm,{timeout:2500});else setTimeout(warm,1000);}
 if(isNode)module.exports=root.SultanAI;
 })(typeof globalThis!=='undefined'?globalThis:this);
