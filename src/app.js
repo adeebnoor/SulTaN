@@ -31,7 +31,7 @@ function field(name,path,type='text',help='',options=null){const id='f_'+path.re
  else{const weight=path.includes('.weight'),score=path.includes('.scores.')&&path.endsWith('.value'),money=path.endsWith('.amount')||path.endsWith('.available'),rf=path.endsWith('.rf'),year=/Year$|\.year$/.test(path);input=`<input ${attrs} type="${type}" value="${esc(v)}" ${type==='number'?`step="${year?'1':'any'}" ${weight||score?'min="0" max="100"':money?'min="0"':rf?'min="0.01" max="1"':''}`:''}>`;}
  return `<label class="field" for="${esc(id)}"><span>${esc(name)}</span>${input}<span class="help" id="${esc(id)}_help">${esc(help)}</span><span class="field-error" hidden></span></label>`;}
 const SECTORS=()=>T('sectorList').split('|');
-const UNITS=()=>T('unitList').split('|');
+const UNITS=()=>{const units=T('unitList').split('|');return p.context?.market==='global'?[...units.filter(x=>!/SAR|ريال/.test(x)),...(p.context.currency?[p.context.currency]:[])]:units;};
 const FREQS=()=>T('freqList').split('|');
 const fields=(base,rows)=>`<div class="grid2">${rows.map(([key,name,type='text',help='',opts=null])=>field(name,base?base+'.'+key:key,type,help,opts)).join('')}</div>`;
 const card=(h,body)=>`<article class="card"><h2>${esc(h)}</h2>${body}</article>`;
