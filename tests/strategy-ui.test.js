@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
-for(const f of ['final','guided','field-guide','lens','strategy'])require('../src/locales/'+f+'.js');
+for(const f of ['final','guided','field-guide','lens','strategy','market'])require('../src/locales/'+f+'.js');
 global.SultanI18n=require('../src/i18n.js');global.Sultan=require('../src/import.js');
 for(const f of ['final-core','context-core','sector-library','draft-engine','expert-lens','strategy-core'])require('../src/'+f+'.js');
 const E=Sultan,S=SultanStrategy;let lang='en',p=E.demo();const listeners={};

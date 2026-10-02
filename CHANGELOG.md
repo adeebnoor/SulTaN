@@ -1,3 +1,10 @@
+# 0.12.0-beta
+
+- International planning context, country and currency independent of interface language. General templates add no Saudi regulations or national programmes. Existing records and amounts remain intact.
+- Arabic workspace breadcrumbs and automatic static-only offline preparation with readiness feedback.
+- 1200×630 social card, Open Graph/Twitter metadata, robots meta and sitemap; configurable public origin.
+- Visible initial HTML content, immutable hashed asset headers and deployment configuration for Netlify / Cloudflare Pages.
+
 # 0.11.0-beta — 2026-10-02
 
 - Add signed read-only snapshots and three independent owner reply capabilities, with explicit identity, expiry and confidentiality limits.

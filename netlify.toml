@@ -1,0 +1,9 @@
+[build]
+  command = "python3 build.py"
+  publish = "public"
+
+[build.environment]
+  PYTHON_VERSION = "3.12"
+
+# Set SULTAN_PUBLIC_URL to the site's assigned HTTPS URL (then the owned domain)
+# before the final build. It controls canonical, OG, sitemap and standalone links.

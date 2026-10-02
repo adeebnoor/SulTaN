@@ -1,8 +1,14 @@
 """Build cacheable web assets and a self-contained local edition."""
 from pathlib import Path
-import base64,hashlib,json,re,shutil,zipfile
+import base64,hashlib,json,re,shutil,zipfile,os
+from urllib.parse import urlsplit
 base=Path(__file__).resolve().parent
-VERSION = '0.11.0-beta'
+VERSION = '0.12.0-beta'
+default_origin='https://sultan-strategy-beta.onrender.com/'
+origin=os.environ.get('SULTAN_PUBLIC_URL',default_origin).rstrip('/')+'/'
+u=urlsplit(origin)
+if u.scheme!='https' or not u.netloc or u.query or u.fragment or u.username or u.password:raise ValueError('SULTAN_PUBLIC_URL must be a public HTTPS base URL')
+control_files={'_headers','_redirects'}
 (base/'src/version.js').write_text("/* Generated from build.py VERSION during packaging. */\nglobalThis.SULTAN_VERSION="+repr(VERSION)+";\n")
 public=base/'public';release=base/'release'
 if public.exists():shutil.rmtree(public)
@@ -11,14 +17,14 @@ sha=lambda data:hashlib.sha256(data).hexdigest()
 def asset(rel):
  p=base/rel
  if not rel.startswith('src/') or '..' in Path(rel).parts or not p.is_file():raise ValueError(rel)
- return p.read_text()
+ return p.read_text().replace(default_origin,origin)
 def hashed(name,code,suffix):
  data=code.encode();path='assets/'+name+'-'+sha(data)[:12]+suffix;(public/path).write_bytes(data);return path
 vendors={}
 for p in sorted((base/'src/vendor').glob('*.js')):vendors['vendor/'+p.name]=hashed(p.stem,p.read_text(),'.js')
 css_re=r'<link\s+rel="stylesheet"\s+href="(src/[^"]+\.css)">'
 js_re=r'<script\s+src="(src/[^"]+\.js)"></script>'
-source=(base/'index.html').read_text()
+source=(base/'index.html').read_text().replace(default_origin,origin)
 def web(html,name):
  css='\n'.join(asset(p) for p in re.findall(css_re,html));scripts='\n'.join(asset(p) for p in re.findall(js_re,html))
  if name=='app':scripts='globalThis.SULTAN_ASSETS='+json.dumps(vendors,sort_keys=True)+';\n'+scripts
@@ -40,22 +46,24 @@ for key,name in [('zip','jszip-3.10.2.js'),('pptx','pptxgen-4.0.1.js'),('pdf','j
  embedded+=f'<script type="text/plain" id="sultan-library-{key}">'+code+'</script>'
 at=standalone.rfind('</body>');standalone=standalone[:at]+embedded+standalone[at:]
 (release/'SULTAN_Strategy_Builder.html').write_text(standalone)
-origin='https://sultan-strategy-beta.onrender.com/'
+shutil.copyfile(base/'src/assets/social-card.png',public/'social-card.png')
 (public/'robots.txt').write_text('User-agent: *\nAllow: /\nDisallow: /share.html\nSitemap: '+origin+'sitemap.xml\n')
 (public/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>'+origin+'</loc></url></urlset>')
 logo=re.search(r'<link rel="apple-touch-icon" href="([^"]+)"',source)[1]
 (public/'icon.svg').write_text('<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512"><rect width="512" height="512" fill="#f7f3ea"/><image x="48" y="48" width="416" height="416" href="'+logo+'"/></svg>')
-(public/'manifest.webmanifest').write_text(json.dumps({'id':'/','name':'SULTAN — Strategy','short_name':'SULTAN','start_url':'/','scope':'/','display':'standalone','background_color':'#f7f3ea','theme_color':'#0b2d63','icons':[{'src':'icon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'}]},ensure_ascii=False))
+(public/'manifest.webmanifest').write_text(json.dumps({'id':'./','name':'SULTAN — Strategy','short_name':'SULTAN','start_url':'./','scope':'./','display':'standalone','background_color':'#f7f3ea','theme_color':'#0b2d63','icons':[{'src':'icon.svg','sizes':'any','type':'image/svg+xml','purpose':'any'}]},ensure_ascii=False))
 (public/'.nojekyll').write_text('')
-files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.'))
+(public/'_headers').write_text('/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/sw.js\n  Cache-Control: no-cache\n/index.html\n  Cache-Control: no-cache\n/share.html\n  X-Robots-Tag: noindex, nofollow\n')
+files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.') and p.name not in control_files)
+offline_files=[p for p in files if p!='social-card.png']
 cache='sultan-app-'+sha(''.join(sha((public/p).read_bytes()) for p in files).encode())[:16]
-(public/'sw.js').write_text((base/'src/sw-template.js').read_text().replace('__CACHE__',json.dumps(cache)).replace('__FILES__',json.dumps(files)))
-files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.'))
-source_files=[base/p for p in ['README.md','index.html','share.html','build.py','.gitignore','.nojekyll','CHANGELOG.md','CONTRIBUTING.md','render.yaml']]
+(public/'sw.js').write_text((base/'src/sw-template.js').read_text().replace('__CACHE__',json.dumps(cache)).replace('__FILES__',json.dumps(offline_files)))
+files=sorted(str(p.relative_to(public)) for p in public.rglob('*') if p.is_file() and not p.name.startswith('.') and p.name not in control_files)
+source_files=[base/p for p in ['README.md','index.html','share.html','build.py','.gitignore','.nojekyll','CHANGELOG.md','CONTRIBUTING.md','render.yaml','netlify.toml']]
 for folder in ['src','tests','.github','docs']:source_files.extend(p for p in (base/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix!='.pyc')
 with zipfile.ZipFile(release/'SULTAN_Strategy_Builder_Source.zip','w',zipfile.ZIP_DEFLATED) as z:
  for p in source_files:
   if p.exists():z.write(p,p.relative_to(base))
  z.write(release/'SULTAN_Strategy_Builder.html','SULTAN_Strategy_Builder.html')
-(release/'manifest.json').write_text(json.dumps({'version':VERSION,'sha256':sha((public/'index.html').read_bytes()),'assets':[{'path':p,'sha256':sha((public/p).read_bytes()),'bytes':(public/p).stat().st_size} for p in files if p!='index.html'],'sourceFiles':[str(p.relative_to(base)) for p in source_files if p.exists()]},indent=2))
+(release/'manifest.json').write_text(json.dumps({'version':VERSION,'publicUrl':origin,'sha256':sha((public/'index.html').read_bytes()),'assets':[{'path':p,'sha256':sha((public/p).read_bytes()),'bytes':(public/p).stat().st_size} for p in files if p!='index.html'],'sourceFiles':[str(p.relative_to(base)) for p in source_files if p.exists()]},indent=2))
 print('Web HTML:',(public/'index.html').stat().st_size,'bytes; standalone:',(release/'SULTAN_Strategy_Builder.html').stat().st_size,'bytes')

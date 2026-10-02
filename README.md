@@ -8,7 +8,7 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 **Live beta:** https://sultan-strategy-beta.onrender.com
 
-**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.11.0-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
+**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.12.0-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
 If GitHub Pages is enabled for the repository, the same tested artifact can also be published at `https://adeebnoor.github.io/SulTaN/`.
 
@@ -121,3 +121,5 @@ The example deliberately contains unresolved and unmapped choices; it is not a c
 ## Council review and board packs
 
 Version 0.11.0-beta adds signed fixed snapshots, three-owner input, adversarial questions, portable decision checkpoints and one-click board packages. See [workflow, privacy limits and verification](docs/COUNCIL.md). Full committee work is best on desktop; the three-line homepage preview remains mobile-friendly.
+
+Version 0.12.0-beta adds Arabic workspace breadcrumbs, planning context independent of language (Saudi / international), explicit country and currency without amount conversion, automatic offline preparation, a social image, search metadata, and a visible HTML first-paint shell. See [international mode and hosting migration](docs/INTERNATIONAL_HOSTING.md).
