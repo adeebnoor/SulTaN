@@ -62,7 +62,12 @@ try:
                 check(lang+' / no overflow '+str(width),page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
             page.set_viewport_size({'width':1366,'height':900})
             # No manual offline button is used in this test.
-            page.wait_for_function("SultanOffline.state==='ready'",timeout=60000)
+            for _ in range(600):
+                if page.evaluate("globalThis.SultanOffline?.state") == 'ready':
+                    break
+                page.wait_for_timeout(100)
+            else:
+                raise AssertionError('offline worker did not reach ready state')
             check(lang+' / worker controls app automatically',page.evaluate('!!navigator.serviceWorker.controller'))
             ctx.set_offline(True);page.reload();page.wait_for_selector('.sw-header')
             check(lang+' / automatic offline reload keeps context',page.evaluate("SultanApp.getProject().context.currency==='USD'"))
