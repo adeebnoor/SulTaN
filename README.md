@@ -8,7 +8,7 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 **Live beta:** https://sultan-strategy-beta.onrender.com
 
-**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.10.1-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
+**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.11.0-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
 If GitHub Pages is enabled for the repository, the same tested artifact can also be published at `https://adeebnoor.github.io/SulTaN/`.
 
@@ -117,3 +117,7 @@ Beta access is free. No redistribution license is included at this stage; please
 The example deliberately contains unresolved and unmapped choices; it is not a completed strategy template. No initiatives means no cost estimate or budget-confirmation judgment. An explicitly entered zero remains zero. The sole Export menu provides the internal strategy, leadership strategy, escalation pack, reusable project JSON and print/PDF of the internal strategy; section exchange remains a separate control.
 
 `tests/hardening071.test.js` contains model behavior checks. `tests/break-even-analytic.test.js` compares the exact switch-point solver with the retained scan, randomized projects, incomplete alternatives, upper-envelope crossings, and dense numerical search. `tests/hardening_browser.py` invokes `tests/review_regressions.py` for actual DOM, geometry, report, print and user-edit checks in Arabic/English at three viewport widths. `SULTAN_BASE_URL` can run the same browser suite against the public mirror. Reports under `qa/` state whether a run used a local real origin or the live URL.
+
+## Council review and board packs
+
+Version 0.11.0-beta adds signed fixed snapshots, three-owner input, adversarial questions, portable decision checkpoints and one-click board packages. See [workflow, privacy limits and verification](docs/COUNCIL.md). Full committee work is best on desktop; the three-line homepage preview remains mobile-friendly.

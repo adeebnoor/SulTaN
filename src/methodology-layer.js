@@ -19,6 +19,8 @@ function rule(i){return `<article class="sm-rule"><b>${esc(T('smR'+i))}</b><p>${
 function ready(){return `<div class="sm-ready"><div><h3>${esc(T('smReady'))}</h3><p class="sm-ready-note">${esc(T('smNote'))}</p></div><ul class="sm-ready-list">${[1,2,3,4,5].map(i=>`<li>${esc(T('smReady'+i))}</li>`).join('')}</ul></div>`;}
 function markup(){return `<div class="landing-wrap sultan-methodology-inner"><header class="sm-head"><span class="eyebrow">${esc(T('smEyebrow'))}</span><h2>${esc(T('smTitle'))}</h2><p>${esc(T('smLead'))}</p></header>${chain()}<h3 class="sm-section-title">${esc(T('smConstructs'))}</h3><div class="sm-construct-grid">${[1,2,3,4,5].map(construct).join('')}</div><section class="sm-rule-panel"><div><h3>${esc(T('smRules'))}</h3><p>${esc(T('smRulesLead'))}</p></div><div class="sm-rule-grid">${[1,2,3,4,5].map(rule).join('')}</div></section>${ready()}</div>`;}
 function enhance(){
+ // External source scripts may arrive after an earlier render timer.
+ if(!root.SultanLocales[root.SultanI18n.language]?.smR1)return;
  if(!document.body.classList.contains('is-home'))return;
  let host=document.getElementById('methodology');
  if(host&&host.querySelector('.sultan-methodology-inner'))return;
@@ -33,6 +35,6 @@ function enhance(){
  host.insertAdjacentHTML('afterbegin',markup());
 }
 function schedule(){setTimeout(()=>setTimeout(enhance,0),0);}
-document.addEventListener('sultan:render',schedule);schedule();
+document.addEventListener('sultan:render',schedule);document.addEventListener('DOMContentLoaded',schedule);schedule();
 root.SultanMethodology={enhance};
 })(globalThis);

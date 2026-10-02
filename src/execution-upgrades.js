@@ -31,7 +31,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-exec]');if
 
 /* Native browser back/forward should move through SULTAN sections rather than exit the workspace. */
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action="goto"][data-section]');if(!b)return;const target=b.dataset.section;if(target&&target!==currentSection())history.pushState({sultanSection:target},'',location.pathname+location.search+'#'+target);},true);
-window.addEventListener('popstate',()=>{const s=currentSection();if(root.SultanApp&&['home','guide','identity','choices','references','priorities','enablers','roadmap','review','about'].includes(s))root.SultanApp.navigate(s);});
+window.addEventListener('popstate',()=>{const s=currentSection();if(root.SultanApp&&['home','guide','identity','choices','references','priorities','enablers','roadmap','review','about','strategy','council'].includes(s))root.SultanApp.navigate(s);});
 
 function sectionIssues(p,key){return E.check(p).filter(x=>x.section===key).length;}
 function sectionStarted(p,key){
@@ -76,7 +76,7 @@ function renderProgress(){
  }
  renderExportMenu();
  const content=document.getElementById('content');
- if(!content||content.querySelector('.exec-toolbar')||['home','about','guide'].includes(currentSection()))return;
+ if(!content||content.querySelector('.exec-toolbar')||['home','about','guide','council'].includes(currentSection()))return;
  const bar=document.createElement('div');bar.className='exec-toolbar noPrint';
  bar.innerHTML=`<span>${esc(T('executionProgress'))}</span><button type="button" class="btn small" data-exec="section-export">${esc(T('sectionExport'))}</button><button type="button" class="btn small" data-exec="section-import">${esc(T('sectionImport'))}</button>`;
  content.prepend(bar);

@@ -1,0 +1,1 @@
+Pinned local browser dependencies: PptxGenJS 4.0.1, jsPDF 4.2.1 and JSZip 3.10.2. Files are unmodified npm distribution builds, loaded only for board export. Licenses are included alongside each library.

@@ -39,7 +39,7 @@ function review(x={}){
 }
 /* Content stamp for review freshness, not an authentication or approval signature. */
 function reviewBasis(p){
- const q=clone(p);for(const k of ['revision','reviewedRevision','documentNumber','updatedAt','createdAt','log'])delete q[k];
+ const q=clone(p);for(const k of ['revision','reviewedRevision','documentNumber','updatedAt','createdAt','log','council'])delete q[k];
  if(q.context){delete q.context.reviews;delete q.context.ai;}
  const stable=x=>Array.isArray(x)?x.map(stable):x&&typeof x==='object'?Object.fromEntries(Object.keys(x).sort().map(k=>[k,stable(x[k])])):x;
  const s=JSON.stringify(stable(q));let a=2166136261,b=5381;

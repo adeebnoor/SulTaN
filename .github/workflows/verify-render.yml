@@ -23,13 +23,17 @@ jobs:
           python - <<'PY'
           import hashlib,json,time,urllib.request
           from pathlib import Path
-          expected=json.loads(Path('release/manifest.json').read_text())['sha256']
+          manifest=json.loads(Path('release/manifest.json').read_text())
+          expected=manifest['sha256']
           url='https://sultan-strategy-beta.onrender.com/'
           for attempt in range(20):
               try:
                   with urllib.request.urlopen(url,timeout=30) as response:
                       actual=hashlib.sha256(response.read()).hexdigest()
                       assert response.status==200 and actual==expected, 'Public application differs from this revision'
+                  for asset in manifest['assets']:
+                      with urllib.request.urlopen(url+asset['path'],timeout=30) as response:
+                          assert response.status==200 and hashlib.sha256(response.read()).hexdigest()==asset['sha256'], asset['path']
                   print('Verified exact live build SHA-256:',expected,flush=True)
                   break
               except Exception as error:
@@ -50,6 +54,7 @@ jobs:
           python tests/consulting_browser.py
           python tests/strategy_browser.py
           python tests/first_minute_browser.py
+          python tests/council_browser.py
       - name: Preserve live verification evidence
         if: always()
         uses: actions/upload-artifact@v4

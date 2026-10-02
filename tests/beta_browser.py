@@ -24,7 +24,7 @@ try:
    page.on('request',lambda r:req.append(r.url))
    page.on('dialog',lambda d:d.accept())
    if RENDER_ONLY:
-    html=(BASE/'public/index.html').read_text().replace('<html lang="ar" dir="rtl">',f'<html lang="{lang}" dir="'+('rtl' if lang=='ar' else 'ltr')+'">')
+    html=(BASE/'release/SULTAN_Strategy_Builder.html').read_text().replace('<html lang="ar" dir="rtl">',f'<html lang="{lang}" dir="'+('rtl' if lang=='ar' else 'ltr')+'">')
     page.set_content(html)
    else:page.goto(url+'?lang='+lang)
    prefix=lang+' / '
