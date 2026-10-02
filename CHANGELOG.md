@@ -1,3 +1,12 @@
+# 0.13.0-beta — 2026-10-02
+
+- Add a bilingual Strategic Services Hub: **Discover → Decide → Challenge → Execute → Watch**.
+- Add an evidence-gated Strategic Shift Radar covering customer, channel/interface, technology, value-chain, economics and regulation shifts.
+- Add Cost of Inaction cases with consequence of waiting, decision window, action/inaction downside, reversibility, learning value, owner and review date.
+- Add a Strategy Watch plan with named owner, review cadence, trigger register and next review date; background web monitoring is explicitly outside this local beta.
+- Surface existing Build/Partner/Acquire, partnership value, recurring-value, early-mover experiment, evidence, adversarial Council review, execution, benchmark and board-package capabilities as clear services instead of disconnected features.
+- Persist service records through import/export and reports, preserve unknowns without fabricated precision, and add unit plus real-browser AR/EN coverage.
+
 # 0.12.0-beta
 
 - International planning context, country and currency independent of interface language. General templates add no Saudi regulations or national programmes. Existing records and amounts remain intact.

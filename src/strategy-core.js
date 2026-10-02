@@ -11,19 +11,22 @@ const fields={
  opportunity:['segment','buyer','need','demandEvidence','agenda','agendaEvidence','renewalDriver','valueEvidence','buildRationale','partnerRationale','acquireRationale','routeReason','ourContribution','partnerContribution','partnerIncentive','partnerEvidence','dueDiligence','integrationPlan','validationOwner','validationDate','killCriterion'],
  charter:['sponsor','scope','outOfScope','benefit','benefitOwner','formula','measurementSource','frequency','resources','handover','reviewDate'],
  activity:['title','owner','start','end','output','acceptance'],
- cost:['label','unit'],risk:['title','owner','mitigation','trigger']
+ cost:['label','unit'],risk:['title','owner','mitigation','trigger'],
+ shift:['signal','evidence','implication'],inaction:['decision','consequence','trigger','window','actionCost','inactionCost','owner'],watch:['owner','triggers']
 };
-const enums={valueModel:['commercial','public'],confidence:['hypothesis','documented'],route:['undecided','build','partner','acquire'],mode:['assess','reuse','adapt','design'],priority:['anchor','quickwin','foundation'],executionMode:['internal','advisory','delivery'],category:['capex','opex'],status:['planned','active','done']};
+const enums={valueModel:['commercial','public'],confidence:['hypothesis','documented'],route:['undecided','build','partner','acquire'],mode:['assess','reuse','adapt','design'],priority:['anchor','quickwin','foundation'],executionMode:['internal','advisory','delivery'],category:['capex','opex'],status:['planned','active','done'],shiftType:['customer','channel','technology','value-chain','economics','regulation'],horizon:['now','near','later'],response:['ignore','experiment','partner','build','acquire','scale'],reversibility:['unknown','high','medium','low'],learningValue:['unknown','high','medium','low'],reviewCadence:['monthly','quarterly','semiannual','annual']};
 // Register every studio input in the existing why/example guidance system.
 const guidance={assessment:fields.assessment,operating:[...fields.operating,'mode'],opportunities:[...fields.opportunity,'valueModel','confidence','route','annualContract','customers','recurringShare','grossMargin'],charters:[...fields.charter,'priority','executionMode'],'charters.activities':[...fields.activity,'status'],'charters.costs':[...fields.cost,'year','quantity','unitCost','category'],'charters.risks':[...fields.risk,'likelihood','impact']};
 for(const [group,keys] of Object.entries(guidance))for(const k of keys){const pattern=('strategy.'+group+'.'+k).replaceAll('.','_');for(const lang of ['en','ar']){const d=root.SultanLocales[lang];d['fgw_'+pattern]=d['swW_'+k];d['fge_'+pattern]=d['swE_'+k];}if(root.SultanFieldGuide&&!root.SultanFieldGuide.patterns.includes(pattern))root.SultanFieldGuide.patterns.push(pattern);}
 const strings=kind=>Object.fromEntries(fields[kind].map(k=>[k,'']));
-const defaults=()=>({version:1,enabled:false,assessment:strings('assessment'),operating:{...strings('operating'),mode:'assess'},opportunities:[],charters:[]});
+const defaults=()=>({version:1,enabled:false,assessment:strings('assessment'),operating:{...strings('operating'),mode:'assess'},opportunities:[],charters:[],services:{shifts:[],inaction:[],watch:{owner:'',reviewCadence:'quarterly',triggers:'',nextReviewDate:''}}});
 const opportunity=optionId=>({id:E.uid('opp'),optionId:optionId||'',...strings('opportunity'),valueModel:'commercial',confidence:'hypothesis',route:'undecided',annualContract:null,customers:null,recurringShare:null,grossMargin:null});
 const charter=initiativeId=>({id:E.uid('charter'),initiativeId:initiativeId||'',...strings('charter'),priority:'foundation',executionMode:'internal',activities:[],costs:[],risks:[]});
 const activity=()=>({id:E.uid('activity'),...strings('activity'),status:'planned'});
 const cost=year=>({id:E.uid('cost'),...strings('cost'),year:year??null,quantity:null,unitCost:null,category:'opex'});
 const risk=()=>({id:E.uid('risk'),...strings('risk'),likelihood:null,impact:null});
+const shift=()=>({id:E.uid('shift'),shiftType:'channel',...strings('shift'),horizon:'near',response:'experiment',confidence:'hypothesis'});
+const inaction=optionId=>({id:E.uid('inaction'),optionId:optionId||'',...strings('inaction'),reversibility:'unknown',learningValue:'unknown',reviewDate:''});
 function shape(raw,template,path){
  if(raw===undefined)return copy(template);
  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error(T('swInvalid')+' '+path);
@@ -48,7 +51,9 @@ function validate(raw){
  const s=shape(raw,defaults(),'strategy');
  s.opportunities=s.opportunities.map(x=>shape(x,opportunity(),'opportunity'));
  s.charters=s.charters.map(x=>{const c=shape(x,charter(),'charter');c.activities=c.activities.map(a=>shape(a,activity(),'activity'));c.costs=c.costs.map(a=>shape(a,cost(),'cost'));c.risks=c.risks.map(a=>shape(a,risk(),'risk'));return c;});
- const ids=new Set();for(const row of [...s.opportunities,...s.charters,...s.charters.flatMap(c=>[...c.activities,...c.costs,...c.risks])]){if(!row.id||ids.has(row.id))throw Error(T('swInvalid')+' id');ids.add(row.id);}
+ s.services.shifts=s.services.shifts.map(x=>shape(x,shift(),'shift'));
+ s.services.inaction=s.services.inaction.map(x=>shape(x,inaction(),'inaction'));
+ const ids=new Set();for(const row of [...s.opportunities,...s.charters,...s.charters.flatMap(c=>[...c.activities,...c.costs,...c.risks]),...s.services.shifts,...s.services.inaction]){if(!row.id||ids.has(row.id))throw Error(T('swInvalid')+' id');ids.add(row.id);}
  for(const [list,key] of [[s.opportunities,'optionId'],[s.charters,'initiativeId']]){const seen=new Set();for(const r of list)if(r[key]){if(seen.has(r[key]))throw Error(T('swDuplicate'));seen.add(r[key]);}}
  return s;
 }
@@ -88,6 +93,8 @@ function issues(p){
   if(o.route==='acquire'&&(!text(o.dueDiligence)||!text(o.integrationPlan)))add('acquire',o.id);
   if(!text(o.validationOwner)||!text(o.validationDate)||!text(o.killCriterion))add('validation',o.id);
  }
+ for(const x of s.services.shifts)if(!text(x.signal)||!text(x.evidence)||!text(x.implication))add('shift',x.id);
+ for(const x of s.services.inaction)if(!text(x.decision)||!text(x.consequence)||!text(x.window)||!text(x.inactionCost)||!text(x.owner)||!text(x.reviewDate))add('inaction',x.id);
  const selected=new Set(E.selectedInitiatives(p).map(x=>x.id));
  for(const c of s.charters){
   const i=p.initiatives.find(x=>x.id===c.initiativeId);
@@ -109,6 +116,9 @@ const check=E.check;E.check=p=>[...check(p),...issues(p)];
 function ensure(p){if(!p.strategy)p.strategy=defaults();p.strategy.enabled=true;return p.strategy;}
 function addOpportunity(p,optionId){const s=ensure(p);if(s.opportunities.length>=100)throw Error(T('swLimit'));if(s.opportunities.some(x=>x.optionId===optionId))throw Error(T('swDuplicate'));const o=opportunity(optionId);s.opportunities.push(o);return o;}
 function addCharter(p,initiativeId){const s=ensure(p);if(s.charters.length>=100)throw Error(T('swLimit'));if(s.charters.some(x=>x.initiativeId===initiativeId))throw Error(T('swDuplicate'));const c=charter(initiativeId);s.charters.push(c);return c;}
+function addShift(p){const s=ensure(p);if(s.services.shifts.length>=60)throw Error(T('swLimit'));const x=shift();s.services.shifts.push(x);return x;}
+function addInaction(p,optionId=''){const s=ensure(p);if(s.services.inaction.length>=60)throw Error(T('swLimit'));const x=inaction(optionId);s.services.inaction.push(x);return x;}
+function serviceReadiness(p){const s=p.strategy||defaults(),v=s.services||defaults().services,selectedOptions=E.selected(p),selectedIds=new Set(selectedOptions.map(x=>x.id)),active=s.opportunities.filter(o=>selectedIds.has(o.optionId));const allRoutes=active.length>0&&active.every(o=>o.route!=='undecided'&&text(o.routeReason)&&text(o.buildRationale)&&text(o.partnerRationale)&&text(o.acquireRationale));const partner=active.some(o=>o.route==='partner'&&['ourContribution','partnerContribution','partnerIncentive','partnerEvidence'].every(k=>text(o[k])));const recurring=active.some(o=>o.valueModel==='commercial'&&num(o.recurringShare)&&text(o.renewalDriver));const experiment=active.some(o=>text(o.validationOwner)&&text(o.validationDate)&&text(o.killCriterion));const evidence=!!text(s.assessment.evidence)&&(!active.length||active.every(o=>text(o.demandEvidence)));const executionReady=E.selectedInitiatives(p).length>0&&s.charters.length>0;const benchmark=!!text(s.assessment.benchmark)||p.references.some(r=>text(r.source)&&['use','adapt'].includes(r.status));const adversarial=!!p.council?.reviews?.length;const watch=!!text(v.watch.owner)&&!!text(v.watch.triggers)&&!!text(v.watch.nextReviewDate);return {shift:{done:v.shifts.some(x=>text(x.signal)&&text(x.evidence)&&text(x.implication))},channel:{done:v.shifts.some(x=>['channel','value-chain'].includes(x.shiftType)&&text(x.signal)&&text(x.evidence)&&text(x.implication))},inaction:{done:v.inaction.some(x=>text(x.decision)&&text(x.consequence)&&text(x.window)&&text(x.inactionCost)&&text(x.owner)&&text(x.reviewDate))},route:{done:allRoutes},partnership:{done:partner},recurring:{done:recurring},experiment:{done:experiment},evidence:{done:evidence},adversarial:{done:adversarial},execution:{done:executionReady},benchmark:{done:benchmark},board:{done:executionReady&&E.check(p).filter(x=>x.level==='blocking').length===0},watch:{done:watch}};}
 function syncBudget(p,c){
  const i=p.initiatives.find(x=>x.id===c.initiativeId),v=costs(c);
  if(!i||v.total===null||c.costs.some(x=>!E.years(p).includes(x.year)||x.year<i.startYear||x.year>i.endYear))throw Error(T('swBudgetBlocked'));
@@ -127,10 +137,11 @@ function report(p){
   for(const [kind,list,extra] of [['activity',c.activities,['status']],['cost',c.costs,['year','quantity','unitCost','category']],['risk',c.risks,['likelihood','impact']]])if(list.length)h+=`<h4>${esc(T('swRows_'+kind))}</h4><table><thead><tr>${[...fields[kind],...extra].map(k=>`<th>${esc(T('swF_'+k))}</th>`).join('')}</tr></thead><tbody>${list.map(r=>'<tr>'+[...fields[kind],...extra].map(k=>`<td>${esc(enums[k]?T('swV_'+r[k]):r[k]??T('swUnknown'))}</td>`).join('')+'</tr>').join('')}</tbody></table>`;
   h+=`<p>${esc(T('swCostTotal'))}: ${fmt(costs(c).total)} · ${esc(T('swBudgetNote'))}</p>`;
  }
+ const svc=s.services||defaults().services,svcPairs=(kind,x)=>'<dl>'+fields[kind].filter(k=>text(x[k])).map(k=>`<dt>${esc(T('svcF_'+k))}</dt><dd>${esc(x[k])}</dd>`).join('')+'</dl>';if(svc.shifts.length||svc.inaction.length||text(svc.watch.owner)||text(svc.watch.triggers)){h+=`<h3>${esc(T('svcReportTitle'))}</h3>`;for(const x of svc.shifts)h+=`<h4>${esc(T('svcShiftRadar'))}</h4><p>${esc(T('svcF_shiftType'))}: ${esc(T('svcV_'+x.shiftType))}</p>${svcPairs('shift',x)}<p>${esc(T('svcF_horizon'))}: ${esc(T('svcV_'+x.horizon))} · ${esc(T('svcF_response'))}: ${esc(T('svcV_'+x.response))}</p>`;for(const x of svc.inaction)h+=`<h4>${esc(T('svcCostInaction'))}</h4>${svcPairs('inaction',x)}<p>${esc(T('svcF_reversibility'))}: ${esc(T('svcV_'+x.reversibility))} · ${esc(T('svcF_learningValue'))}: ${esc(T('svcV_'+x.learningValue))}</p>`;if(text(svc.watch.owner)||text(svc.watch.triggers))h+=`<h4>${esc(T('svcWatch'))}</h4>${svcPairs('watch',svc.watch)}<p>${esc(T('svcF_reviewCadence'))}: ${esc(T('svcV_'+svc.watch.reviewCadence))} · ${esc(T('svcF_nextReviewDate'))}: ${esc(svc.watch.nextReviewDate||T('swUnknown'))}</p>`;}
  const q=issues(p);h+=`<h3>${esc(T('swOpen'))}</h3>${q.length?'<ul>'+q.map(x=>`<li>${esc(x.message)}</li>`).join('')+'</ul>':`<p>${esc(T('swFieldsComplete'))}</p>`}</section>`;return h;
 }
 function aiContext(p){if(!p.strategy?.enabled)return '';const selected=new Set(E.selected(p).map(o=>o.id)),ids=new Set(E.selectedInitiatives(p).map(i=>i.id)),s=copy(p.strategy);s.opportunities=s.opportunities.filter(o=>selected.has(o.optionId));s.charters=s.charters.filter(c=>ids.has(c.initiativeId));return JSON.stringify(s);}
 const demo=E.demo;E.demo=function(){const p=demo();p.strategy=defaults();const s=ensure(p);s.assessment={problem:T('swDemo_problem'),scope:T('swDemo_scope'),currentState:T('swDemo_current'),evidence:T('swDemo_evidence'),benchmark:T('swDemo_benchmark'),riskAppetite:T('swDemo_risk')};s.operating.mode='reuse';s.operating.currentModel=T('swDemo_model');const choice=E.selected(p).find(o=>o.type!=='requirement');if(choice){const o=addOpportunity(p,choice.id);Object.assign(o,{segment:T('swDemo_segment'),buyer:T('swDemo_buyer'),need:T('swDemo_need'),demandEvidence:T('swDemo_evidence'),route:'partner',ourContribution:T('swDemo_ours'),partnerContribution:T('swDemo_theirs'),partnerIncentive:T('swDemo_incentive'),routeReason:T('swDemo_route'),annualContract:120000,customers:6,recurringShare:75,grossMargin:35,renewalDriver:T('swDemo_renewal'),validationOwner:T('swDemo_owner'),validationDate:'2027-03-31',killCriterion:T('swDemo_stop')});}const i=E.selectedInitiatives(p)[0];if(i){const c=addCharter(p,i.id);Object.assign(c,{sponsor:T('swDemo_owner'),scope:T('swDemo_scope'),benefit:T('swDemo_benefit'),benefitOwner:T('swDemo_owner')});}return p;};
-root.SultanStrategy={fields,enums,defaults,opportunity,charter,activity,cost,risk,validate,economics,costs,issues,ensure,addOpportunity,addCharter,syncBudget,readiness,report,aiContext};
+root.SultanStrategy={fields,enums,defaults,opportunity,charter,activity,cost,risk,shift,inaction,validate,economics,costs,issues,ensure,addOpportunity,addCharter,addShift,addInaction,serviceReadiness,syncBudget,readiness,report,aiContext};
 if(typeof module!=='undefined'&&module.exports)module.exports=root.SultanStrategy;
 })(globalThis);

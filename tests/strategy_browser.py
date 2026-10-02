@@ -1,6 +1,6 @@
 """Studio acceptance: complete user journeys on synthetic data, in Arabic and English."""
 from pathlib import Path
-import functools, http.server, json, os, threading
+import functools, http.server, json, os, threading, re
 from playwright.sync_api import sync_playwright, expect
 BASE=Path(__file__).resolve().parents[1]; QA=BASE/'qa'; QA.mkdir(exist_ok=True)
 LIVE=os.environ.get('SULTAN_LIVE_URL','');server=None
@@ -25,6 +25,34 @@ try:
    page.locator('[data-sw="enable"]').click();expect(page.locator('#sw-panel')).to_be_visible()
    page.locator('[data-path="strategy.assessment.problem"]').fill('Synthetic decision problem')
    page.locator('[data-path="strategy.assessment.evidence"]').fill('Synthetic interviews')
+   page.locator('[data-sw-tab="services"]').click()
+   expect(page.locator('.svc-catalog')).to_be_visible()
+   check(lang+' service catalog exposes thirteen services',page.locator('.svc-card').count()==13)
+   page.locator('[data-sw="svc-add-shift"]').click()
+   page.locator('[data-path="strategy.services.shifts.0.shiftType"]').select_option('channel')
+   page.locator('[data-path="strategy.services.shifts.0.signal"]').fill('Synthetic AI-mediated distribution shift')
+   page.locator('[data-path="strategy.services.shifts.0.evidence"]').fill('Synthetic channel evidence')
+   page.locator('[data-path="strategy.services.shifts.0.implication"]').fill('Synthetic interface ownership risk');page.locator('[data-path="strategy.services.shifts.0.implication"]').press('Tab')
+   expect(page.locator('[data-svc-key="shift"] .svc-status')).to_have_class(re.compile('.*done.*'))
+   check(lang+' shift and channel services require evidence',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).shift.done && SultanStrategy.serviceReadiness(SultanApp.getProject()).channel.done'))
+   page.locator('[data-sw="svc-add-inaction"]').click()
+   page.locator('[data-path="strategy.services.inaction.0.decision"]').fill('Experiment now or wait')
+   page.locator('[data-path="strategy.services.inaction.0.consequence"]').fill('Lose a learning window')
+   page.locator('[data-path="strategy.services.inaction.0.window"]').fill('90 days')
+   page.locator('[data-path="strategy.services.inaction.0.inactionCost"]').fill('Delayed evidence and partner access')
+   page.locator('[data-path="strategy.services.inaction.0.owner"]').fill('Strategy lead')
+   page.locator('[data-path="strategy.services.inaction.0.reviewDate"]').fill('2027-03-31');page.locator('[data-path="strategy.services.inaction.0.reviewDate"]').press('Tab')
+   expect(page.locator('[data-svc-key="inaction"] .svc-status')).to_have_class(re.compile('.*done.*'))
+   check(lang+' cost-of-inaction service completes without invented action cost',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).inaction.done && SultanApp.getProject().strategy.services.inaction[0].actionCost===""'))
+   page.locator('[data-path="strategy.services.watch.owner"]').fill('Strategy office')
+   page.locator('[data-path="strategy.services.watch.triggers"]').fill('Channel share changes; new regulation')
+   page.locator('[data-path="strategy.services.watch.nextReviewDate"]').fill('2027-06-30');page.locator('[data-path="strategy.services.watch.nextReviewDate"]').press('Tab')
+   expect(page.locator('[data-svc-key="watch"] .svc-status')).to_have_class(re.compile('.*done.*'))
+   check(lang+' watch plan is explicit and scheduled',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).watch.done'))
+   check(lang+' service report contains evidence',page.evaluate('SultanStrategy.report(SultanApp.getProject()).includes("Synthetic AI-mediated distribution shift") && SultanStrategy.report(SultanApp.getProject()).includes("Delayed evidence and partner access")'))
+   page.reload(wait_until='load')
+   expect(page.locator('[data-path="strategy.services.shifts.0.signal"]')).to_have_value('Synthetic AI-mediated distribution shift')
+   check(lang+' service records survive reload',page.evaluate('SultanApp.getProject().strategy.services.inaction.length===1 && SultanApp.getProject().strategy.services.watch.owner==="Strategy office"'))
    page.locator('[data-sw-tab="opportunities"]').click()
    page.locator('[data-sw="add-opportunity"]').click()
    page.locator('[data-path="strategy.opportunities.0.segment"]').fill('Synthetic segment')
@@ -63,7 +91,7 @@ try:
    check(lang+' open issues visible',page.locator('.sw-issues li').count()>0)
    check(lang+' report includes studio content',page.evaluate('SultanApp.getReport().includes("Synthetic buyer") && SultanApp.getReport().includes("Synthetic sponsor") && SultanApp.getReport().includes("Synthetic support")'))
    check(lang+' import roundtrip',page.evaluate('JSON.stringify(Sultan.validateImport(SultanApp.getProject()))===JSON.stringify(SultanApp.getProject())'))
-   for stage in ['opportunities','delivery','operating','execution','review']:
+   for stage in ['services','opportunities','delivery','operating','execution','review']:
     page.locator('[data-sw-tab="'+stage+'"]').click();page.set_viewport_size({'width':390,'height':844})
     check(lang+' mobile '+stage,page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'))
     page.set_viewport_size({'width':1366,'height':900})

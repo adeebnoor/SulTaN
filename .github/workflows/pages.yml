@@ -52,15 +52,15 @@ jobs:
           exact=json.loads((root/'qa/break-even-analytic-results.json').read_text())
           assert exact['tests']>0 and exact['passed']==exact['tests'] and exact.get('failed',0)==0
           manifest=json.loads((root/'release/manifest.json').read_text())
-          assert manifest['version']=='0.12.0-beta'
+          assert manifest['version']=='0.13.0-beta'
           assert hashlib.sha256((root/'public/index.html').read_bytes()).hexdigest()==manifest['sha256']
           for asset in manifest['assets']:
               assert hashlib.sha256((root/'public'/asset['path']).read_bytes()).hexdigest()==asset['sha256'], asset['path']
           (root/'release/SULTAN_Beta_AR_EN.html').write_bytes((root/'release/SULTAN_Strategy_Builder.html').read_bytes())
           print('Verified browser behavior, model evidence, exact sensitivity evidence and application SHA-256.')
           PY
-          if ! gh release view v0.12.0-beta >/dev/null 2>&1; then
-            gh release create v0.12.0-beta --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.12.0-beta — International planning and launch polish' --notes 'Independent international planning context, explicit country and currency, Arabic breadcrumbs, automatic offline preparation, social card and search metadata. Retains signed read-only snapshots, three-owner input, local/optional AI adversarial review and PDF/PPTX board packages. Link-holder positions are not verified identities or formal approvals. External AI quality and conversion remain unmeasured.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json tested/qa/break-even-analytic-results.json
+          if ! gh release view v0.13.0-beta >/dev/null 2>&1; then
+            gh release create v0.13.0-beta --target "$TESTED_SHA" --prerelease --title 'SULTAN 0.13.0-beta — Strategic services and shift intelligence' --notes 'Adds a bilingual Strategic Services Hub with Discover → Decide → Challenge → Execute → Watch, evidence-gated Strategic Shift Radar, Cost of Inaction cases and an explicit Strategy Watch plan. Reuses the existing Build/Partner/Acquire, partnership, recurring-value, adversarial review, execution, benchmark and board-pack engines. The watch plan records triggers and review dates; it does not claim background web monitoring. Link-holder positions are not verified identities or formal approvals.' tested/release/SULTAN_Beta_AR_EN.html tested/release/SULTAN_Strategy_Builder_Source.zip tested/release/manifest.json tested/qa/review-browser-results.json tested/qa/model-hardening-results.json tested/qa/break-even-analytic-results.json
           fi
       - name: Check first-time hosting setup
         id: hosting

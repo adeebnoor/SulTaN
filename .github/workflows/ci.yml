@@ -35,7 +35,7 @@ jobs:
           html=Path('release/SULTAN_Strategy_Builder.html').read_text(encoding='utf-8')
           leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
           assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
-          assert "SULTAN_VERSION='0.12.0-beta'" in html
+          assert "SULTAN_VERSION='0.13.0-beta'" in html
           assert '--brand-logo:url(' in html
           assert '--brand-ivory:#f7f3ea' in html
           print('Standalone build contains the RC version and premium visual identity.')
