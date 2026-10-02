@@ -35,7 +35,7 @@ jobs:
           html=Path('public/index.html').read_text(encoding='utf-8')
           leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
           assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
-          assert "SULTAN_VERSION='0.10.0-beta'" in html
+          assert "SULTAN_VERSION='0.10.1-beta'" in html
           assert '--brand-logo:url(' in html
           assert '--brand-ivory:#f7f3ea' in html
           print('Standalone build contains the RC version and premium visual identity.')
@@ -46,6 +46,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test Arabic and English at a real browser origin
         run: |
+          python tests/first_minute_browser.py
           python tests/review_regressions.py
           python tests/beta_browser.py
           python tests/hardening_browser.py

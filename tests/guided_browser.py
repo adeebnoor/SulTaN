@@ -66,8 +66,9 @@ try:
             page = ctx.new_page(); errors = []; requests = []
             page.on('pageerror', lambda e: errors.append(str(e))); page.on('request', lambda r: requests.append(r.url)); page.on('dialog', lambda d: d.accept())
             page.goto(url + '?lang=' + lang, wait_until='load'); page.wait_for_timeout(300)
-            check(pre + 'guided CTA leads the hero', page.locator('.launch-hero .hero-actions .btn').first.evaluate('e=>e.classList.contains("gw-hero-cta")'))
-            page.locator('.gw-hero-cta').click(); page.wait_for_selector('.gw-steps'); page.wait_for_selector('#navigation [data-section="guide"]')
+            check(pre + 'first-use preview leads the hero', page.locator('.launch-hero .hero-actions .btn').first.get_attribute('data-fm') == 'try')
+            page.locator('.fm-full-example > summary').click()
+            page.locator('.gw-workspace-cta').click(); page.wait_for_selector('.gw-steps'); page.wait_for_selector('#navigation [data-section="guide"]')
             check(pre + 'guided path renders five steps', page.locator('.gw-steps li').count() == 5 and page.locator('#navigation [data-section="guide"]').count() == 1)
             check(pre + 'all six sectors offered', page.locator('.gw-sector').count() == 6)
             page.locator('.gw-sector input[value="edu"]').check(); page.wait_for_selector('select[data-gw="typeId"]')

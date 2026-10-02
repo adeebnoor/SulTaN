@@ -22,6 +22,7 @@ try:
   assert page.locator('#navigation .exec-badge[data-state="complete"]').count()==0
   assert all(t.strip()!='✓' for t in badges.all_text_contents())
   assert page.locator('#navigation .exec-badge[data-state="not-started"]').count()>=4
+  page.locator('.fm-full-example > summary').click()
   page.locator('[data-action="demo"]').first.click();page.wait_for_timeout(140)
   assert page.locator('#navigation .exec-badge[data-state="complete"]').count()>=1
   field=page.locator('[data-path="institution.name"]')

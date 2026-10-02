@@ -314,10 +314,10 @@ document.addEventListener('click',async e=>{
  catch(err){box.hidden=false;box.innerHTML=`<p class="fg-ai-error">${esc(err?.message||String(err))}</p>`;}
  finally{busy=false;}
 });
-/* Home: the guided path is the primary way in. */
+/* Older entrances may expose a guided CTA; the first-use hero owns its own two actions. */
 function renderHome(){
  if(!document.body.classList.contains('is-home'))return;
- const actions=document.querySelector('.launch-hero .hero-actions');if(!actions||actions.querySelector('[data-section="guide"]'))return;
+ const actions=document.querySelector('.launch-hero .hero-actions');if(actions?.closest('[data-first-minute]'))return;if(!actions||actions.querySelector('[data-section="guide"]'))return;
  actions.insertAdjacentHTML('afterbegin',`<button type="button" class="btn primary gw-hero-cta" data-action="goto" data-section="guide">✦ ${esc(T('gwHomeCta'))}</button>`);
  actions.querySelectorAll('.btn.primary:not(.gw-hero-cta)').forEach(x=>{x.classList.remove('primary');x.classList.add('ghost');});
 }

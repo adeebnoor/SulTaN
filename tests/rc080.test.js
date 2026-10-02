@@ -4,7 +4,7 @@ const root=path.resolve(__dirname,'..');
 const ui=fs.readFileSync(path.join(root,'src/final-ui.js'),'utf8');
 const index=fs.readFileSync(path.join(root,'index.html'),'utf8');
 const build=fs.readFileSync(path.join(root,'build.py'),'utf8');
-assert.ok(build.includes("VERSION = '0.10.0-beta'"),'release version must come from build.py');
+assert.ok(build.includes("VERSION = '0.10.1-beta'"),'release version must come from build.py');
 assert.ok(fs.existsSync(path.join(root,'src/locales/final.js')),'final locale must live under src/locales');
 assert.ok(!fs.existsSync(path.join(root,'src/final-locales.js')),'legacy out-of-tree locale must be removed');
 assert.ok(index.includes('src/locales/final.js'),'browser must load tested final locale');
@@ -13,8 +13,8 @@ assert.ok(ui.includes("window.open('','_blank')")&&ui.includes('w.print()'),'PDF
 assert.ok(ui.includes("T('clientDeliverables')")&&ui.includes("T('decisionExtensions')"),'client headings must be localized');
 assert.ok(ui.includes('circle.baseline-dot')||ui.includes('baseline-dot'),'trajectory markers must be present');
 assert.ok(ui.includes("T('gatedFundingTitle')")&&ui.includes("T('riskSource')")&&ui.includes("T('maturityFamily')"),'client report must surface gated funding, risk source and maturity family');
-/* 43 is intentional: the 0.9 context dossier, sector library, draft engine, AI layer, field guidance, guided path
+/* 45 is intentional: the isolated first-minute preview and its locale add two modules; the 0.9 context dossier, sector library, draft engine, AI layer, field guidance, guided path
    and expert lenses are declared in index.html so source and built app share one visible load graph. */
-const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=43,'source load graph should remain explicit and consolidated');
+const scripts=(index.match(/<script src=/g)||[]).length;assert.ok(scripts<=45,'source load graph should remain explicit and consolidated');
 for(const removed of ['final-core-patch.js','final-export-hook.js','final-report-patch.js','final-polish.js','final-dashboard-polish.js','version-patch.js'])assert.ok(!index.includes(removed),'obsolete patch loaded: '+removed);
 console.log(JSON.stringify({suite:'rc080',passed:true,scripts}));

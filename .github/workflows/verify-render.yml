@@ -48,6 +48,8 @@ jobs:
           python tests/surfacing_browser.py
           python tests/rev3_browser.py
           python tests/consulting_browser.py
+          python tests/strategy_browser.py
+          python tests/first_minute_browser.py
       - name: Preserve live verification evidence
         if: always()
         uses: actions/upload-artifact@v4
