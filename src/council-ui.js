@@ -29,7 +29,7 @@ document.addEventListener('click',async e=>{const t=e.target.closest('[data-co-t
  else if(action==='calendar'){download('SULTAN_review_dates.ics',C.calendar(p),'text/calendar;charset=utf-8');message=T('coReminderLimits');}
  else if(action==='local'||action==='ai'){let r,model='local-rules';status(T('coReviewBusy'));if(action==='ai'){if(!document.getElementById('co-ai-consent').checked||!root.SultanAI.configured())throw Error(T('coAIRequired'));r=await root.SultanAI.adversarialReview({project:p});model=r.usage.model||root.SultanAI.settings().model;p.context.ai.log.push({at:new Date().toISOString(),model,purpose:'adversarial-review',inputTokens:r.usage.inputTokens,outputTokens:r.usage.outputTokens});r=r.data;}else r=C.adversary(p);p.council.reviews.push({id:E.uid('red'),at:new Date().toISOString(),basis:before,source:action==='ai'?'ai':'local',model,summary:r.summary,findings:r.findings});p.council.reviews=p.council.reviews.slice(-12);next=E.validateImport(p);}
  else if(action==='board'){status(T('coBoardBusy'));await root.SultanBoard.exportPack(p);message=T('coBoardDone');}
- else if(action==='offline'){await root.SultanOffline.prepare();message=T('coOfflineReady');}
+ else if(action==='offline'){await root.SultanOffline.prepare();message=T('coOfflineReady')+' '+T('coInstallHelp');}
  if(next){if(await C.basis(root.SultanApp.getProject())!==before)throw Error(T('coReviewChanged'));root.SultanApp.setProject(next);}
  status(message);
  }catch(err){console.error(err);status(T('coError')+err.message);}finally{busy=false;if(b.isConnected)b.disabled=false;}
