@@ -11,7 +11,7 @@ test('Legacy strategy projects gain empty services without invented claims',()=>
  const p=E.blank();delete p.strategy.services;const q=E.validateImport(copy(p));
  assert.deepEqual(q.strategy.services.shifts,[]);
  assert.deepEqual(q.strategy.services.inaction,[]);
- assert.equal(q.strategy.services.watch.cadence,'quarterly');
+ assert.equal(q.strategy.services.watch.reviewCadence,'quarterly');
 });
 test('Shift radar preserves unknowns and requires evidence for completion',()=>{
  const p=E.blank();S.ensure(p);const x=S.addShift(p);
