@@ -222,7 +222,7 @@ document.addEventListener('click',async e=>{
  if(b.dataset.ai==='save'){status.textContent=AI.configured()?T('aiSaved'):T('aiSavedIncomplete');refreshAfterSettings();return;}
  if(b.dataset.ai==='test'){status.textContent=T('aiTesting');b.disabled=true;try{const r=await AI.ping();status.textContent=r.ok?T('aiTestOk'):T('aiTestOdd');}catch(err){status.textContent=T('aiTestFailed')+' '+(err?.message||err);}finally{b.disabled=false;refreshAfterSettings();}}
 });
-function refreshAfterSettings(){if(section()==='guide'||section()==='review'||section()==='references')root.SultanApp.navigate(section());}
+function refreshAfterSettings(){if(section()==='guide'||section()==='review'||section()==='references'||section()==='council')root.SultanApp.navigate(section());}
 
 /* ---------------------------------------------------------------- workspace additions */
 function renderNav(){
@@ -232,7 +232,7 @@ function renderNav(){
  if(section()==='guide')nav.querySelectorAll('.navbtn').forEach(x=>{if(x!==b){x.classList.remove('active');x.removeAttribute('aria-current');}});
 }
 function renderBanner(){
- const p=project(),content=document.getElementById('content'),s=section();if(!p||!content||['home','about','guide'].includes(s)||content.querySelector('.fx-banner'))return;
+ const p=project(),content=document.getElementById('content'),s=section();if(!p||!content||['home','about','guide','council'].includes(s)||content.querySelector('.fx-banner'))return;
  const sum=D.summary(p),ctx=E.contextSummary(p);if(!sum.library&&!sum.ai&&!ctx.proposed)return;
  const key='sultan.banner.'+(p.createdAt||'');try{if(localStorage.getItem(key)==='1')return;}catch{}
  const parts=[];if(sum.ai)parts.push(T('gwBannerAi',[sum.ai]));if(sum.library)parts.push(T('gwBannerLib',[sum.library]));if(ctx.proposed)parts.push(T('ctxIssueUnreviewed').replace('%{0}',String(ctx.proposed)));

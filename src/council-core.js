@@ -1,99 +1,36 @@
-/* Council evidence records and serverless snapshot integrity. No network access. */
+/* Portable council records; advisory findings never change approval rules. */
 (function(root){
 'use strict';
-const E=root.Sultan,T=(k,v)=>root.SultanI18n.t(k,v),clone=x=>JSON.parse(JSON.stringify(x));
-const enc=new TextEncoder(),dec=new TextDecoder(),bytes=x=>enc.encode(JSON.stringify(x));
-const cleanString=(s,n=12000)=>typeof s==='string'&&s.length<=n;
-const defaults=()=>({version:1,decisions:[],reviews:[],contributions:[]});
-function validate(raw){
- if(raw===undefined)return defaults();
- if(!raw||Array.isArray(raw)||raw.version!==1||Object.keys(raw).some(k=>!Object.hasOwn(defaults(),k)))throw Error('Invalid council record');
- const shapes={decisions:['id','at','basis','optionId','title','decision','rationale','owner','evidence','reviewDate'],reviews:['id','at','basis','mode','summary','items'],contributions:['id','at','basis','invitationId','owner','note','disposition','resolution']};
- for(const [key,fields] of Object.entries(shapes)){
-  if(!Array.isArray(raw[key])||raw[key].length>200)throw Error('Council record limit');
-  const seen=new Set();for(const row of raw[key]){
-   if(!row||Object.keys(row).some(k=>!fields.includes(k))||fields.some(k=>!Object.hasOwn(row,k)))throw Error('Invalid council fields');
-   for(const k of fields)if(k!=='items'&&!cleanString(row[k]))throw Error('Invalid council value');
-   if(!/^[a-zA-Z0-9_-]{1,100}$/.test(row.id)||seen.has(row.id))throw Error('Invalid council identity');seen.add(row.id);
-   if(!Number.isFinite(Date.parse(row.at)))throw Error('Invalid council timestamp');
-   if(key==='reviews'&&(!['local','ai'].includes(row.mode)||!Array.isArray(row.items)||row.items.length>200||row.items.some(i=>!i||Object.keys(i).length!==3||['question','weakness','test'].some(k=>!cleanString(i[k])))))throw Error('Invalid council review');
-   if(key==='contributions'&&!['pending','accepted','dismissed'].includes(row.disposition))throw Error('Invalid contribution disposition');
-   if(key==='decisions'&&(!['select','consider','defer','reject'].includes(row.decision)||!validDate(row.reviewDate)))throw Error('Invalid council decision');
-  }
- }
- return clone(raw);
+const E=root.Sultan,S=root.SultanShare,T=(k,v)=>root.SultanI18n.t(k,v),copy=E.clone,has=x=>typeof x==='string'&&x.trim(),now=()=>new Date().toISOString();
+const defaults=()=>({version:1,requests:[],responses:[],checkpoints:[],reviews:[]});
+const templates={request:{id:'',owner:'',basis:'',createdAt:'',expiresAt:'',replyPublic:''},response:{requestId:'',basis:'',owner:'',stance:'',comment:'',at:'',proof:''},checkpoint:{id:'',at:'',label:'',nextDate:'',note:'',snapshot:''},review:{id:'',at:'',basis:'',source:'local',model:'',summary:'',findings:[]},finding:{rule:'',subject:'',evidence:'',challenge:'',test:''}};
+function date(v){return /^\d{4}-\d{2}-\d{2}$/.test(v)&&Number.isFinite(Date.parse(v))&&new Date(v).toISOString().slice(0,10)===v;}
+function shape(raw,template){if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error(T('coInvalid'));for(const k of Object.keys(raw))if(!Object.hasOwn(template,k))throw Error(T('coInvalid')+' '+k);const out=copy(template);for(const [k,v]of Object.entries(raw)){if(Array.isArray(template[k])){if(!Array.isArray(v)||v.length>100)throw Error(T('coInvalid'));out[k]=copy(v);}else if(typeof v!==typeof template[k]||(typeof v==='string'&&v.length>(['snapshot','proof'].includes(k)?240000:12000)))throw Error(T('coInvalid'));else out[k]=v;}return out;}
+function validate(raw){if(raw===undefined)return defaults();const out=shape(raw,defaults());if(out.version!==1||JSON.stringify(out).length>2000000)throw Error(T('coLimit'));for(const [list,kind,max]of [['requests','request',60],['responses','response',60],['checkpoints','checkpoint',12],['reviews','review',12]]){if(out[list].length>max)throw Error(T('coLimit'));out[list]=out[list].map(v=>shape(v,templates[kind]));const seen=new Set();for(const r of out[list]){const id=r.id||r.requestId;if(!/^[\w-]{1,80}$/.test(id)||seen.has(id))throw Error(T('coInvalid'));seen.add(id);}}
+ for(const r of out.requests){const key=JSON.parse(r.replyPublic);if(key.kty!=='EC'||key.crv!=='P-256'||key.d||!key.x||!key.y||!has(r.owner)||!Number.isFinite(Date.parse(r.expiresAt)))throw Error(T('coInvalid'));}
+ for(const r of out.responses)if(!['support','changes','abstain'].includes(r.stance)||!out.requests.some(q=>q.id===r.requestId)||!r.comment.trim()||r.comment.length>4000)throw Error(T('coInvalid'));
+ for(const c of out.checkpoints){if(!has(c.label)||!date(c.nextDate))throw Error(T('coInvalid'));const p=JSON.parse(c.snapshot);if(p.council||!Array.isArray(p.options)||p.schema!==E.blank().schema)throw Error(T('coInvalid'));}
+ for(const r of out.reviews){if(!['local','ai'].includes(r.source))throw Error(T('coInvalid'));r.findings=r.findings.map(f=>shape(f,templates.finding));}
+ return out;
 }
-function validDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;}
-const baseBlank=E.blank,baseImport=E.validateImport,baseSync=E.syncYears;
-E.blank=()=>({...baseBlank(),council:defaults()});
-E.validateImport=raw=>{if(!raw||typeof raw!=='object')return baseImport(raw);const c=validate(raw.council),q=clone(raw);delete q.council;const p=baseImport(q);p.council=c;return p;};
-E.syncYears=p=>{const q=baseSync(p)||p;if(!q.council)q.council=defaults();return q;};
+const blank=E.blank,importer=E.validateImport,sync=E.syncYears,demo=E.demo;
+E.blank=()=>({...blank(),council:defaults()});
+E.validateImport=raw=>{if(!raw||typeof raw!=='object'||Array.isArray(raw))return importer(raw);const c=validate(raw.council),p=copy(raw);delete p.council;return {...importer(p),council:c};};
+E.syncYears=p=>{const q=sync(p)||p;if(!q.council)q.council=defaults();return q;};
+E.demo=()=>({...demo(),council:defaults()});
 if(root.SultanRecovery?.pending&&root.SultanRecovery.raw){try{E.validateImport(JSON.parse(root.SultanRecovery.raw));root.SultanRecovery.pending=false;root.SultanRecovery.error='';}catch{}}
-function basis(p){const q=clone(p);delete q.council;return E.contextReviewBasis(q);}
-function challenges(p){
- const items=[],add=(q,w,t,title)=>items.push({question:T(q)+' — '+title,weakness:T(w),test:T(t)});
- for(const o of E.selected(p)){
-  const op=p.strategy?.opportunities.find(x=>x.optionId===o.id);
-  if(!op?.demandEvidence)add('cChallengeEvidence','cNoEvidence','cResolveEvidence',o.title);
-  if(!o.tradeoff?.trim())add('cChallengeTradeoff','cNoTradeoff','cResolveTradeoff',o.title);
-  if(op?.route==='partner'&&(!op.partnerIncentive?.trim()||!op.partnerEvidence?.trim()))add('cChallengePartner','cNoPartner','cResolvePartner',o.title);
-  if(op?.valueModel==='commercial'&&(!op.renewalDriver?.trim()||!op.valueEvidence?.trim()))add('cChallengeRenewal','cNoRenewal','cResolveRenewal',o.title);
-  if((op||o.type==='moonshot')&&!op?.killCriterion?.trim())add('cChallengeStop','cNoStop','cResolveStop',o.title);
- }
- for(const t of p.transitions.filter(t=>E.selected(p).some(o=>o.id===t.optionId)))if(!E.num(t.baseline)||!t.baselineSource?.trim())add('cChallengeMetric','cNoBaseline','cResolveMetric',t.kpi||t.domain);
- return items.slice(0,200);
-}
-const value=x=>x===null||x===undefined||x===''?T('cUnknown'):String(x);
-const decision=x=>T(({select:'cSelected',consider:'cConsider',defer:'cDeferred',reject:'cRejected'})[x]||'cUnknown');
-function snapshot(p){
- const fields=(pairs)=>pairs.map(([k,v])=>T(k)+': '+value(v)).join('\n');
- const records=[];const add=(section,title,body)=>records.push({section,title:value(title),body:String(body)});
- for(const o of p.options)add(T('cChoices'),o.title,fields([['cDecision',decision(o.decision)],['cReason',o.decisionReason],['cOwner',o.owner],['cOutput',o.outcome],['cEvidence',o.whyUs]])+'\n'+T('cChallengeTradeoff')+' '+value(o.tradeoff));
- for(const t of p.transitions.filter(t=>E.selected(p).some(o=>o.id===t.optionId)))add(T('cKPIs'),t.kpi||t.domain,fields([['cBaseline',t.baseline],['cSource',t.baselineSource],['cTarget',t.target],['cOwner',t.owner]])+'\n'+t.annual.map(a=>a.year+': '+value(a.target)+' · '+value(a.milestone)+' · '+value(a.evidence)).join('\n'));
- for(const i of E.selectedInitiatives(p))add(T('cInitiatives'),i.title,fields([['cOwner',i.owner],['cOutput',i.output],['cAcceptance',i.acceptance],['cTime',i.startYear+'–'+i.endYear]])+'\n'+i.budget.map(b=>b.year+': '+value(b.amount)).join('\n'));
- for(const issue of E.check(p).filter(x=>x.entity!=='ai-review'))add(T('cOpenIssues'),issue.section,issue.message);
- for(const d of p.council?.decisions||[])add(T('cDecisions'),d.title,fields([['cDecision',decision(d.decision)],['cReason',d.rationale],['cOwner',d.owner],['cEvidence',d.evidence],['cDate',d.reviewDate],['cAt',d.at]]));
- for(const c of p.council?.contributions||[])add(T('cInbox'),c.owner,fields([['cAt',c.at],['cNote',c.note],['cDecision',T({pending:'cPending',accepted:'cAccepted',dismissed:'cDismissed'}[c.disposition])],['cResolution',c.resolution]])+'\n'+(c.basis===basis(p)?T('cFresh'):T('cStale')));
- const r=p.council?.reviews.at(-1);if(r){add(T('cReview'),r.mode==='ai'?T('cAIMode'):T('cLocalMode'),(r.basis===basis(p)?T('cFresh'):T('cStale'))+'\n'+r.summary);for(const i of r.items)add(T('cReview'),i.question,i.weakness+'\n'+i.test);}
- return {version:1,lang:root.SultanI18n.language,title:p.institution.name||T('cCover'),at:new Date().toISOString(),basis:basis(p),draft:T('cDraft'),mission:p.institution.mission||'',horizon:p.institution.startYear+'–'+p.institution.endYear,isDemo:!!p.isDemo,
- counts:{selected:E.selected(p).length,initiatives:E.selectedInitiatives(p).length,issues:E.check(p).filter(x=>x.entity!=='ai-review').length},funding:E.budgetSummary(p),records};
-}
-function validateSnapshot(s){
- if(!s||s.version!==1||!['ar','en'].includes(s.lang)||!['title','at','basis','draft','mission','horizon'].every(k=>cleanString(s[k],30000))||!Array.isArray(s.records)||s.records.length>2500||s.records.some(r=>!r||!['section','title','body'].every(k=>cleanString(r[k],50000)))||!s.counts||!['selected','initiatives','issues'].every(k=>Number.isSafeInteger(s.counts[k])&&s.counts[k]>=0)||!Array.isArray(s.funding)||s.funding.length>301||s.funding.some(f=>!f||!['year','declared','unknown','available','gap'].every(k=>f[k]===null||typeof f[k]==='number'&&Number.isFinite(f[k])&&f[k]>=0)))throw Error(T('cBadLink'));
- return s;
-}
-const b64=a=>{let s='';for(const b of new Uint8Array(a))s+=String.fromCharCode(b);return btoa(s).replaceAll('+','-').replaceAll('/','_').replaceAll('=','');};
-const un64=s=>{if(typeof s!=='string'||!/^[A-Za-z0-9_-]*$/.test(s))throw Error('Invalid encoding');return Uint8Array.from(atob(s.replaceAll('-','+').replaceAll('_','/')),c=>c.charCodeAt(0));};
-async function hash(x){return b64(await crypto.subtle.digest('SHA-256',bytes(x)));}
-async function compress(x){const st=new Blob([bytes(x)]).stream().pipeThrough(new CompressionStream('deflate'));return b64(await new Response(st).arrayBuffer());}
-async function expand(s){
- if(s.length>48000)throw Error(T('cTooBig'));
- const reader=new Blob([un64(s)]).stream().pipeThrough(new DecompressionStream('deflate')).getReader();let size=0;const chunks=[];
- try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.length;if(size>1000000)throw Error(T('cTooBig'));chunks.push(value);}}finally{await reader.cancel();}
- const all=new Uint8Array(size);let off=0;for(const c of chunks){all.set(c,off);off+=c.length;}return JSON.parse(dec.decode(all));
-}
-async function createLink(s,owner=''){
- validateSnapshot(s);const pair=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
- const invite=owner?{id:crypto.randomUUID(),owner,secret:b64(crypto.getRandomValues(new Uint8Array(32)))}:null;
- const payload={kind:'sultan-snapshot',version:1,snapshot:s,invite};
- const envelope={payload,pub:await crypto.subtle.exportKey('jwk',pair.publicKey),sig:b64(await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},pair.privateKey,bytes(payload)))};
- const token=await compress(envelope);if(token.length>48000)throw Error(T('cTooBig'));
- return {token,invite:invite?{...invite,basis:s.basis,snapshotHash:await hash(s)}:null};
-}
-async function readLink(token){
- const x=await expand(token);if(x?.payload?.kind!=='sultan-snapshot'||x.payload.version!==1)throw Error(T('cBadLink'));
- const key=await crypto.subtle.importKey('jwk',x.pub,{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
- if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,un64(x.sig),bytes(x.payload)))throw Error(T('cBadLink'));
- validateSnapshot(x.payload.snapshot);const i=x.payload.invite;
- if(i&&(!cleanString(i.id,100)||!cleanString(i.owner,120)||un64(i.secret).length!==32))throw Error(T('cBadLink'));
- return x.payload;
-}
-async function mac(secret,payload,signature){const key=await crypto.subtle.importKey('raw',un64(secret),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);return signature===undefined?b64(await crypto.subtle.sign('HMAC',key,bytes(payload))):crypto.subtle.verify('HMAC',key,un64(signature),bytes(payload));}
-async function response(payload,note){if(!payload.invite||!cleanString(note)||!note.trim())throw Error(T('cInvalidResponse'));const body={kind:'sultan-owner-response',version:1,id:crypto.randomUUID(),invitationId:payload.invite.id,snapshotHash:await hash(payload.snapshot),at:new Date().toISOString(),note:note.trim()};return {body,signature:await mac(payload.invite.secret,body)};}
-async function verifyResponse(x,invites,existing){
- const b=x?.body,i=invites.find(i=>i.id===b?.invitationId);if(!b||b.kind!=='sultan-owner-response'||b.version!==1||!i||b.snapshotHash!==i.snapshotHash||!cleanString(b.id,100)||!cleanString(b.note)||!b.note.trim()||!Number.isFinite(Date.parse(b.at))||!await mac(i.secret,b,x.signature))throw Error(T('cInvalidResponse'));
- if(existing.some(c=>c.invitationId===i.id))throw Error(T('cDuplicate'));
- return {id:E.uid('input'),invitationId:i.id,at:b.at,basis:i.basis,owner:i.owner,note:b.note,disposition:'pending',resolution:''};
-}
-root.SultanCouncil={defaults,validate,validDate,basis,challenges,snapshot,validateSnapshot,decision,value,createLink,readLink,response,verifyResponse,hash,compress,expand};
+function snapshot(p){const q=copy(p);for(const k of ['council','log','createdAt','updatedAt','revision','reviewedRevision','documentNumber','isDemo'])delete q[k];if(q.collaboration)q.collaboration.contributions=[];if(q.context){q.context.documents=[];q.context.reviews=[];if(q.context.ai){q.context.ai.log=[];}}return q;}
+const basis=p=>S.digest(snapshot(p));
+if(E.contextReviewBasis){const old=E.contextReviewBasis;E.contextReviewBasis=p=>{const q=copy(p);delete q.council;return old(q);};}
+async function createLinks(project,owners=[],days=14){if(owners.length!==0&&owners.length!==3||new Set(owners.map(x=>x.toLowerCase())).size!==owners.length||owners.some(x=>!has(x)||x.length>100)||!Number.isInteger(days)||days<1||days>90)throw Error(T('coOwnersRequired'));const p=E.validateImport(project),pair=await S.issuer(),b=await basis(p),createdAt=now(),expiresAt=new Date(Date.now()+days*86400000).toISOString(),packets=[];if(p.council.requests.length+owners.length>60)throw Error(T('coLimit'));for(const owner of owners.length?owners:['']){const key=owner?await S.keys():null,payload={version:1,kind:owner?'invite':'read',id:E.uid('invite'),owner,basis:b,createdAt,expiresAt,language:root.SultanI18n.language,isDemo:!!p.isDemo,snapshot:snapshot(p)};if(key)payload.replyPublic=key.publicKey;const packet=await S.sign(payload,pair);if(key){packet.replyKey=key.privateKey;p.council.requests.push({id:payload.id,owner,basis:b,createdAt,expiresAt,replyPublic:JSON.stringify(key.publicKey)});}packets.push(packet);}return {project:E.validateImport(p),packets};}
+async function responsePayload(p,packet){const r=packet?.payload,q=p.council.requests.find(x=>x.id===r?.requestId);if(!q)throw Error(T('coUnknownInvite'));const v=await S.verify(packet,JSON.parse(q.replyPublic));if(v.version!==1||v.kind!=='response'||v.owner!==q.owner||v.basis!==q.basis||!['support','changes','abstain'].includes(v.stance)||!has(v.comment)||v.comment.length>4000||!Number.isFinite(Date.parse(v.at))||Date.parse(v.at)<Date.parse(q.createdAt)||Date.parse(v.at)>Date.parse(q.expiresAt))throw Error(T('coInvalid'));return {v,q};}
+async function accept(project,value){const p=E.validateImport(project),packet=await S.decode(value),{v,q}=await responsePayload(p,packet);if(Date.parse(q.expiresAt)<Date.now())throw Error(T('coExpired'));if(p.council.responses.some(r=>r.requestId===v.requestId))throw Error(T('coDuplicate'));p.council.responses.push({requestId:v.requestId,basis:v.basis,owner:v.owner,stance:v.stance,comment:v.comment,at:v.at,proof:JSON.stringify(packet)});return E.validateImport(p);}
+async function verifyResponse(p,r){try{const {v}=await responsePayload(p,JSON.parse(r.proof));return ['requestId','basis','owner','stance','comment','at'].every(k=>v[k]===r[k]);}catch{return false;}}
+async function checkpoint(project,{label,nextDate,note=''}){if(!has(label)||label.length>160||!date(nextDate)||note.length>4000)throw Error(T('coCheckpointRequired'));const p=E.validateImport(project);p.council.checkpoints.push({id:E.uid('review'),at:now(),label,nextDate,note,snapshot:JSON.stringify(snapshot(p))});p.council.checkpoints=p.council.checkpoints.slice(-12);return E.validateImport(p);}
+function diff(p,checkpoint){if(!checkpoint)return [];const out=[],old=JSON.parse(checkpoint.snapshot),current=snapshot(p);function walk(a,b,path,labels=[]){if(S.canonical(a??null)===S.canonical(b??null))return;if(Array.isArray(a)&&Array.isArray(b)){const identified=[...a,...b].every(x=>x&&typeof x==='object'&&('id'in x||'year'in x));if(identified){const key=x=>String(x.id??x.year),aa=new Map(a.map(x=>[key(x),x])),bb=new Map(b.map(x=>[key(x),x]));for(const id of new Set([...aa.keys(),...bb.keys()])){const x=bb.get(id)||aa.get(id);walk(aa.get(id),bb.get(id),path+'.'+id,[...labels,x.title||x.name||x.kpi||x.year||id]);}return;}}if(a&&b&&typeof a==='object'&&typeof b==='object'&&!Array.isArray(a)&&!Array.isArray(b)){for(const k of new Set([...Object.keys(a),...Object.keys(b)]))walk(a[k],b[k],path?path+'.'+k:k,labels);return;}const field=path.split('.').at(-1),known={mission:'s272',vision:'s451',name:'s329',kpi:'s485',title:'s492',baseline:'coBaseline',target:'coTarget',actual:'coActual',owner:'coOwner',note:'coCheckpointNote',nextDate:'coCheckpointDate'};const key=known[field]||'swF_'+field;const label=Object.hasOwn(root.SultanLocales[root.SultanI18n.language],key)?T(key):field;out.push({path,label:[...labels,label].join(' / '),before:a??null,after:b??null});}walk(old,current,'');return out;}
+function stress(p){const options=p.options.filter(o=>o.type!=='requirement'&&!['reject','defer'].includes(o.decision)),q={...p,options},base=E.ranking(q);if(!E.weightInfo(p).valid||options.length<2||base.length!==options.length)return {available:false,base:[],trials:[]};const top=r=>r.filter(x=>Math.abs(x.value-r[0].value)<1e-7).map(x=>x.id).sort().join(','),trials=[];for(const c of p.criteria)for(const delta of [-10,10]){const to=c.weight*(1+delta/100),remaining=100-c.weight;if(to<0||to>100||remaining<=0)continue;const weights=Object.fromEntries(p.criteria.map(k=>[k.id,k.id===c.id?to:k.weight*(100-to)/remaining])),r=E.ranking(q,weights);trials.push({criterion:c.name,delta,from:c.weight,to,top:r.filter(x=>Math.abs(x.value-r[0].value)<1e-7).map(x=>x.title),changed:top(r)!==top(base)});}return {available:trials.length>0,base,trials};}
+function adversary(p){const findings=[],selected=E.selected(p),ids=new Set(selected.map(o=>o.id)),add=(rule,subject,evidence='')=>findings.push({rule,subject,evidence:evidence||T('coMissingEvidence'),challenge:T('coQ_'+rule),test:T('coTest_'+rule)});for(const o of selected){if(!has(o.tradeoff))add('tradeoff',o.title);if(!o.assumptions?.length)add('assumption',o.title);for(const a of o.assumptions||[])if(!has(a.testEvidence))add('assumption',o.title,a.text);}for(const t of p.transitions.filter(t=>ids.has(t.optionId)))if(!E.num(t.baseline)||!has(t.currentSource)||!has(t.dataSource))add('evidence',t.kpi||t.domain,t.currentSource);for(const en of p.enablers.filter(x=>ids.has(x.optionId)&&x.status!=='ready'))add('authority',en.title,en.source);for(const b of E.budgetSummary(p))if(b.unknown||b.gap>0||b.available===null&&selected.length)add('funding',String(b.year),T('coUnknownCosts')+': '+b.unknown);for(const r of p.references)if(p.transitions.some(t=>ids.has(t.optionId)&&t.referenceId===r.id)&&(!has(r.source)||r.status==='unchecked'))add('reference',r.name,r.source);const s=stress(p);if(!s.available)add('sensitivity',T('coStressResult'));else for(const t of s.trials.filter(x=>x.changed))add('sensitivity',t.criterion,`${t.from}% → ${t.to}%: ${t.top.join(' / ')}`);return {summary:T('coLocalSummary'),findings:findings.slice(0,100)};}
+function milestones(p,today=now().slice(0,10)){const rows=[],add=(id,dateValue,title,owner='',kind='date')=>{if(date(dateValue))rows.push({id,date:dateValue,title,owner,kind,overdue:kind==='year'?dateValue.slice(0,4)<today.slice(0,4):dateValue<today});};for(const c of p.council?.checkpoints||[])add(c.id,c.nextDate,c.label);const ids=new Set(E.selected(p).map(o=>o.id));for(const o of E.selected(p))for(const a of o.assumptions||[])if(!has(a.testEvidence))add(a.id,a.testDate,a.text,a.owner);const selectedI=new Set(E.selectedInitiatives(p).map(i=>i.id));for(const c of p.strategy?.charters||[])if(selectedI.has(c.initiativeId))add(c.id,c.reviewDate,p.initiatives.find(i=>i.id===c.initiativeId)?.title,c.benefitOwner);for(const en of p.enablers.filter(x=>ids.has(x.optionId)&&x.status!=='ready'&&Number.isInteger(x.dueYear)))add(en.id,en.dueYear+'-01-01',en.title,en.owner,'year');return rows.sort((a,b)=>a.date.localeCompare(b.date));}
+function calendar(p){const escape=v=>String(v||'').replaceAll('\\','\\\\').replaceAll('\n','\\n').replaceAll(',','\\,').replaceAll(';','\\;'),stamp=now().replace(/[-:]/g,'').replace(/\.\d+Z/,'Z');return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//SULTAN//Decision review//EN','CALSCALE:GREGORIAN',...milestones(p).flatMap(m=>['BEGIN:VEVENT','UID:'+m.id+'@sultan.local','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+m.date.replaceAll('-',''),'SUMMARY:'+escape(m.title),'DESCRIPTION:'+escape(T('coCalendarNote')+(m.kind==='year'?' '+T('coYearReminder'):'')),'BEGIN:VALARM','TRIGGER:-P7D','ACTION:DISPLAY','DESCRIPTION:'+escape(m.title),'END:VALARM','END:VEVENT']),'END:VCALENDAR',''].join('\r\n');}
+root.SultanCouncil={defaults,validate,snapshot,basis,createLinks,accept,verifyResponse,checkpoint,diff,stress,adversary,milestones,calendar};
 })(globalThis);

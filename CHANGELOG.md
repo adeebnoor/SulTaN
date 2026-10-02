@@ -1,3 +1,13 @@
+# 0.11.0-beta — 2026-10-02
+
+- Add signed read-only snapshots and three independent owner reply capabilities, with explicit identity, expiry and confidentiality limits.
+- Add local/optional AI adversarial review, relative ±10% sensitivity and provider/key/data disclosure.
+- Add decision checkpoints, field changes, assumption reviews and calendar reminders.
+- Export one local ZIP with editable PPTX, visual PDF, complete appendix and calendar.
+- Align dialog version, keep one page H1, add robots/sitemap/JSON-LD and opt-in offline installation.
+- Split web scripts/styles into hashed cacheable files; load export libraries on demand and retain the standalone HTML edition.
+- Verify every published asset and the new journeys after Render deployment. No old CI issue is reopened.
+
 ## 0.10.1-beta — First-minute decision preview
 
 - Three lines on the homepage produce a local decision preview with a proposed first step, measure and unresolved conditions. The preview does not write project data or call an AI provider.

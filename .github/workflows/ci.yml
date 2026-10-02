@@ -26,16 +26,16 @@ jobs:
           # Every suite under tests/ runs. Do NOT list suites by name: a new
           # test file must never be able to exist without being executed.
           for suite in tests/*.test.js; do echo "== $suite"; node "$suite"; done
-      - name: Build the standalone application
+      - name: Build cacheable web assets and the standalone edition
         run: |
           python build.py
           python - <<'PY'
           import re
           from pathlib import Path
-          html=Path('public/index.html').read_text(encoding='utf-8')
+          html=Path('release/SULTAN_Strategy_Builder.html').read_text(encoding='utf-8')
           leftover=re.findall(r'(?:src|href)="(src/[^"]+)"',html)
           assert not leftover, 'standalone build kept external assets: '+', '.join(sorted(set(leftover)))
-          assert "SULTAN_VERSION='0.10.1-beta'" in html
+          assert "SULTAN_VERSION='0.11.0-beta'" in html
           assert '--brand-logo:url(' in html
           assert '--brand-ivory:#f7f3ea' in html
           print('Standalone build contains the RC version and premium visual identity.')
@@ -46,6 +46,7 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test Arabic and English at a real browser origin
         run: |
+          python tests/council_browser.py
           python tests/first_minute_browser.py
           python tests/review_regressions.py
           python tests/beta_browser.py

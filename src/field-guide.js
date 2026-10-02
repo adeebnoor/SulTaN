@@ -47,7 +47,7 @@ const advancedState=new Map();
 /* ---------------------------------------------------------------- disclosure */
 function disclose(){
  const p=project(),content=document.getElementById('content'),s=section();
- if(!p||!content||mode()!=='simple'||['home','about','guide','review'].includes(s))return;
+ if(!p||!content||mode()!=='simple'||['home','about','guide','review','council'].includes(s))return;
  if(content.querySelector('.identity-starter'))return; // final-ui already discloses the empty identity form
  const groups=new Map();
  const add=(container,el)=>{if(!container||!el)return;if(!groups.has(container))groups.set(container,{fields:[],blocks:[]});if(el.classList.contains('field'))groups.get(container).fields.push(el);else groups.get(container).blocks.push(el);};
@@ -86,7 +86,7 @@ document.addEventListener('toggle',e=>{const d=e.target;if(d?.classList?.contain
 function guide(path){const key=pattern(path).replace(/\./g,'_');const dict=root.SultanLocales?.[I.language]||{};const why=dict['fgw_'+key],example=dict['fge_'+key];return why?{why,example:example||''}:null;}
 function textual(ctrl){return ctrl.tagName==='TEXTAREA'||(ctrl.tagName==='INPUT'&&(ctrl.type==='text'||!ctrl.type));}
 function decorate(){
- const content=document.getElementById('content');if(!content||['home','about'].includes(section()))return;
+ const content=document.getElementById('content');if(!content||['home','about','council'].includes(section()))return;
  const openAll=guideAll();
  for(const ctrl of content.querySelectorAll('.field [data-path]')){
   const field=ctrl.closest('.field');if(!field||field.dataset.fgDone)continue;field.dataset.fgDone='1';
@@ -105,7 +105,7 @@ function renderModeSwitch(){
  const m=mode();box.querySelectorAll('[data-ux-mode]').forEach(b=>{const on=b.dataset.uxMode===m;b.setAttribute('aria-pressed',String(on));b.title=on?'':(b.dataset.uxMode==='simple'?T('uxModeSimpleHelp'):T('uxModeExpertHelp'));});
 }
 function renderGuideSwitch(){
- const content=document.getElementById('content'),s=section();if(!content||['home','about','guide'].includes(s))return;
+ const content=document.getElementById('content'),s=section();if(!content||['home','about','guide','council'].includes(s))return;
  const heading=content.querySelector('.heading');if(!heading||heading.querySelector('.fg-guide-switch'))return;
  const on=guideAll();const b=document.createElement('button');b.type='button';b.className='btn small fg-guide-switch';b.dataset.fgGuideAll='1';b.setAttribute('aria-pressed',String(on));b.textContent=on?T('uxGuideHide'):T('uxGuideShow');heading.append(b);
 }
