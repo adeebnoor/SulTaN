@@ -1,6 +1,6 @@
 """Studio acceptance: complete user journeys on synthetic data, in Arabic and English."""
 from pathlib import Path
-import functools, http.server, json, os, threading
+import functools, http.server, json, os, threading, re
 from playwright.sync_api import sync_playwright, expect
 BASE=Path(__file__).resolve().parents[1]; QA=BASE/'qa'; QA.mkdir(exist_ok=True)
 LIVE=os.environ.get('SULTAN_LIVE_URL','');server=None
@@ -33,7 +33,7 @@ try:
    page.locator('[data-path="strategy.services.shifts.0.signal"]').fill('Synthetic AI-mediated distribution shift')
    page.locator('[data-path="strategy.services.shifts.0.evidence"]').fill('Synthetic channel evidence')
    page.locator('[data-path="strategy.services.shifts.0.implication"]').fill('Synthetic interface ownership risk');page.locator('[data-path="strategy.services.shifts.0.implication"]').press('Tab')
-   expect(page.locator('[data-svc-key="shift"] .svc-status')).to_have_class(/done/)
+   expect(page.locator('[data-svc-key="shift"] .svc-status')).to_have_class(re.compile('.*done.*'))
    check(lang+' shift and channel services require evidence',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).shift.done && SultanStrategy.serviceReadiness(SultanApp.getProject()).channel.done'))
    page.locator('[data-sw="svc-add-inaction"]').click()
    page.locator('[data-path="strategy.services.inaction.0.decision"]').fill('Experiment now or wait')
@@ -42,12 +42,12 @@ try:
    page.locator('[data-path="strategy.services.inaction.0.inactionCost"]').fill('Delayed evidence and partner access')
    page.locator('[data-path="strategy.services.inaction.0.owner"]').fill('Strategy lead')
    page.locator('[data-path="strategy.services.inaction.0.reviewDate"]').fill('2027-03-31');page.locator('[data-path="strategy.services.inaction.0.reviewDate"]').press('Tab')
-   expect(page.locator('[data-svc-key="inaction"] .svc-status')).to_have_class(/done/)
+   expect(page.locator('[data-svc-key="inaction"] .svc-status')).to_have_class(re.compile('.*done.*'))
    check(lang+' cost-of-inaction service completes without invented action cost',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).inaction.done && SultanApp.getProject().strategy.services.inaction[0].actionCost===""'))
    page.locator('[data-path="strategy.services.watch.owner"]').fill('Strategy office')
    page.locator('[data-path="strategy.services.watch.triggers"]').fill('Channel share changes; new regulation')
    page.locator('[data-path="strategy.services.watch.nextReviewDate"]').fill('2027-06-30');page.locator('[data-path="strategy.services.watch.nextReviewDate"]').press('Tab')
-   expect(page.locator('[data-svc-key="watch"] .svc-status')).to_have_class(/done/)
+   expect(page.locator('[data-svc-key="watch"] .svc-status')).to_have_class(re.compile('.*done.*'))
    check(lang+' watch plan is explicit and scheduled',page.evaluate('SultanStrategy.serviceReadiness(SultanApp.getProject()).watch.done'))
    check(lang+' service report contains evidence',page.evaluate('SultanStrategy.report(SultanApp.getProject()).includes("Synthetic AI-mediated distribution shift") && SultanStrategy.report(SultanApp.getProject()).includes("Delayed evidence and partner access")'))
    page.reload(wait_until='load')
