@@ -69,7 +69,7 @@ There are no analytics, tracking libraries or project-upload endpoints. The only
 
 A completed field is not verified evidence. This edition does not authenticate decision owners, check legal authority, award accreditation, establish funding approval, or maintain a protected audit trail. Software tests do not establish field effectiveness, global novelty, or superiority over consulting firms.
 
-Multi-user cloud collaboration, protected audit trails, direct DOCX generation, and task-level/quarterly project scheduling are outside this beta. Section-level exchange is the current collaboration mechanism.
+SULTAN supports signed read-only snapshots, structured input from up to three invited owners, section-level exchange, and PDF/PPTX board packages. A shared multi-user cloud workspace, protected audit trails, direct DOCX generation, and task-level/quarterly project scheduling remain outside this beta.
 
 See [privacy](docs/PRIVACY.md), [product scope](docs/PRODUCT.md), and [feedback guide](docs/FEEDBACK.md).
 
@@ -110,7 +110,7 @@ The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, a
 
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.9.0-beta — guided, context-aware, AI-assisted beta for non-sensitive planning and feedback.**
+**Version 0.12.0-beta — guided, context-aware, AI-assisted strategy workspace with international planning context, council review, board packs, signed read-only sharing and offline preparation.**
 
 ### Review checks
 
