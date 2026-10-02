@@ -2,6 +2,7 @@
 (function(root){
 'use strict';
 const en={
+swTab_services:"Strategic services",
 svcTab:"Strategic services",svcLead:"Use SULTAN as a set of decision services: detect change, choose a response, challenge the case, execute it and keep the strategy under review.",
 svcFlow:"Discover → Decide → Challenge → Execute → Watch",svcStatus_done:"Configured",svcStatus_start:"Start / strengthen",svcOpen:"Open service",svcOutput:"Output",svcAvailable:"Available in this beta",
 svcMacro_discover:"Discover",svcMacro_discoverD:"Detect shifts in customers, channels, technology, regulation and economics before they invalidate the plan.",
@@ -34,6 +35,7 @@ svcV_unknown:"Unknown",svcV_high:"High",svcV_medium:"Medium",svcV_low:"Low",svcV
 svcReportTitle:"Strategic services evidence",swIssue_shift:"A recorded strategic shift needs a signal, evidence and strategic implication.",swIssue_inaction:"An action / inaction case needs the decision, consequence of waiting, decision window, inaction cost, owner and review date."
 };
 const ar={
+swTab_services:"الخدمات الاستراتيجية",
 svcTab:"الخدمات الاستراتيجية",svcLead:"استخدم SULTAN كمجموعة خدمات قرار: اكتشف التحول، اختر الاستجابة، اختبر القرار نقديًا، حوّله إلى تنفيذ، ثم أبقِ الاستراتيجية تحت المراجعة.",
 svcFlow:"اكتشف ← قرّر ← اختبر ← نفّذ ← راقب",svcStatus_done:"مهيأة",svcStatus_start:"ابدأ / قوِّ الخدمة",svcOpen:"افتح الخدمة",svcOutput:"المخرج",svcAvailable:"متاحة في هذه النسخة التجريبية",
 svcMacro_discover:"اكتشف",svcMacro_discoverD:"اكشف تحولات العميل والقنوات والتقنية والتنظيم والاقتصاد قبل أن تجعل الخطة الحالية غير كافية.",
