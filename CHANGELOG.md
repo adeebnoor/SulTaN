@@ -1,3 +1,10 @@
+# 0.12.1-beta
+
+- Pre-warm the configured SULTAN AI relay with a health-only GET after AI consent is already stored, so a sleeping relay can wake before the first generation or review.
+- Warm again immediately after the user saves consented proxy settings. The warm-up sends no project body, prompt, document, objective or API key.
+- Preserve the privacy boundary: no relay request is made before consent, direct/BYOK transport is never pre-warmed, and unit tests enforce both rules.
+- No strategy logic, model defaults, evidence rules or board outputs changed in this patch.
+
 # 0.12.0-beta
 
 - International planning context, country and currency independent of interface language. General templates add no Saudi regulations or national programmes. Existing records and amounts remain intact.
