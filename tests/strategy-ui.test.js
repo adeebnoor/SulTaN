@@ -2,7 +2,7 @@
 'use strict';
 const assert=require('node:assert/strict');
 global.SultanLocales={en:require('../src/locales/en.js'),ar:require('../src/locales/ar.js')};
-for(const f of ['final','guided','field-guide','lens','strategy','market'])require('../src/locales/'+f+'.js');
+for(const f of ['final','guided','field-guide','lens','strategy','services','market'])require('../src/locales/'+f+'.js');
 global.SultanI18n=require('../src/i18n.js');global.Sultan=require('../src/import.js');
 for(const f of ['final-core','context-core','sector-library','draft-engine','expert-lens','strategy-core'])require('../src/'+f+'.js');
 const E=Sultan,S=SultanStrategy;let lang='en',p=E.demo();const listeners={};
@@ -14,7 +14,7 @@ require('../src/strategy-ui.js');
 function stage(key){for(const fn of listeners.click)fn({target:{closest(selector){return selector==='[data-sw-tab]'?{dataset:{swTab:key}}:null;}}});return SultanStudio.view();}
 let count=0;
 for(const language of ['ar','en']){lang=language;
- for(const key of ['diagnosis','opportunities','delivery','operating','execution','review']){const h=stage(key);assert.ok(h.includes('id="sw-panel"'));assert.ok(h.includes('aria-selected="true"'));assert.ok(!h.includes('undefined'));count++;}
+ for(const key of ['diagnosis','services','opportunities','delivery','operating','execution','review']){const h=stage(key);assert.ok(h.includes('id="sw-panel"'));assert.ok(h.includes('aria-selected="true"'));assert.ok(!h.includes('undefined'));count++;}
  p.strategy.opportunities[0].route='acquire';let h=stage('delivery');assert.ok(h.includes('strategy.opportunities.0.dueDiligence'));assert.ok(!h.includes('data-path="strategy.opportunities.0.partnerIncentive"'));count++;
  p.strategy.opportunities[0].valueModel='public';h=stage('opportunities');assert.ok(!h.includes('data-path="strategy.opportunities.0.annualContract"'));count++;
  p.strategy.operating.mode='reuse';h=stage('operating');assert.ok(!h.includes('data-path="strategy.operating.targetModel"'));count++;
