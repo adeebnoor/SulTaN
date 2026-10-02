@@ -4,7 +4,7 @@
 const E=root.Sultan,S=root.SultanStrategy,I=root.SultanI18n,T=I.t,A=root.SultanApp;if(!S||!A)return;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=x=>E.num(x)?x.toLocaleString(I.locale,{maximumFractionDigits:2}):T('swUnknown');
-const tabs=['diagnosis','opportunities','delivery','operating','execution','review'];
+const tabs=['diagnosis','services','opportunities','delivery','operating','execution','review'];
 let goalText='',generating=false,generationNotice='';
 const openDetails=new Set();
 function goalComposer(p){const ai=!!root.SultanAI?.configured();return `<article class="card gp-composer"><h2>${esc(T('gpTitle'))}</h2><p>${esc(T('gpLead'))}</p><label class="field" for="gp-goals"><span>${esc(T('gpLabel'))}</span><textarea id="gp-goals" rows="4" maxlength="3100" placeholder="${esc(T('gpPlaceholder'))}" aria-describedby="gp-note">${esc(goalText)}</textarea></label><p id="gp-note" class="sw-note">${esc(T('gpNote'))}</p>${ai?`<label class="gp-ai"><input type="checkbox" id="gp-ai" checked> ${esc(T('gpAI'))}</label>`:''}<div class="toolbar"><button type="button" class="btn primary" data-gp="generate" ${generating?'disabled':''}>${esc(T('gpGenerate'))}</button>${E.selected(p).length?`<button type="button" class="btn" data-gp="existing" ${generating?'disabled':''}>${esc(T('gpExisting'))}</button>`:''}<button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button></div><p id="gp-status" role="status" aria-live="polite">${esc(generating?T('gpWorking'):generationNotice)}</p></article>`;}
@@ -12,6 +12,14 @@ let active='diagnosis';try{const saved=sessionStorage.getItem('sultan.studio.tab
 const btn=(key,action,extra='')=>`<button type="button" class="btn" data-sw="${action}" ${extra}>${esc(T(key))}</button>`;
 const link=(key,section)=>`<button type="button" class="btn" data-action="goto" data-section="${section}">${esc(T(key))}</button>`;
 const title=(key,lead)=>`<h2>${esc(T(key))}</h2><p class="sw-note">${esc(T(lead))}</p>`;
+function svcField(obj,path,k,options=null){
+ const value=obj[k],id='svc_'+(path+'.'+k).replaceAll('.','_'),vals=options||S.enums[k],date=k.endsWith('Date')||k==='reviewDate',attrs=`id="${id}" data-path="${esc(path+'.'+k)}"`;
+ let control;if(vals){control=`<select ${attrs}>${vals.map(v=>`<option value="${esc(v)}" ${value===v?'selected':''}>${esc(T((k==='confidence'?'swV_':'svcV_')+v))}</option>`).join('')}</select>`;}
+ else if(date)control=`<input ${attrs} type="date" value="${esc(value||'')}">`;
+ else control=`<textarea ${attrs} rows="2" maxlength="12000">${esc(value||'')}</textarea>`;
+ return `<label class="field sw-field" for="${id}"><span>${esc(T('svcF_'+k))}</span>${control}<span class="field-error" hidden></span></label>`;
+}
+function svcChoiceField(p,obj,path){const id='svc_'+(path+'.optionId').replaceAll('.','_');return `<label class="field sw-field" for="${id}"><span>${esc(T('svcF_optionId'))}</span><select id="${id}" data-path="${esc(path+'.optionId')}"><option value=""></option>${p.options.map(o=>`<option value="${esc(o.id)}" ${obj.optionId===o.id?'selected':''}>${esc(o.title||T('swUnknown'))}</option>`).join('')}</select><span class="field-error" hidden></span></label>`;}
 function field(obj,path,k){
  const value=obj[k],id='sw_'+(path+'.'+k).replaceAll('.','_'),opts=S.enums[k],numeric=['annualContract','customers','recurringShare','grossMargin','year','quantity','unitCost','likelihood','impact'].includes(k),date=['start','end','validationDate','reviewDate'].includes(k);
  const attrs=`id="${id}" data-path="${esc(path+'.'+k)}" aria-describedby="${id}_help"`;
@@ -36,11 +44,38 @@ function opportunities(p,delivery=false){
 function rows(c,i,kind){const plural={activity:'activities',cost:'costs',risk:'risks'}[kind],extra={activity:['status'],cost:['year','quantity','unitCost','category'],risk:['likelihood','impact']}[kind];return `<h4>${esc(T('swRows_'+kind))}</h4>${c[plural].map((r,j)=>`<div class="sw-row"><b>${j+1}</b>${grid(r,`strategy.charters.${i}.${plural}.${j}`,[...S.fields[kind],...extra])}${btn('swRemove','remove-row',`data-index="${i}" data-kind="${kind}" data-row="${j}"`)}</div>`).join('')}${btn('swAdd_'+kind,'add-row',`data-kind="${kind}" data-index="${i}"`)}`;}
 function execution(p){let h=title('swTab_execution','swLinkedNote')+picker(p,'charter');return h+p.strategy.charters.map((c,i)=>{const path=`strategy.charters.${i}`,x=p.initiatives.find(x=>x.id===c.initiativeId),t=p.transitions.find(t=>t.id===x?.transitionId),owner=x?.owner||T('swUnknown');return `<article class="card sw-record"><h3>${esc(x?.title||T('swUnlinked'))}</h3><p>${esc(T('swF_owner'))}: ${esc(owner)} · ${esc(x?.startYear||'—')}–${esc(x?.endYear||'—')}</p><p class="sw-linked">${esc(T('swLinkedKpi'))}: <b>${esc(t?.kpi||T('swUnknown'))}</b> · ${esc(fmt(t?.baseline))} ← ${esc(fmt(t?.target))} ${esc(t?.unit||'')}</p>${grid(c,path,['priority','executionMode','sponsor','scope','benefit','benefitOwner'])}${disclosure(T('swLinkedKpi'),grid(c,path,['formula','measurementSource','frequency','outOfScope','resources','handover','reviewDate']),path+'.measurement')}${disclosure(T('swRows_activity'),rows(c,i,'activity'),path+'.activity')}${disclosure(T('swRows_cost'),rows(c,i,'cost')+`<p data-sw-cost-total="${i}">${esc(T('swCostTotal'))}: <b>${esc(fmt(S.costs(c).total))}</b></p><p class="sw-note">${esc(T('swBudgetNote'))}</p>`+btn('swSyncBudget','sync-budget',`data-index="${i}"`),path+'.cost')}${disclosure(T('swRows_risk'),rows(c,i,'risk'),path+'.risk')}${btn('swRemove','remove-charter',`data-index="${i}"`)}</article>`;}).join('');}
 function review(p){const r=S.readiness(p),q=S.issues(p);return title('swTab_review','swReviewNote')+`<div class="sw-stage-grid">${r.stages.map(x=>`<div class="sw-stage ${x.done?'complete':''}"><b>${esc(T('swTab_'+x.key))}</b><span>${esc(T(x.done?'swComplete':'swPending'))}</span></div>`).join('')}</div><p>${esc(T('swCycle'))}</p><article class="card"><h3>${esc(T('swOpen'))} (${q.length})</h3>${q.length?'<ul class="sw-issues">'+q.map(x=>`<li>${esc(x.message)}</li>`).join('')+'</ul>':`<p>${esc(T('swFieldsComplete'))}</p>`}</article>${link('swGoReview','review')}`;}
+function serviceHub(p){
+ const s=p.strategy||S.defaults(),v=s.services||S.defaults().services,r=S.serviceReadiness(p);
+ const phases=[['discover','svcMacro_discover','svcMacro_discoverD'],['decide','svcMacro_decide','svcMacro_decideD'],['challenge','svcMacro_challenge','svcMacro_challengeD'],['execute','svcMacro_execute','svcMacro_executeD'],['watch','svcMacro_watch','svcMacro_watchD']];
+ const defs=[
+  ['shift','svcShiftRadar','svcShiftRadarD','svcShiftRadarO','services','svc-shifts'],
+  ['channel','svcChannel','svcChannelD','svcChannelO','services','svc-shifts'],
+  ['inaction','svcCostInaction','svcCostInactionD','svcCostInactionO','services','svc-inaction'],
+  ['route','svcRoute','svcRouteD','svcRouteO','delivery',''],
+  ['partnership','svcPartnership','svcPartnershipD','svcPartnershipO','delivery',''],
+  ['recurring','svcRecurring','svcRecurringD','svcRecurringO','opportunities',''],
+  ['experiment','svcExperiment','svcExperimentD','svcExperimentO','delivery',''],
+  ['evidence','svcEvidence','svcEvidenceD','svcEvidenceO','diagnosis',''],
+  ['adversarial','svcAdversarial','svcAdversarialD','svcAdversarialO','council',''],
+  ['execution','svcExecution','svcExecutionD','svcExecutionO','execution',''],
+  ['benchmark','svcBenchmark','svcBenchmarkD','svcBenchmarkO','references',''],
+  ['board','svcBoard','svcBoardD','svcBoardO','council',''],
+  ['watch','svcWatch','svcWatchD','svcWatchO','services','svc-watch']
+ ];
+ let h=`<div class="sw-header"><span class="eyebrow">${esc(T('svcAvailable'))}</span><h2>${esc(T('svcTab'))}</h2><p>${esc(T('svcLead'))}</p><p><b>${esc(T('svcFlow'))}</b></p></div>`;
+ h+=`<div class="svc-flow">${phases.map(x=>`<div class="svc-phase"><b>${esc(T(x[1]))}</b><span>${esc(T(x[2]))}</span></div>`).join('')}</div>`;
+ h+=`<div class="svc-catalog">${defs.map(([key,titleKey,descKey,outKey,target,anchor])=>`<article class="svc-card"><span class="svc-status ${r[key]?.done?'done':'todo'}">${esc(T(r[key]?.done?'svcStatus_done':'svcStatus_start'))}</span><h3>${esc(T(titleKey))}</h3><p>${esc(T(descKey))}</p><p class="svc-output"><b>${esc(T('svcOutput'))}:</b> ${esc(T(outKey))}</p><div class="toolbar"><button type="button" class="btn small" data-svc-target="${esc(target)}" ${anchor?`data-svc-anchor="${esc(anchor)}"`:''}>${esc(T('svcOpen'))}</button></div></article>`).join('')}</div>`;
+ h+=`<article class="card svc-editor" id="svc-shifts"><h3>${esc(T('svcShiftEditor'))}</h3><p class="sw-note">${esc(T('svcShiftEditorD'))}</p>${v.shifts.map((x,i)=>{const path=`strategy.services.shifts.${i}`;return `<div class="svc-record">${svcField(x,path,'shiftType')}${svcField(x,path,'signal')}${svcField(x,path,'evidence')}${svcField(x,path,'implication')}${svcField(x,path,'horizon')}${svcField(x,path,'response')}${svcField(x,path,'confidence')}<div class="svc-actions">${btn('svcRemoveShift','svc-remove-shift',`data-index="${i}"`)}</div></div>`;}).join('')}${btn('svcAddShift','svc-add-shift')}</article>`;
+ h+=`<article class="card svc-editor" id="svc-inaction"><h3>${esc(T('svcInactionEditor'))}</h3><p class="sw-note">${esc(T('svcInactionEditorD'))}</p>${v.inaction.map((x,i)=>{const path=`strategy.services.inaction.${i}`;return `<div class="svc-record">${svcChoiceField(p,x,path)}${svcField(x,path,'decision')}${svcField(x,path,'consequence')}${svcField(x,path,'trigger')}${svcField(x,path,'window')}${svcField(x,path,'actionCost')}${svcField(x,path,'inactionCost')}${svcField(x,path,'reversibility')}${svcField(x,path,'learningValue')}${svcField(x,path,'owner')}${svcField(x,path,'reviewDate')}<div class="svc-actions">${btn('svcRemoveInaction','svc-remove-inaction',`data-index="${i}"`)}</div></div>`;}).join('')}${btn('svcAddInaction','svc-add-inaction')}</article>`;
+ const w=v.watch,path='strategy.services.watch';h+=`<article class="card svc-editor" id="svc-watch"><h3>${esc(T('svcWatchEditor'))}</h3><p class="sw-note">${esc(T('svcWatchEditorD'))}</p>${svcField(w,path,'owner')}${svcField(w,path,'cadence')}${svcField(w,path,'triggers')}${svcField(w,path,'nextReviewDate')}</article>`;
+ return h;
+}
 function view(){const p=A.getProject(),s=p.strategy||S.defaults();let h=`<div class="sw-header"><span class="eyebrow">${esc(T('mkEyebrow'))}</span><h1 tabindex="-1">${esc(T('swTitle'))}</h1><p>${esc(T('swLead'))}</p></div>`+goalComposer(p);
- if(!s.enabled)return h+`<article class="card sw-start"><p>${esc(T('swIntro'))}</p><div class="sw-stage-grid">${tabs.slice(0,5).map(k=>`<div class="sw-stage"><b>${esc(T('swTab_'+k))}</b></div>`).join('')}</div>${btn('swEnable','enable')}</article>`;
+ if(!s.enabled)return h+`<article class="card sw-start"><p>${esc(T('swIntro'))}</p><div class="sw-stage-grid">${['diagnosis','opportunities','delivery','operating','execution'].map(k=>`<div class="sw-stage"><b>${esc(T('swTab_'+k))}</b></div>`).join('')}</div>${btn('swEnable','enable')}</article>`;
  h+=`<div class="sw-tabs" role="tablist" aria-label="${esc(T('swTitle'))}">${tabs.map(k=>`<button type="button" role="tab" id="sw-tab-${k}" aria-selected="${active===k}" aria-controls="sw-panel" data-sw-tab="${k}" class="${active===k?'active':''}">${esc(T('swTab_'+k))}</button>`).join('')}</div><section id="sw-panel" role="tabpanel" aria-labelledby="sw-tab-${active}">`;
  if(p.isDemo)h+=`<p class="sw-note">${esc(T('swSampleNote'))}</p>`;
  if(active==='diagnosis')h+=`<article class="card">${title('swTab_diagnosis','swDiagnosisNote')}${grid(s.assessment,'strategy.assessment',S.fields.assessment)}${link('swGoMaturity','references')}</article>`;
+ if(active==='services')h+=serviceHub(p);
  if(active==='opportunities'||active==='delivery')h+=opportunities(p,active==='delivery');
  if(active==='operating')h+=`<article class="card">${title('swTab_operating','swOperatingNote')}${grid(s.operating,'strategy.operating',['mode','currentModel','gaps'])}${s.operating.mode==='reuse'?'':grid(s.operating,'strategy.operating',S.fields.operating.filter(k=>!['currentModel','gaps'].includes(k)))}</article>`;
  if(active==='execution')h+=execution(p);if(active==='review')h+=review(p);return h+'</section>';
@@ -53,9 +88,12 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-gp]'
  catch(err){generationNotice=err.message;const box=document.getElementById('gp-status');if(box)box.textContent=generationNotice;}
  finally{generating=false;document.querySelectorAll('[data-gp]').forEach(x=>x.disabled=false);}
 });
-document.addEventListener('click',e=>{const tab=e.target.closest('[data-sw-tab]');if(tab){active=tab.dataset.swTab;try{sessionStorage.setItem('sultan.studio.tab',active);}catch{}A.navigate('strategy');document.getElementById('sw-tab-'+active)?.focus();return;}
+document.addEventListener('click',e=>{const svc=e.target.closest('[data-svc-target]');if(svc){const target=svc.dataset.svcTarget,anchor=svc.dataset.svcAnchor;if(target==='services'){active='services';try{sessionStorage.setItem('sultan.studio.tab',active);}catch{}A.navigate('strategy');setTimeout(()=>document.getElementById(anchor)?.scrollIntoView({behavior:'smooth',block:'start'}),0);}else if(tabs.includes(target)){active=target;try{sessionStorage.setItem('sultan.studio.tab',active);}catch{}A.navigate('strategy');}else A.navigate(target);return;}const tab=e.target.closest('[data-sw-tab]');if(tab){active=tab.dataset.swTab;try{sessionStorage.setItem('sultan.studio.tab',active);}catch{}A.navigate('strategy');document.getElementById('sw-tab-'+active)?.focus();return;}
  const b=e.target.closest('[data-sw]');if(!b)return;const p=A.getProject(),s=p.strategy||S.defaults();try{
   if(b.dataset.sw==='enable'){S.ensure(p);save(p);return;}
+  if(b.dataset.sw==='svc-add-shift'){S.addShift(p);save(p);active='services';return;}
+  if(b.dataset.sw==='svc-add-inaction'){S.addInaction(p,E.selected(p)[0]?.id||'');save(p);active='services';return;}
+  if(b.dataset.sw==='svc-remove-shift'||b.dataset.sw==='svc-remove-inaction'){if(!confirm(T('swRemoveConfirm')))return;const key=b.dataset.sw==='svc-remove-shift'?'shifts':'inaction';s.services[key].splice(Number(b.dataset.index),1);save(p);active='services';return;}
   if(b.dataset.sw==='add-opportunity'||b.dataset.sw==='add-charter'){const opp=b.dataset.sw==='add-opportunity',id=document.getElementById('sw-pick-'+(opp?'opportunity':'charter'))?.value;if(!id)return;(opp?S.addOpportunity:S.addCharter)(p,id);save(p);return;}
   if(b.dataset.sw==='add-row'){const c=s.charters[Number(b.dataset.index)],kind=b.dataset.kind,key={activity:'activities',cost:'costs',risk:'risks'}[kind];if(!c||!key)return;if(c[key].length>=100)throw Error(T('swLimit'));c[key].push(S[kind](p.institution.startYear));save(p);const cards=document.querySelectorAll('.sw-record');cards[Number(b.dataset.index)]?.querySelectorAll('details').forEach(x=>{if(x.querySelector(`[data-kind="${kind}"]`)){x.open=true;openDetails.add(x.dataset.swDetail);}});return;}
   if(['remove-opportunity','remove-charter','remove-row'].includes(b.dataset.sw)){
