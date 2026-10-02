@@ -3,7 +3,7 @@ from pathlib import Path
 import base64,hashlib,json,re,shutil,zipfile,os
 from urllib.parse import urlsplit
 base=Path(__file__).resolve().parent
-VERSION = '0.12.0-beta'
+VERSION = '0.12.1-beta'
 default_origin='https://sultan-strategy-beta.onrender.com/'
 origin=os.environ.get('SULTAN_PUBLIC_URL',default_origin).rstrip('/')+'/'
 u=urlsplit(origin)
