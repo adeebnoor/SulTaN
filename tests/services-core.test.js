@@ -16,9 +16,9 @@ test('Legacy strategy projects gain empty services without invented claims',()=>
 test('Shift radar preserves unknowns and requires evidence for completion',()=>{
  const p=E.blank();S.ensure(p);const x=S.addShift(p);
  Object.assign(x,{signal:'Synthetic channel shift',implication:'Synthetic interface risk'});
- assert.equal(S.serviceReadiness(p).shift.done,true);
+ assert.equal(S.serviceReadiness(p).shift.done,false);
  assert.ok(S.issues(p).some(i=>i.code==='shift'));
- x.evidence='Synthetic primary source';assert.ok(!S.issues(p).some(i=>i.code==='shift'));
+ x.evidence='Synthetic primary source';assert.equal(S.serviceReadiness(p).shift.done,true);assert.ok(!S.issues(p).some(i=>i.code==='shift'));
 });
 test('Channel risk is a specific shift type, not every external trend',()=>{
  const p=E.blank();S.ensure(p);const x=S.addShift(p);Object.assign(x,{shiftType:'technology',signal:'Synthetic model capability',evidence:'Synthetic source',implication:'Synthetic implication'});
