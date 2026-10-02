@@ -96,14 +96,14 @@ const usageOf=m=>({inputTokens:m?.usage?.input_tokens||0,outputTokens:m?.usage?.
 /* ---------------------------------------------------------------- prompts */
 function methodSystem(){
  return [
-  'You are the drafting and research engine inside SULTAN, a bilingual (Arabic/English) strategy workspace for Saudi institutions built on the SULTAN Decision Accountability Method.',
+  'You are the drafting and research engine inside SULTAN, a bilingual (Arabic/English) strategy workspace for institutions in their explicitly chosen jurisdiction, built on the SULTAN Decision Accountability Method.',
   'The method chains: mandate → strategic choice → evidence/reference → authority (enablers) → initiative → evidence-gated funding → outcome. Identity (mission, beneficiaries, distinctive assets, liabilities, context, culture, vision, what we will not prioritise) comes before any initiative.',
   'Rules you must respect in every output:',
   '1. Unknown is never zero. If a baseline, target, budget, date or owner is not supported by the brief, the documents or a cited source, leave it null or empty and say what evidence would establish it. Never invent statistics, benchmark values, laws, programme targets or quotations.',
   '2. Mandatory requirements (regulations, licences, safety, data protection) are choices of type "requirement": always selected, never scored against discretionary alternatives.',
   '3. A moonshot keeps its strategic value even without a track record, but needs a foothold and an explicit stop gate.',
   '4. A divest choice (stop/merge/withdraw) must name what stops, where released resources go, the evidence and the impact on people.',
-  '5. References must be relevant to the Saudi context of this institution: state why they fit and what may be adapted versus what must not change. Use the bundled library below as a verified starting point and prefer official issuers (ministries, authorities, commissions) with root URLs.',
+  '5. References must be relevant to the institution\'s explicitly chosen jurisdiction: state why they fit and what may be adapted versus what must not change. Do not infer jurisdiction from language. Treat general planning templates as prompts, never verified regulations. Check the stated scope and date of any bundled references; prefer official issuers with source URLs.',
   '6. Enablers model authority: who controls the decision (internal/external/shared/unknown) and its status. Do not mark anything "ready" unless the brief or a document proves it; prefer "unknown" or "pending".',
   '7. Preference scores (0-100 per criterion) are stated judgements, not probabilities. Explain each score in its note against the criterion anchors.',
   '8. Annual milestones must cover every year of the horizon; targets move from baseline to the final target; the last year equals the final target.',
@@ -120,9 +120,10 @@ function methodSystem(){
 function lensBlock(){try{return root.SultanLens?.promptBlock?.()||'';}catch{return '';}}
 function lensQuestions(){try{return root.SultanLens?.reviewQuestions?.()||[];}catch{return [];}}
 function groundingBlock(project){
- const Lib=root.SultanLibrary,ctx=project?.context||{};
+ const ctx=project?.context||{},Lib=root.SultanLibrary?.forMarket?.(ctx.market)||root.SultanLibrary;
  const sectorId=ctx.sectorId||Lib?.detect?.(project?.institution?.sector)?.id||'';
  const g=Lib&&sectorId?Lib.grounding(sectorId,ctx.typeId,lang()):'';
+ if(ctx.market==='global')return (root.SultanMarket?.describe(project)||'International planning context; country unspecified.')+'\n'+(g||'No verified local regulatory references supplied.');
  return g?`Bundled sector library (verified ${Lib.verifiedOn}; re-verify before publishing):\n${g}`:'No bundled sector library matched this institution; rely on official sources and say so when uncertain.';
 }
 function documentBlocks(documents=[]){
@@ -144,7 +145,7 @@ async function researchContext({project,documents=[],onProgress,focus=''}={}){
    'Institution digest:\n'+(D?D.digest(project):JSON.stringify(project?.institution||{})),
    groundingBlock(project),
    focus?'Research focus (takes precedence over the generic sector checklist): '+focus:'',
-   s.webSearch?'Use web_search to verify and extend the library: current regulations and their issuers, national programmes and published targets for this sector, national and international indicators with the most recent published values (year + source), and studies or official reports from the last five years about this sector in Saudi Arabia. Prefer official domains (.gov.sa, vision2030.gov.sa, etec.gov.sa, oecd.org, iea.nl). Do not cite a value you did not see.':'Web search is disabled: use only the library, the brief and the attached documents, and flag what should be verified online.',
+   s.webSearch?(project?.context?.market==='global'?'Use web_search for the explicitly named jurisdictions in the institution digest. If none is named, ask which jurisdiction applies; do not assume Saudi Arabia or any other country. Prefer official regulators and primary sources. Record dates and scope. Never invent benchmark values or legal applicability.':'Use web_search to verify and extend the library: current regulations and their issuers, national programmes and published targets for this sector, national and international indicators with the most recent published values (year + source), and studies or official reports from the last five years about this sector in Saudi Arabia. Prefer official domains (.gov.sa, vision2030.gov.sa, etec.gov.sa, oecd.org, iea.nl). Do not cite a value you did not see.'):'Web search is disabled: use only the library, the brief and the attached documents, and flag what should be verified online.',
    documents.length?'For each attached document, add a section "Document: <name>" with a 3-5 line summary of what it says that matters for the strategy (baselines, commitments, constraints, previous targets).':'',
    'Output a research memo in '+(lang()==='ar'?'Arabic':'English')+' with numbered sources. For each source give: title, issuer, URL, year, what it establishes, and why it matters for this institution (one line). End with a short list of open questions the institution must answer itself.'
   ].filter(text).join('\n\n')}

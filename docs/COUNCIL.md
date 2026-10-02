@@ -34,7 +34,7 @@ The latest 12 checkpoints retain the decision note, next review date and busines
 
 Reminders appear when the app opens. Import the ICS file for calendar notifications; SULTAN sends no scheduled emails or background alerts. Export project backups to retain a longer archive.
 
-Offline preparation is explicit. The service worker caches a static allow-list, including export libraries, and never caches AI POST data or cross-origin requests. The manifest uses the approved existing logo. The web build has cacheable hashed scripts/styles; the standalone HTML retains embedded export libraries. Standalone sharing points to the hosted reader. AI needs a connection.
+On the hosted site, offline preparation now runs automatically after load (0.12.0-beta). The Council section reports readiness and offers retry if preparation fails. The service worker caches a static allow-list, including export libraries, and never caches AI POST data or cross-origin requests. The manifest uses the approved existing logo. The web build has cacheable hashed scripts/styles; the standalone HTML retains embedded export libraries. Standalone sharing points to the hosted reader. AI needs a connection.
 
 ## Verification
 

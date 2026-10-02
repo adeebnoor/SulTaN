@@ -49,6 +49,7 @@ jobs:
         env:
           SULTAN_LIVE_URL: https://sultan-strategy-beta.onrender.com/
         run: |
+          python tests/market_browser.py
           python tests/surfacing_browser.py
           python tests/rev3_browser.py
           python tests/consulting_browser.py

@@ -7,7 +7,7 @@ global.SultanI18n=require('../src/i18n.js');
 global.Sultan=require('../src/import.js');require('../src/final-core.js');require('../src/context-core.js');
 const E=global.Sultan;
 const clone=x=>JSON.parse(JSON.stringify(x));
-{ const p=E.blank();assert.deepEqual(p.context,{sectorId:'',typeId:'',brief:'',sources:[],documents:[],reviews:[],ai:{enabled:false,consentAt:'',log:[]}}); }
+{ const p=E.blank();assert.deepEqual(p.context,{market:'sa',country:'Saudi Arabia',currency:'SAR',sectorId:'',typeId:'',brief:'',sources:[],documents:[],reviews:[],ai:{enabled:false,consentAt:'',log:[]}}); }
 { const p=E.demo();assert.equal(p.context.sectorId,'highered');assert.equal(p.context.sources.length,3);assert.equal(E.contextSummary(p).proposed,1);assert.deepEqual(E.validateImport(clone(p)),p,'demo with dossier must round-trip'); }
 { const p=E.demo();const legacy=clone(p);delete legacy.context;const q=E.validateImport(legacy);assert.equal(q.context.sources.length,0,'legacy exports gain an empty dossier'); }
 { const p=clone(E.demo());p.context.extra='x';assert.throws(()=>E.validateImport(p),/context/i); }

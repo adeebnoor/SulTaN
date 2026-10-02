@@ -11,6 +11,7 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const num=x=>typeof x==='number'&&Number.isFinite(x);
 const text=x=>typeof x==='string'&&x.trim().length>0;
 const P=x=>Lib.pick(x,I.language);
+const scoped=()=>Lib.forMarket?.((section()==='guide'?state.market:project()?.context?.market)||'sa')||Lib;
 const section=()=>location.hash.slice(1)||'home';
 const project=()=>root.SultanApp?.getProject?.();
 const STATE_KEY='sultan.guided.v2';
@@ -21,14 +22,14 @@ let docs=[];  // in-memory attachments (base64 / text); never persisted
 let busy=false;
 
 /* ---------------------------------------------------------------- wizard state */
-function blankState(){return {step:1,sectorId:'',typeId:'',brief:'',institution:{name:'',vision:'',beneficiaries:'',mission:'',startYear:thisYear+1,endYear:thisYear+4},goals:{},custom:[],funding:{},context:{sources:[],memo:'',documents:[],openQuestions:[]},aiLog:[],useAI:true};}
+function blankState(){return {step:1,market:root.SultanMarket?.preferred()||'sa',country:root.SultanMarket?.preferred()==='global'?'':'Saudi Arabia',currency:root.SultanMarket?.preferred()==='global'?'':'SAR',sectorId:'',typeId:'',brief:'',institution:{name:'',vision:'',beneficiaries:'',mission:'',startYear:thisYear+1,endYear:thisYear+4},goals:{},custom:[],funding:{},context:{sources:[],memo:'',documents:[],openQuestions:[]},aiLog:[],useAI:true};}
 let state=load();
 function load(){try{const s=JSON.parse(localStorage.getItem(STATE_KEY)||'null');if(s&&typeof s==='object')return Object.assign(blankState(),s,{institution:Object.assign(blankState().institution,s.institution||{}),context:Object.assign(blankState().context,s.context||{})});}catch{}return blankState();}
 function save(){try{localStorage.setItem(STATE_KEY,JSON.stringify(state));}catch{}}
 function reset(){state=blankState();docs=[];save();}
-function setPath(path,value){const keys=path.split('.');let o=state;for(const k of keys.slice(0,-1)){if(o[k]===undefined||o[k]===null)o[k]={};o=o[k];}o[keys.at(-1)]=value;save();}
-function selectedGoals(){return Object.entries(state.goals).filter(([,g])=>g&&g.selected).map(([goalId,g])=>({goalId,baseline:num(g.baseline)?g.baseline:null,target:num(g.target)?g.target:null,owner:g.owner||''}));}
-function spec(){return {sectorId:state.sectorId,typeId:state.typeId,brief:state.brief,institution:state.institution,goals:[...selectedGoals(),...state.custom.filter(c=>text(c.title)).map(c=>({custom:c,owner:c.owner||'',baseline:num(c.baseline)?c.baseline:null,target:num(c.target)?c.target:null}))],funding:state.funding};}
+function setPath(path,value){if(path==='market'){state.market=value;if(!Object.keys(state.funding).length){state.country=value==='sa'?'Saudi Arabia':'';state.currency=value==='sa'?'SAR':'';}save();return;}const keys=path.split('.');let o=state;for(const k of keys.slice(0,-1)){if(o[k]===undefined||o[k]===null)o[k]={};o=o[k];}o[keys.at(-1)]=value;save();}
+function selectedGoals(){return Object.entries(state.goals).filter(([id,g])=>g&&g.selected&&scoped().goal(state.sectorId,id)).map(([goalId,g])=>({goalId,baseline:num(g.baseline)?g.baseline:null,target:num(g.target)?g.target:null,owner:g.owner||''}));}
+function spec(){return {market:state.market,country:state.country||(state.market==='sa'?'Saudi Arabia':''),currency:state.currency||(state.market==='sa'?'SAR':''),sectorId:state.sectorId,typeId:state.typeId,brief:state.brief,institution:state.institution,goals:[...selectedGoals(),...state.custom.filter(c=>text(c.title)).map(c=>({custom:c,owner:c.owner||'',baseline:num(c.baseline)?c.baseline:null,target:num(c.target)?c.target:null}))],funding:state.funding};}
 function aiReady(){return !!AI&&AI.configured();}
 function go(step){state.step=Math.max(1,Math.min(5,step));save();root.SultanApp.navigate('guide');}
 
@@ -38,10 +39,10 @@ const field=(label,path,value,type='text',help='',attrs='')=>{const id='gw_'+pat
 function stepper(){const labels=[T('gwStep1'),T('gwStep2'),T('gwStep3'),T('gwStep4'),T('gwStep5')];return `<ol class="gw-steps" aria-label="${esc(T('gwStepsLabel'))}">${labels.map((l,i)=>`<li class="${state.step===i+1?'current':state.step>i+1?'done':''}"><button type="button" data-gw-action="go" data-step="${i+1}" ${state.step===i+1?'aria-current="step"':''}><span>${i+1}</span>${esc(l)}</button></li>`).join('')}</ol>`;}
 function aiStatusLine(){if(!AI)return '';const s=AI.status();return `<div class="gw-ai-status ${s.configured?'on':'off'}"><span class="status-light"></span><span>${esc(s.configured?T('gwAiOn',[AI.MODELS.find(m=>m.id===s.model)?.label||s.model]):T('gwAiOff'))}</span><button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button></div>`;}
 function step1(){
- const cards=Lib.sectors.map(s=>{const c=Lib.counts(s.id);return `<label class="gw-sector ${state.sectorId===s.id?'selected':''}"><input type="radio" name="gw-sector" value="${esc(s.id)}" data-gw-action="sector" ${state.sectorId===s.id?'checked':''}><b>${esc(P(s.name))}</b><small>${esc(P(s.short))}</small><span class="gw-counts">${esc(T('gwLibraryCounts',[c.regulations,c.indicators,c.goals]))}</span></label>`;}).join('');
- const sector=Lib.sector(state.sectorId);
+ const cards=scoped().sectors.map(s=>{const c=scoped().counts(s.id);return `<label class="gw-sector ${state.sectorId===s.id?'selected':''}"><input type="radio" name="gw-sector" value="${esc(s.id)}" data-gw-action="sector" ${state.sectorId===s.id?'checked':''}><b>${esc(P(s.name))}</b><small>${esc(P(s.short))}</small><span class="gw-counts">${esc(T('gwLibraryCounts',[c.regulations,c.indicators,c.goals]))}</span></label>`;}).join('');
+ const sector=scoped().sector(state.sectorId);
  const types=sector?`<label class="field gw-field"><span>${esc(T('gwTypeLabel'))}</span><select data-gw="typeId" data-gw-action="type"><option value="">${esc(T('s252'))}</option>${sector.types.map(t=>`<option value="${esc(t.id)}" ${state.typeId===t.id?'selected':''}>${esc(P(t.name))}</option>`).join('')}</select></label>`:'';
- return `<article class="card gw-card"><h2>${esc(T('gwStep1Title'))}</h2><p class="muted">${esc(T('gwStep1Lead'))}</p><div class="gw-sector-grid">${cards}</div>${types}${sector?`<p class="hint">${esc(T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p>`:''}</article>`;
+ return `<article class="card gw-card"><h2>${esc(T('gwStep1Title'))}</h2>${root.SultanMarketUI?.wizardFields(state)||''}<p class="muted">${esc(T('gwStep1Lead'))}</p><div class="gw-sector-grid">${cards}</div>${types}${sector?`<p class="hint">${esc(state.market==='global'&&section()==='guide'||section()!=='guide'&&project()?.context?.market==='global'?T('mkLibrary'):T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p>`:''}</article>`;
 }
 function step2(){
  const i=state.institution,years=[];for(let y=thisYear;y<=thisYear+8;y++)years.push(y);
@@ -59,8 +60,8 @@ function sourceRow(s,k){
  return `<li class="gw-source ${s.status}" data-index="${k}"><div class="gw-source-head"><span class="pill ${s.origin==='ai'?'ai':'lib'}">${esc(s.origin==='ai'?T('uxOriginAiShort'):T('uxOriginLibraryShort'))}</span><span class="pill">${esc(kindLabel(s.kind))}</span><b>${esc(s.title)}</b></div><p>${esc([s.issuer,s.year].filter(Boolean).join(' · '))}${s.url?` · <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(T('gwOpenSource'))} ↗</a>`:''}</p><p>${esc(s.summary)}</p>${s.relevance?`<p class="gw-relevance"><b>${esc(T('ctxColRelevance'))}:</b> ${esc(s.relevance)}</p>`:''}<div class="toolbar"><button type="button" class="btn small ${s.status==='accepted'?'primary':''}" data-gw-action="source-status" data-index="${k}" data-status="accepted">${esc(T('ctxAccept'))}</button><button type="button" class="btn small ${s.status==='rejected'?'danger':''}" data-gw-action="source-status" data-index="${k}" data-status="rejected">${esc(T('ctxReject'))}</button></div></li>`;
 }
 function step3(){
- const sector=Lib.sector(state.sectorId);
- const libRefs=sector?Lib.referencesFor(sector.id,state.typeId):[];
+ const sector=scoped().sector(state.sectorId);
+ const libRefs=sector?scoped().referencesFor(sector.id,state.typeId):[];
  const libList=sector?`<details class="gw-lib-refs" open><summary>${esc(T('gwLibraryRefs',[libRefs.length,sector.programs.length,sector.indicators.length]))}</summary><ul>${libRefs.map(r=>`<li><b>${esc(P(r.name))}</b> <small>${esc(P(r.issuer))}${r.url?` · <a href="${esc(r.url)}" target="_blank" rel="noopener noreferrer">↗</a>`:''}</small><br><span class="muted">${esc(P(r.relevance))}</span></li>`).join('')}</ul><p class="help">${esc(T('gwLibraryRefsNote'))}</p></details>`:`<p class="hint">${esc(T('gwNoSector'))}</p>`;
  const ctx=state.context;
  const ai=aiReady();
@@ -72,14 +73,14 @@ function step3(){
  return `<article class="card gw-card"><h2>${esc(T('gwStep3Title'))}</h2><p class="muted">${esc(T('gwStep3Lead'))}</p>${libList}${gather}${list}${questions}${docsum}${memo}</article>`;
 }
 function goalCard(g,sectorId){
- const st=state.goals[g.id]||{},ind=Lib.indicator(sectorId,g.kpi),sel=!!st.selected;
+ const st=state.goals[g.id]||{},ind=scoped().indicator(sectorId,g.kpi),sel=!!st.selected;
  const typeLabel={requirement:T('s215'),differentiation:T('s216'),moonshot:T('s217'),divest:T('divest')}[g.type]||g.type;
  const drafted=T('gwGoalDrafts',[(g.refs||[]).length,(g.enablers||[]).length,(g.initiatives||[]).length]);
  return `<li class="gw-goal ${sel?'selected':''}" data-goal="${esc(g.id)}"><label class="gw-goal-head"><input type="checkbox" data-gw-action="goal" data-goal="${esc(g.id)}" ${sel?'checked':''}><span class="gw-goal-title"><b>${esc(P(g.title))}</b><span class="pill blue">${esc(typeLabel)}</span></span></label><p class="muted">${esc(T('gwGoalKpi'))}: ${esc(ind?P(ind.name):'—')}${ind?` (${esc(P(ind.unit))}, ${esc(ind.direction==='down'?T('s339'):T('s338'))})`:''} · ${esc(drafted)}</p><div class="gw-goal-fields grid3" ${sel?'':'hidden'}>${g.type==='requirement'?'':field(T('s341'),`goals.${g.id}.baseline`,st.baseline,'number',T('gwBaselineHelp'),'step="any"')}${field(T('s343'),`goals.${g.id}.target`,st.target,'number',T('gwTargetHelp'),'step="any"')}${field(T('s305'),`goals.${g.id}.owner`,st.owner||'','text',T('gwOwnerHelp'))}</div></li>`;
 }
 function step4(){
- const sector=Lib.sector(state.sectorId);
- const goals=sector?Lib.goalsFor(sector.id,state.typeId):[];
+ const sector=scoped().sector(state.sectorId);
+ const goals=sector?scoped().goalsFor(sector.id,state.typeId):[];
  const groups={};for(const g of goals)(groups[g.group]=groups[g.group]||[]).push(g);
  const groupLabel=k=>T('gwGroup_'+k);
  const lists=Object.entries(groups).map(([k,list])=>`<h3 class="gw-group">${esc(groupLabel(k))}</h3><ul class="gw-goals">${list.map(g=>goalCard(g,sector.id)).join('')}</ul>`).join('');
@@ -90,7 +91,7 @@ function step4(){
 }
 function yearsOf(){const s=state.institution.startYear,e=Math.max(s,Math.min(state.institution.endYear,s+15));const out=[];for(let y=s;y<=e;y++)out.push(y);return out;}
 function step5(){
- const sector=Lib.sector(state.sectorId),sel=selectedGoals(),customs=state.custom.filter(c=>text(c.title));
+ const sector=scoped().sector(state.sectorId),sel=selectedGoals(),customs=state.custom.filter(c=>text(c.title));
  let preview=null;try{preview=D.build(spec());}catch(err){preview=null;}
  const counts=preview?{options:preview.options.length,references:preview.references.length,transitions:preview.transitions.length,enablers:preview.enablers.length,initiatives:preview.initiatives.length,mandates:preview.mandates.length,sources:state.context.sources.filter(s=>s.status==='accepted').length+preview.context.sources.length}:null;
  const rows=counts?[['s209',counts.options],['s285',counts.mandates],['s312',counts.references],['s210',counts.transitions],['s212',counts.enablers],['s213',counts.initiatives],['ctxSourcesLabel',counts.sources]].map(([k,v])=>`<div><span>${esc(T(k))}</span><strong>${v}</strong></div>`).join(''):'';
@@ -106,7 +107,7 @@ function step5(){
 }
 function view(){
  const steps=[step1,step2,step3,step4,step5];
- return `<div class="heading gw-heading"><div><div class="eyebrow">SULTAN / ${esc(T('gwEyebrow'))}</div><h1 tabindex="-1">${esc(T('gwTitle'))}</h1><p>${esc(T('gwLead'))}</p></div><div class="toolbar">${btn(T('gwReset'),'reset','small')}<button type="button" class="btn small" data-action="goto" data-section="identity">${esc(T('gwToWorkspace'))}</button></div></div>${stepper()}${steps[state.step-1]()}<div class="gw-nav">${state.step>1?btn(T('s545'),'prev'):'<span></span>'}${state.step<5?btn(T('s547')+[T('gwStep1'),T('gwStep2'),T('gwStep3'),T('gwStep4'),T('gwStep5')][state.step],'next','primary'):''}</div>`;
+ return `<div class="heading gw-heading"><div><div class="eyebrow">${esc(T('mkGuided'))}</div><h1 tabindex="-1">${esc(T('gwTitle'))}</h1><p>${esc(T('gwLead'))}</p></div><div class="toolbar">${btn(T('gwReset'),'reset','small')}<button type="button" class="btn small" data-action="goto" data-section="identity">${esc(T('gwToWorkspace'))}</button></div></div>${stepper()}${steps[state.step-1]()}<div class="gw-nav">${state.step>1?btn(T('s545'),'prev'):'<span></span>'}${state.step<5?btn(T('s547')+[T('gwStep1'),T('gwStep2'),T('gwStep3'),T('gwStep4'),T('gwStep5')][state.step],'next','primary'):''}</div>`;
 }
 
 /* ---------------------------------------------------------------- actions */
@@ -143,7 +144,7 @@ async function build(useAI,box){
   progress(box,T('gwBuilding'));
   let p=D.build(spec());applyContext(p);
   if(useAI&&aiReady()){
-   const hints=[...selectedGoals().map(g=>P(Lib.goal(state.sectorId,g.goalId)?.title)),...state.custom.filter(c=>text(c.title)).map(c=>c.title)].filter(text);
+   const hints=[...selectedGoals().map(g=>P(scoped().goal(state.sectorId,g.goalId)?.title)),...state.custom.filter(c=>text(c.title)).map(c=>c.title)].filter(text);
    const r=await AI.generateStrategy({project:p,goalHints:hints,onProgress:x=>progress(box,T('gwAiStreaming',[x.chars]))});
    p=D.fromAI(r.data,p,{mode:'replace'});logUsage(p,'strategy',r.usage);
    if(r.truncated)toast(T('aiErrTruncated'),9000);
@@ -164,7 +165,7 @@ async function addFiles(files){
  }
  root.SultanApp.navigate('guide');
 }
-document.addEventListener('input',e=>{const el=e.target.closest('[data-gw]');if(!el)return;let v=el.value;if(el.type==='number')v=v.trim()===''?null:Number(v);if(/Year$/.test(el.dataset.gw))v=Number(v);setPath(el.dataset.gw,v);});
+document.addEventListener('input',e=>{const el=e.target.closest('[data-gw]');if(!el)return;let v=el.value;if(el.dataset.gw==='currency')v=v.toUpperCase();if(el.type==='number')v=v.trim()===''?null:Number(v);if(/Year$/.test(el.dataset.gw))v=Number(v);setPath(el.dataset.gw,v);});
 document.addEventListener('change',e=>{
  const el=e.target;
  if(el.matches?.('[data-gw-action="docs"]')){addFiles(el.files);return;}
@@ -244,8 +245,8 @@ function dossierCard(){
  const p=project();if(!p?.context)return '';
  const c=p.context,sources=c.sources;
  const rows=sources.length?`<ul class="gw-sources compact">${sources.map((s,k)=>`<li class="gw-source ${s.status}"><div class="gw-source-head"><span class="pill ${s.origin==='ai'?'ai':s.origin==='library'?'lib':''}">${esc(s.origin==='ai'?T('uxOriginAiShort'):s.origin==='library'?T('uxOriginLibraryShort'):T('ctxOriginUser'))}</span><span class="pill">${esc(kindLabel(s.kind))}</span><b>${esc(s.title)}</b><span class="pill status-${s.status}">${esc(T('ctxStatus_'+s.status))}</span></div><p>${esc([s.issuer,s.year].filter(Boolean).join(' · '))}${s.url?` · <a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">↗</a>`:''} ${esc(s.relevance||s.summary)}</p><div class="toolbar">${s.status!=='accepted'?`<button type="button" class="btn small primary" data-ctx="status" data-id="${esc(s.id)}" data-status="accepted">${esc(T('ctxAccept'))}</button>`:''}${s.status!=='rejected'?`<button type="button" class="btn small" data-ctx="status" data-id="${esc(s.id)}" data-status="rejected">${esc(T('ctxReject'))}</button>`:''}${s.status==='accepted'&&['regulation','benchmark','indicator','program'].includes(s.kind)&&!p.references.some(r=>r.name===s.title)&&!p.mandates.some(m=>m.title===s.title)?`<button type="button" class="btn small" data-ctx="to-reference" data-id="${esc(s.id)}">${esc(s.kind==='program'?T('ctxToMandate'):T('ctxToReference'))}</button>`:''}<button type="button" class="btn small danger" data-ctx="remove" data-id="${esc(s.id)}">${esc(T('s254'))}</button></div></li>`).join('')}</ul>`:`<p class="muted">${esc(T('ctxEmpty'))}</p>`;
- const sector=Lib.sector(c.sectorId)||Lib.detect(p.institution.sector);
- return `<article class="card ctx-dossier"><div class="feature-head"><h2>${esc(T('ctxDossierTitle'))}</h2><span class="pill">${esc(T('ctxCounts',[E.contextSummary(p).accepted,sources.length]))}</span></div><p class="muted">${esc(T('ctxDossierLead'))}</p>${text(c.brief)?`<p><b>${esc(T('ctxBriefLabel'))}:</b> ${esc(c.brief)}</p>`:''}<div class="toolbar"><button type="button" class="btn small primary" data-ctx="library">${esc(T('libAddReference'))}</button><button type="button" class="btn small" data-ctx="gather" ${aiReady()?'':'disabled'}>✦ ${esc(T('gwGather'))}</button><button type="button" class="btn small" data-ctx="add">${esc(T('ctxAddManual'))}</button>${AI?`<button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button>`:''}</div><div class="gw-progress" hidden></div>${rows}${sector?`<p class="help">${esc(T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p>`:''}</article>`;
+ const sector=scoped().sector(c.sectorId)||scoped().detect(p.institution.sector);
+ return `<article class="card ctx-dossier"><div class="feature-head"><h2>${esc(T('ctxDossierTitle'))}</h2><span class="pill">${esc(T('ctxCounts',[E.contextSummary(p).accepted,sources.length]))}</span></div><p class="muted">${esc(T('ctxDossierLead'))}</p>${text(c.brief)?`<p><b>${esc(T('ctxBriefLabel'))}:</b> ${esc(c.brief)}</p>`:''}<div class="toolbar"><button type="button" class="btn small primary" data-ctx="library">${esc(T('libAddReference'))}</button><button type="button" class="btn small" data-ctx="gather" ${aiReady()?'':'disabled'}>✦ ${esc(T('gwGather'))}</button><button type="button" class="btn small" data-ctx="add">${esc(T('ctxAddManual'))}</button>${AI?`<button type="button" class="btn small" data-gw-action="ai-settings">${esc(T('aiSettings'))}</button>`:''}</div><div class="gw-progress" hidden></div>${rows}${sector?`<p class="help">${esc(state.market==='global'&&section()==='guide'||section()!=='guide'&&project()?.context?.market==='global'?T('mkLibrary'):T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p>`:''}</article>`;
 }
 function renderDossier(){
  if(section()!=='references')return;const content=document.getElementById('content');if(!content||content.querySelector('.ctx-dossier'))return;
@@ -257,14 +258,14 @@ function renderLibraryButtons(){
  if(s==='references'){const p=project();(p?.transitions||[]).forEach((t,i)=>{const sel=content.querySelector(`[data-path="transitions.${i}.direction"]`),card=sel?.closest('article.card');if(!card||card.querySelector('[data-lib="interpolate"]'))return;const ok=['up','down'].includes(t.direction)&&num(t.baseline)&&num(t.target);const toolbar=card.querySelector(':scope > .toolbar')||card;toolbar.insertAdjacentHTML('afterbegin',`<button type="button" class="btn small" data-lib="interpolate" data-index="${i}" ${ok?'':'disabled'} title="${esc(ok?'':T('libInterpolateNeeds'))}">${esc(T('libInterpolate'))}</button>`);});}
 }
 function libraryDialogHtml(kind){
- const p=project();const sector=Lib.sector(p?.context?.sectorId)||Lib.detect(p?.institution?.sector)||Lib.sectors[0];
- const sectorSelect=`<label class="field"><span>${esc(T('s271'))}</span><select id="libSector">${Lib.sectors.map(s=>`<option value="${s.id}" ${sector?.id===s.id?'selected':''}>${esc(P(s.name))}</option>`).join('')}</select></label>`;
- return `<dialog id="libDialog" aria-labelledby="libDialogTitle" data-kind="${kind}"><div class="dialog-header"><div><span class="eyebrow">SULTAN · ${esc(T('libEyebrow'))}</span><h2 id="libDialogTitle">${esc(kind==='goals'?T('libAddGoal'):T('libAddReference'))}</h2></div><button type="button" class="btn small" data-lib="close">${esc(T('close'))}</button></div><p>${esc(kind==='goals'?T('libGoalsLead'):T('libRefsLead'))}</p>${sectorSelect}<div id="libList"></div><div class="toolbar"><button type="button" class="btn primary" data-lib="apply">${esc(T('libApply'))}</button><button type="button" class="btn" data-lib="close">${esc(T('close'))}</button></div><p class="help">${esc(T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p></dialog>`;
+ const p=project();const sector=scoped().sector(p?.context?.sectorId)||scoped().detect(p?.institution?.sector)||scoped().sectors[0];
+ const sectorSelect=`<label class="field"><span>${esc(T('s271'))}</span><select id="libSector">${scoped().sectors.map(s=>`<option value="${s.id}" ${sector?.id===s.id?'selected':''}>${esc(P(s.name))}</option>`).join('')}</select></label>`;
+ return `<dialog id="libDialog" aria-labelledby="libDialogTitle" data-kind="${kind}"><div class="dialog-header"><div><span class="eyebrow">SULTAN · ${esc(T('libEyebrow'))}</span><h2 id="libDialogTitle">${esc(kind==='goals'?T('libAddGoal'):T('libAddReference'))}</h2></div><button type="button" class="btn small" data-lib="close">${esc(T('close'))}</button></div><p>${esc(kind==='goals'?T('libGoalsLead'):T('libRefsLead'))}</p>${sectorSelect}<div id="libList"></div><div class="toolbar"><button type="button" class="btn primary" data-lib="apply">${esc(T('libApply'))}</button><button type="button" class="btn" data-lib="close">${esc(T('close'))}</button></div><p class="help">${esc(state.market==='global'&&section()==='guide'||section()!=='guide'&&project()?.context?.market==='global'?T('mkLibrary'):T('gwLibraryNote',[P(sector.regulator),Lib.verifiedOn]))}</p></dialog>`;
 }
 function fillLibraryList(){
  const el=document.getElementById('libDialog');if(!el)return;const kind=el.dataset.kind,sectorId=el.querySelector('#libSector').value,p=project(),list=el.querySelector('#libList');
- if(kind==='goals'){const goals=Lib.goalsFor(sectorId,p?.context?.typeId);list.innerHTML=`<ul class="gw-goals">${goals.map(g=>{const ind=Lib.indicator(sectorId,g.kpi);const exists=p.options.some(o=>o.title===P(g.title));return `<li class="gw-goal"><label class="gw-goal-head"><input type="checkbox" value="${esc(g.id)}" ${exists?'disabled':''}><span class="gw-goal-title"><b>${esc(P(g.title))}</b>${exists?`<span class="pill">${esc(T('libAlreadyAdded'))}</span>`:''}</span></label><p class="muted">${esc(T('gwGoalKpi'))}: ${esc(ind?P(ind.name):'—')} · ${esc(T('gwGoalDrafts',[(g.refs||[]).length,(g.enablers||[]).length,(g.initiatives||[]).length]))}</p></li>`;}).join('')}</ul>`;}
- else{const refs=Lib.referencesFor(sectorId,p?.context?.typeId);list.innerHTML=`<ul class="gw-goals">${refs.map(r=>{const exists=p.references.some(x=>x.name===P(r.name));return `<li class="gw-goal"><label class="gw-goal-head"><input type="checkbox" value="${esc(r.id)}" ${exists?'disabled':''}><span class="gw-goal-title"><b>${esc(P(r.name))}</b><span class="pill blue">${esc({framework:T('s316'),benchmark:T('s317'),accreditation:T('s318'),internal:T('s319')}[r.kind]||r.kind)}</span>${exists?`<span class="pill">${esc(T('libAlreadyAdded'))}</span>`:''}</span></label><p class="muted">${esc(P(r.issuer))} · ${esc(P(r.relevance))}</p></li>`;}).join('')}</ul>`;}
+ if(kind==='goals'){const goals=scoped().goalsFor(sectorId,p?.context?.typeId);list.innerHTML=`<ul class="gw-goals">${goals.map(g=>{const ind=scoped().indicator(sectorId,g.kpi);const exists=p.options.some(o=>o.title===P(g.title));return `<li class="gw-goal"><label class="gw-goal-head"><input type="checkbox" value="${esc(g.id)}" ${exists?'disabled':''}><span class="gw-goal-title"><b>${esc(P(g.title))}</b>${exists?`<span class="pill">${esc(T('libAlreadyAdded'))}</span>`:''}</span></label><p class="muted">${esc(T('gwGoalKpi'))}: ${esc(ind?P(ind.name):'—')} · ${esc(T('gwGoalDrafts',[(g.refs||[]).length,(g.enablers||[]).length,(g.initiatives||[]).length]))}</p></li>`;}).join('')}</ul>`;}
+ else{const refs=scoped().referencesFor(sectorId,p?.context?.typeId);list.innerHTML=`<ul class="gw-goals">${refs.map(r=>{const exists=p.references.some(x=>x.name===P(r.name));return `<li class="gw-goal"><label class="gw-goal-head"><input type="checkbox" value="${esc(r.id)}" ${exists?'disabled':''}><span class="gw-goal-title"><b>${esc(P(r.name))}</b><span class="pill blue">${esc({framework:T('s316'),benchmark:T('s317'),accreditation:T('s318'),internal:T('s319')}[r.kind]||r.kind)}</span>${exists?`<span class="pill">${esc(T('libAlreadyAdded'))}</span>`:''}</span></label><p class="muted">${esc(P(r.issuer))} · ${esc(P(r.relevance))}</p></li>`;}).join('')}</ul>`;}
 }
 function openLibrary(kind){let el=document.getElementById('libDialog');if(el)el.remove();document.body.insertAdjacentHTML('beforeend',libraryDialogHtml(kind));fillLibraryList();document.getElementById('libDialog').showModal();}
 document.addEventListener('change',e=>{if(e.target.id==='libSector')fillLibraryList();});

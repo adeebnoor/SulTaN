@@ -118,7 +118,7 @@ def run_review_regressions(browser, base_url: str, qa: Path) -> None:
 
                 # 0.8 RC: full-horizon dashboard, localized client exports and success-only document numbering.
                 rc_labels = page.evaluate('Object.fromEntries(["clientDeliverables","decisionExtensions","pdfPopupBlocked","qualitativeRecorded"].map(k=>[k,SultanI18n.t(k)]))')
-                check(prefix + 'visible release version', '0.11.0-beta' in page.locator('.final-version').inner_text())
+                check(prefix + 'visible release version', page.evaluate('SULTAN_VERSION') in page.locator('.final-version').inner_text())
                 menu(page)
                 check(prefix + 'client deliverables heading localized', page.locator('.final-deliverables > b').inner_text().strip() == rc_labels['clientDeliverables'])
                 check(prefix + 'single status legend for progress panel', page.locator('.dashboard-progress .dashboard-status-legend').count() == 1)

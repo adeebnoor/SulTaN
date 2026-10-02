@@ -23,7 +23,7 @@ const ID=/^[A-Za-z0-9_-]{1,80}$/;
 const str=(v,max=LIMITS.string)=>typeof v==='string'?v.slice(0,max):'';
 const uid=p=>E.uid(p);
 
-function defaults(){return {sectorId:'',typeId:'',brief:'',sources:[],documents:[],reviews:[],ai:{enabled:false,consentAt:'',log:[]}};}
+function defaults(){return {market:'sa',country:'Saudi Arabia',currency:'SAR',sectorId:'',typeId:'',brief:'',sources:[],documents:[],reviews:[],ai:{enabled:false,consentAt:'',log:[]}};}
 function source(x={}){
  return {id:ID.test(String(x.id||''))?x.id:uid('src'),title:str(x.title),kind:KINDS.includes(x.kind)?x.kind:'other',issuer:str(x.issuer),url:str(x.url,2000),
   year:Number.isInteger(x.year)&&x.year>=1900&&x.year<=2200?x.year:null,summary:str(x.summary),relevance:str(x.relevance),
@@ -63,6 +63,7 @@ function logEntry(x={}){return {at:str(x.at,40),model:str(x.model,120),purpose:s
 function normalize(p){
  const c=p.context&&typeof p.context==='object'&&!Array.isArray(p.context)?p.context:{};
  const out=defaults();
+ out.market=c.market==='global'?'global':'sa';out.country=c.country===undefined?(out.market==='sa'?'Saudi Arabia':''):str(c.country,160);out.currency=c.currency===undefined?(out.market==='sa'?'SAR':''):str(c.currency,3).toUpperCase();
  out.sectorId=str(c.sectorId,80);out.typeId=str(c.typeId,80);out.brief=str(c.brief);
  out.sources=(Array.isArray(c.sources)?c.sources:[]).slice(0,LIMITS.sources).map(source);
  out.documents=(Array.isArray(c.documents)?c.documents:[]).slice(0,LIMITS.documents).map(document);
@@ -76,8 +77,10 @@ function normalize(p){
 function validateShape(c){
  if(c===undefined)return;
  if(!c||typeof c!=='object'||Array.isArray(c))throw Error(T('ctxInvalid'));
- for(const k of Object.keys(c))if(!['sectorId','typeId','brief','sources','documents','reviews','ai'].includes(k))throw Error(T('ctxInvalidKey')+' '+k);
- for(const k of ['sectorId','typeId','brief'])if(c[k]!==undefined&&typeof c[k]!=='string')throw Error(T('ctxInvalidKey')+' '+k);
+ for(const k of Object.keys(c))if(!['market','country','currency','sectorId','typeId','brief','sources','documents','reviews','ai'].includes(k))throw Error(T('ctxInvalidKey')+' '+k);
+ if(c.market!==undefined&&!['sa','global'].includes(c.market))throw Error(T('ctxInvalidKey')+' market');
+ if(c.currency!==undefined&&(typeof c.currency!=='string'||!/^([A-Z]{3})?$/.test(c.currency)))throw Error(T('ctxInvalidKey')+' currency');
+ for(const k of ['market','country','currency','sectorId','typeId','brief'])if(c[k]!==undefined&&typeof c[k]!=='string')throw Error(T('ctxInvalidKey')+' '+k);
  for(const [k,limit] of [['sources',LIMITS.sources],['documents',LIMITS.documents],['reviews',LIMITS.reviews]])if(c[k]!==undefined&&(!Array.isArray(c[k])||c[k].length>limit))throw Error(T('ctxInvalidKey')+' '+k);
  for(const s of c.sources||[]){if(!s||typeof s!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(s))if(!['id','title','kind','issuer','url','year','summary','relevance','status','origin'].includes(k))throw Error(T('ctxInvalidKey')+' sources.'+k);if(s.kind!==undefined&&!KINDS.includes(s.kind))throw Error(T('ctxInvalidKey')+' kind');if(s.status!==undefined&&!STATUS.includes(s.status))throw Error(T('ctxInvalidKey')+' status');if(s.origin!==undefined&&!ORIGIN.includes(s.origin))throw Error(T('ctxInvalidKey')+' origin');if(s.year!==undefined&&s.year!==null&&!Number.isInteger(s.year))throw Error(T('ctxInvalidKey')+' year');}
  for(const d of c.documents||[]){if(!d||typeof d!=='object')throw Error(T('ctxInvalid'));for(const k of Object.keys(d))if(!['id','name','kind','size','pages','summary','addedAt'].includes(k))throw Error(T('ctxInvalidKey')+' documents.'+k);}
@@ -139,7 +142,7 @@ E.contextReportHtml=function(p){
  const c=p?.context;if(!c)return '';
  const kinds={regulation:T('ctxKindRegulation'),program:T('ctxKindProgram'),indicator:T('ctxKindIndicator'),study:T('ctxKindStudy'),benchmark:T('ctxKindBenchmark'),internal:T('ctxKindInternal'),other:T('ctxKindOther')};
  const accepted=c.sources.filter(s=>s.status==='accepted'),proposed=c.sources.filter(s=>s.status==='proposed');
- let h='';
+ let h=root.SultanMarket?`<p><b>${esc(T('mkTitle'))}:</b> ${esc(T(c.market==='global'?'mkGlobal':'mkSA'))} · ${esc(c.country||T('mkUnknown'))} · <bdi>${esc(c.currency||T('mkUnknown'))}</bdi></p>`:'';
  if(text(c.brief))h+=`<p><b>${esc(T('ctxBriefLabel'))}:</b> ${esc(c.brief)}</p>`;
  h+=accepted.length?`<div class="tablewrap"><table><thead><tr><th>${esc(T('ctxColSource'))}</th><th>${esc(T('ctxColKind'))}</th><th>${esc(T('ctxColIssuer'))}</th><th>${esc(T('ctxColYear'))}</th><th>${esc(T('ctxColRelevance'))}</th></tr></thead><tbody>${accepted.map(s=>`<tr><td>${esc(s.title)}${text(s.url)?`<br><small>${esc(s.url)}</small>`:''}</td><td>${esc(kinds[s.kind]||s.kind)}</td><td>${esc(s.issuer||'—')}</td><td>${s.year??'—'}</td><td>${esc(s.relevance||s.summary||'—')}</td></tr>`).join('')}</tbody></table></div>`:`<p>${esc(T('ctxNoneAccepted'))}</p>`;
  if(proposed.length)h+=`<p class="hint">${esc(T('ctxIssueUnreviewed',[proposed.length]))}</p>`;

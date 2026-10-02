@@ -42,13 +42,13 @@ function interpolateAnnual(t,p,opts={}){
 
 /* ---------------------------------------------------------------- library → records */
 function addProgram(p,sectorId,programId){
- const prog=Lib.program(sectorId,programId);if(!prog)return null;
+ const prog=(Lib.forMarket?.(p.context?.market)||Lib).program(sectorId,programId);if(!prog)return null;
  const title=P(prog.name);const existing=(p.mandates||[]).find(m=>m.title===title);if(existing)return existing;
  const m={id:libId(sectorId,programId,'m'),title,relationship:'contribution',source:`${P(prog.issuer)} — ${prog.url}`,contribution:P(prog.contribution)};
  p.mandates.push(m);return m;
 }
 function addReference(p,sectorId,refId){
- const r=Lib.reference(sectorId,refId);if(!r)return null;
+ const r=(Lib.forMarket?.(p.context?.market)||Lib).reference(sectorId,refId);if(!r)return null;
  const name=P(r.name);const existing=p.references.find(x=>x.name===name);if(existing)return existing;
  const ref=Object.assign(E.reference(),{id:libId(sectorId,refId,'r'),name,kind:['framework','benchmark','accreditation','internal'].includes(r.kind)?r.kind:'framework',source:`${P(r.issuer)}${r.url?' — '+r.url:''}${r.year?' · '+r.year:''}`,purpose:P(r.summary),context:P(r.relevance),adaptation:r.status==='adapt'?T('drAdaptation'):'',status:'unchecked'});
  p.references.push(ref);
@@ -59,8 +59,8 @@ function enablerFromTemplate(p,sectorId,goalId,optionId,e){
  return Object.assign(E.enabler(),{id:libId(sectorId,goalId,'e'),optionId,title:P(e.title),kind:['legislation','authority','capability','culture','operating'].includes(e.kind)?e.kind:'capability',action:['keep','activate','amend','add','remove'].includes(e.action)?e.action:'add',control:['internal','external','shared','unknown'].includes(e.control)?e.control:'unknown',owner:P(e.owner),status:'unknown',dueYear:p.institution.startYear,source:P(e.source),route:P(e.route),fallback:P(e.fallback)});
 }
 function addGoal(p,sectorId,goalId,params={}){
- const g=Lib.goal(sectorId,goalId),sector=Lib.sector(sectorId);if(!g||!sector)return null;
- const ind=Lib.indicator(sectorId,g.kpi),years=E.years(p),startYear=p.institution.startYear,endYear=p.institution.endYear;
+ const scoped=Lib.forMarket?.(p.context?.market)||Lib;const g=scoped.goal(sectorId,goalId),sector=scoped.sector(sectorId);if(!g||!sector)return null;
+ const ind=scoped.indicator(sectorId,g.kpi),years=E.years(p),startYear=p.institution.startYear,endYear=p.institution.endYear;
  const baseline=num(params.baseline)?params.baseline:null,target=num(params.target)?params.target:null,owner=str(params.owner,200);
  const unit=ind?P(ind.unit):'',kpiName=ind?P(ind.name):'';
  const vars={kpi:kpiName,unit,endYear,baseline:baseline===null?T('drUnknownBaseline'):fmt(baseline),target:target===null?T('drUnknownTarget'):fmt(target)};
@@ -96,7 +96,8 @@ function addCustomGoal(p,custom={}){
 /* Build a complete first draft from the wizard answers. */
 function build(spec={}){
  const p=E.blank();
- const sector=Lib.sector(spec.sectorId);
+ if(p.context){p.context.market=spec.market==='global'?'global':spec.market==='sa'?'sa':p.context.market;p.context.country=spec.country??(p.context.market==='sa'?'Saudi Arabia':'');p.context.currency=spec.currency??(p.context.market==='sa'?'SAR':'');}
+ const sector=(Lib.forMarket?.(p.context?.market)||Lib).sector(spec.sectorId);
  const inst=spec.institution||{};
  const start=Number.isInteger(inst.startYear)?inst.startYear:p.institution.startYear,end=Number.isInteger(inst.endYear)&&inst.endYear>=start&&inst.endYear-start<=15?inst.endYear:Math.max(start,Math.min(start+3,start+15));
  Object.assign(p.institution,{name:str(inst.name,300),sector:sector?P(sector.name)+(spec.typeId?' · '+P((sector.types.find(t=>t.id===spec.typeId)||{}).name||''):''):str(inst.sector,200),vision:str(inst.vision),beneficiaries:str(inst.beneficiaries),mission:str(inst.mission),startYear:start,endYear:end});
@@ -227,6 +228,7 @@ function summary(p){const out={library:0,ai:0};for(const k of ['options','refere
 function digest(p){
  const c=p.context||{};const L=lang();
  const lines=[];const push=(k,v)=>{if(text(v)||num(v))lines.push(`${k}: ${v}`);};
+ if(root.SultanMarket)lines.push(root.SultanMarket.describe(p));
  const I=p.institution;push('name',I.name);push('sector',I.sector);push('horizon',`${I.startYear}-${I.endYear}`);for(const k of ['mission','vision','beneficiaries','assets','liabilities','context','culture','notDoing'])push(k,I[k]);
  if(text(c.brief))push('brief',c.brief);
  if(c.sources?.length)lines.push('context sources (accepted): '+c.sources.filter(s=>s.status==='accepted').map(s=>`${s.title} [${s.kind}; ${s.issuer}${s.year?' '+s.year:''}${s.url?'; '+s.url:''}] — ${s.relevance||s.summary}`).join(' | '));

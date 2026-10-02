@@ -19,8 +19,8 @@ try:
   browser=pw.chromium.launch(**opts)
   for lang in ['ar','en']:
    ctx=browser.new_context(viewport={'width':1440,'height':1000},accept_downloads=True,reduced_motion='reduce');page=ctx.new_page();errors=[];requests=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('console',lambda m:print('BROWSER '+m.text,flush=True) if m.type=='error' else None);page.on('request',lambda r:requests.append(r.url));page.goto(url+'?lang='+lang,wait_until='load');prefix=lang+' / '
-   check(prefix+'one heading and current version',page.locator('h1').count()==1 and page.evaluate('SULTAN_VERSION')=='0.11.0-beta')
-   page.locator('[data-beta="feedback"]').first.click();expect(page.locator('#feedbackDialog')).to_be_visible();check(prefix+'feedback version matches','0.11.0-beta' in page.locator('#feedbackDialog').inner_text() and 'BETA 0.6' not in page.locator('#feedbackDialog').inner_text());page.keyboard.press('Escape')
+   check(prefix+'one heading and current version',page.locator('h1').count()==1 and page.evaluate('SULTAN_VERSION')=='0.12.0-beta')
+   page.locator('[data-beta="feedback"]').first.click();expect(page.locator('#feedbackDialog')).to_be_visible();check(prefix+'feedback version matches','0.12.0-beta' in page.locator('#feedbackDialog').inner_text() and 'BETA 0.6' not in page.locator('#feedbackDialog').inner_text());page.keyboard.press('Escape')
    check(prefix+'export libraries load only on demand',not any('assets/jspdf-' in r or 'assets/pptxgen-' in r for r in requests))
    page.evaluate('SultanApp.setProject(Sultan.demo());SultanCouncilUI.open("share")');page.wait_for_selector('#co-days')
    check(prefix+'no legacy section controls',page.locator('.exec-toolbar').count()==0 and page.locator('.collaboration-bar').count()==0)
