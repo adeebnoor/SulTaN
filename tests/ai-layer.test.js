@@ -17,9 +17,10 @@ function sse(events){return events.map(e=>`event: ${e.type}\ndata: ${JSON.string
 function streamResponse(text,extra={}){const body=sse([{type:'message_start',message:{id:'msg_1',model:'claude-opus-5-5',usage:{input_tokens:11}}},{type:'content_block_start',index:0,content_block:{type:'text',text:''}},...text.match(/.{1,40}/gs).map(t=>({type:'content_block_delta',index:0,delta:{type:'text_delta',text:t}})),{type:'content_block_stop',index:0},{type:'message_delta',delta:{stop_reason:extra.stop||'end_turn'},usage:{output_tokens:22}},{type:'message_stop'}]);const chunks=[];for(let i=0;i<body.length;i+=37)chunks.push(new TextEncoder().encode(body.slice(i,i+37)));let n=0;return {ok:true,status:200,body:{getReader(){return {read:async()=>n<chunks.length?{value:chunks[n++],done:false}:{value:undefined,done:true}};}},json:async()=>({})};}
 function jsonResponse(status,obj){return {ok:status<400,status,json:async()=>obj};}
 let next=()=>jsonResponse(200,{id:'m',model:'claude-opus-5-5',content:[{type:'text',text:'OK'}],stop_reason:'end_turn',usage:{input_tokens:3,output_tokens:1}});
-AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)});return next();});
+AI._setFetch(async(url,init={})=>{calls.push({url,init,body:init.body?JSON.parse(init.body):null});return next();});
 (async()=>{
  assert.equal(AI.configured(),false);AI.saveSettings({model:'claude-opus-5-5',extractModel:'claude-sonnet-5-5'});
+ const coldBefore=await AI.warmProxy({force:true});assert.equal(coldBefore.skipped,true,'relay warm-up is blocked before consent');
  await assert.rejects(()=>AI.call({model:'claude-opus-5-5',max_tokens:10,messages:[]}),e=>e.code==='consent','nothing is sent before consent');
  assert.equal(calls.length,0);
  AI.saveSettings({consent:true,transport:'direct'});assert.equal(AI.configured(),false,'direct needs a key');
@@ -28,7 +29,7 @@ AI._setFetch(async(url,init)=>{calls.push({url,init,body:JSON.parse(init.body)})
  assert.ok(!JSON.stringify(mem['sultan.ai.v1']).includes('sk-ant'),'key is stored separately from settings');
  const pong=await AI.ping();assert.equal(pong.ok,true);
  let c=calls.at(-1);assert.equal(c.url,'https://api.anthropic.com/v1/messages');assert.equal(c.init.headers['x-api-key'],'sk-ant-test-key');assert.equal(c.init.headers['anthropic-dangerous-direct-browser-access'],'true');assert.equal(c.init.headers['anthropic-version'],'2023-06-01');assert.ok(c.init.headers['anthropic-beta'].includes('server-side-fallback'));assert.equal(c.body.fallbacks,'default');assert.equal(c.body.output_config.effort,'low');assert.equal(c.body.thinking,undefined,'adaptive thinking by default; no budget_tokens');
- AI.saveSettings({transport:'proxy',endpoint:'https://relay.example/'});await AI.ping();c=calls.at(-1);assert.equal(c.url,'https://relay.example/v1/messages');assert.equal(c.init.headers['x-api-key'],undefined,'proxy never receives the browser key');assert.equal(c.init.headers['x-sultan-client'],'web');
+ AI.saveSettings({transport:'proxy',endpoint:'https://relay.example/'});const warm=await AI.warmProxy({force:true});assert.equal(warm.ok,true);c=calls.at(-1);assert.equal(c.url,'https://relay.example/healthz');assert.equal(c.init.method,'GET');assert.equal(c.body,null,'warm-up sends no project payload');await AI.ping();c=calls.at(-1);assert.equal(c.url,'https://relay.example/v1/messages');assert.equal(c.init.headers['x-api-key'],undefined,'proxy never receives the browser key');assert.equal(c.init.headers['x-sultan-client'],'web');
  /* error mapping */
  next=()=>jsonResponse(401,{error:{message:'bad key'}});await assert.rejects(()=>AI.ping(),e=>e.code==='auth');
  next=()=>jsonResponse(429,{error:{message:'slow'}});await assert.rejects(()=>AI.ping(),e=>e.code==='rate');
