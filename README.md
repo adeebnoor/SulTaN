@@ -8,7 +8,7 @@ SULTAN connects institutional identity and ambition to explicit choices, context
 
 **Live beta:** https://sultan-strategy-beta.onrender.com
 
-**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.12.0-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
+**Latest tested standalone release:** https://github.com/adeebnoor/SulTaN/releases/tag/v0.12.1-beta — open `SULTAN_Beta_AR_EN.html` in a browser. No subscription, account, payment card, installation, or API key is required.
 
 If GitHub Pages is enabled for the repository, the same tested artifact can also be published at `https://adeebnoor.github.io/SulTaN/`.
 
@@ -110,7 +110,7 @@ The cybersecurity methodology, Adeeb Noor's institutional strategy philosophy, a
 
 Beta access is free. No redistribution license is included at this stage; please contact the author before redistributing the product or branding.
 
-**Version 0.12.0-beta — guided, context-aware, AI-assisted strategy workspace with international planning context, council review, board packs, signed read-only sharing and offline preparation.**
+**Version 0.12.1-beta — international, council-ready strategy workspace with consent-gated AI relay pre-warming for a faster first assisted action.**
 
 ### Review checks
 
@@ -122,4 +122,4 @@ The example deliberately contains unresolved and unmapped choices; it is not a c
 
 Version 0.11.0-beta adds signed fixed snapshots, three-owner input, adversarial questions, portable decision checkpoints and one-click board packages. See [workflow, privacy limits and verification](docs/COUNCIL.md). Full committee work is best on desktop; the three-line homepage preview remains mobile-friendly.
 
-Version 0.12.0-beta adds Arabic workspace breadcrumbs, planning context independent of language (Saudi / international), explicit country and currency without amount conversion, automatic offline preparation, a social image, search metadata, and a visible HTML first-paint shell. See [international mode and hosting migration](docs/INTERNATIONAL_HOSTING.md).
+Version 0.12.0-beta adds Arabic workspace breadcrumbs, planning context independent of language (Saudi / international), explicit country and currency without amount conversion, automatic offline preparation, a social image, search metadata, and a visible HTML first-paint shell. Version 0.12.1-beta adds privacy-preserving relay pre-warming only after AI consent, reducing the chance that the first assisted action pays the full free-service wake-up delay. See [international mode and hosting migration](docs/INTERNATIONAL_HOSTING.md).
